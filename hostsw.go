@@ -11,11 +11,16 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
+	"strings"
 )
 
 const (
-	HostDir = ".host"
+	Splitter = "@"
+	HostDir  = ".host"
 )
+
+type HostNodes = map[string]*HostNode
+type HostGroupNodes = map[string][]*HostNode
 
 type HostSwitcher struct {
 	HomeDir string
@@ -41,32 +46,51 @@ func init() {
 	}
 }
 
-func NewHostNode(name string, isDir bool) *HostNode {
-	return &HostNode{
-		Name:  name,
-		IsDir: isDir,
-		Sub:   make([]*HostNode, 0),
+func (h *HostSwitcher) LoadHostNodes() (HostNodes, HostGroupNodes) {
+	hostNodes := HostNodes{
+		// root node
+		h.HomeDir: NewHostNode(h.HomeDir, h.HomeDir, true),
 	}
-}
-
-func (h *HostSwitcher) ListAsTree() {
-	rootNode := NewHostNode(h.HomeDir, true)
-	nodes := map[string]*HostNode{
-		rootNode.Name: rootNode,
-	}
+	hostGroupNodes := HostGroupNodes{}
 	err := filepath.Walk(h.HostDir, func(filePath string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		node := NewHostNode(info.Name(), info.IsDir())
-		nodes[filePath] = node
-		if pNode, exist := nodes[path.Dir(filePath)]; exist {
+		node := NewHostNode(info.Name(), filePath, info.IsDir())
+		hostNodes[filePath] = node
+		if pNode, exist := hostNodes[path.Dir(filePath)]; exist {
 			pNode.AddSub(node)
+		}
+		if !node.IsDir {
+			_name := strings.Split(node.Name, Splitter)
+			if len(_name) != 2 {
+				panic("not valid file name " + node.Name)
+			}
+			alias := _name[0]
+			node.Name = _name[1]
+			hostGroupNodes[alias] = append(hostGroupNodes[alias], node)
 		}
 		return nil
 	})
 	if err != nil {
 		panic(err)
 	}
-	rootNode.Print()
+	h.printHostNodes(hostNodes)
+	h.printHostGroupNodes(hostGroupNodes)
+	return hostNodes, hostGroupNodes
+}
+
+func (h *HostSwitcher) printHostNodes(hn HostNodes) {
+	for _, subNode := range hn[h.HomeDir].Sub[0].Sub {
+		subNode.Print()
+	}
+}
+
+func (h *HostSwitcher) printHostGroupNodes(hgn HostGroupNodes) {
+	for alias, nodes := range hgn {
+		fmt.Println("group", alias)
+		for _, node := range nodes {
+			fmt.Println(node.Name, node.Path)
+		}
+	}
 }

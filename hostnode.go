@@ -8,8 +8,18 @@ import "fmt"
 
 type HostNode struct {
 	Name  string
+	Path  string
 	IsDir bool
 	Sub   []*HostNode
+}
+
+func NewHostNode(name string, path string, isDir bool) *HostNode {
+	return &HostNode{
+		Name:  name,
+		Path:  path,
+		IsDir: isDir,
+		Sub:   make([]*HostNode, 0),
+	}
 }
 
 func (hn *HostNode) AddSub(other *HostNode) {
@@ -22,7 +32,7 @@ func (hn *HostNode) Print() {
 }
 
 func (hn *HostNode) print(prefix string) {
-	fmt.Println(prefix, hn.Name, hn.IsDir)
+	fmt.Println(prefix, hn.Name)
 	for _, sub := range hn.Sub {
 		sub.print("    " + prefix)
 	}

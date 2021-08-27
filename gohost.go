@@ -6,5 +6,5 @@ package main
 
 
 func main() {
-	h.ListAsTree()
+	h.LoadHostNodes()
 }
