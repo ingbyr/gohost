@@ -1129,7 +1129,7 @@ func (e *Editor) Find() error {
 	return err
 }
 
-func example() {
+func Open(filePath string) {
 	var editor Editor
 
 	if err := editor.Init(); err != nil {
@@ -1138,7 +1138,7 @@ func example() {
 	defer editor.Close()
 
 	if len(os.Args) > 1 {
-		err := editor.OpenFile(os.Args[1])
+		err := editor.OpenFile(filePath)
 		if err != nil && !errors.Is(err, os.ErrNotExist) {
 			die(err)
 		}

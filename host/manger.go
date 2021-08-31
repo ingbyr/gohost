@@ -5,8 +5,8 @@
 package host
 
 import (
-	"errors"
 	"fmt"
+	"github.com/ingbyr/gohost/editor"
 	"io/fs"
 	"os"
 	"os/user"
@@ -88,7 +88,7 @@ func (m *manager) PrintGroups() {
 }
 
 func (m *manager) PrintHostNodes() {
-	fmt.Println("All hosts: ")
+	fmt.Println("All hosts:")
 	for name, node := range Manager.Nodes {
 		fmt.Printf("  %s (%s)\n", name, node.FileName)
 	}
@@ -97,9 +97,9 @@ func (m *manager) PrintHostNodes() {
 func (m *manager) EditHostFile(name string) error {
 	node, exist := m.Nodes[name]
 	if !exist {
-		return errors.New(fmt.Sprintf("not found host file '%s'", name))
+		return fmt.Errorf("not found host file '%s'", name)
 	}
-	fmt.Println(node)
+	editor.Open(node.Path)
 	return nil
 }
 
