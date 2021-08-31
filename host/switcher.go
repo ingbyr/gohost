@@ -16,6 +16,7 @@ import (
 const (
 	SpGroup = "_"
 	Dir     = ".gohost"
+	DefaultGroup = "default"
 )
 
 type Nodes = map[string]*Node
@@ -53,9 +54,8 @@ func (h *Switcher) LoadHostNodes() (Nodes, Groups) {
 			return err
 		}
 		node := NewNode(info.Name(), filePath)
-		name, groups := node.NameGroups()
-		allNodes[name] = node
-		for _, group := range groups {
+		allNodes[node.Name] = node
+		for _, group := range node.Groups {
 			allGroups[group] = append(allGroups[group], node)
 		}
 		return nil
@@ -63,9 +63,8 @@ func (h *Switcher) LoadHostNodes() (Nodes, Groups) {
 	if err != nil {
 		panic(err)
 	}
-
-	printNodes(allNodes)
-	printGroups(allGroups)
+	//printNodes(allNodes)
+	//printGroups(allGroups)
 	return allNodes, allGroups
 }
 
