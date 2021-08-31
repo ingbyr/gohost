@@ -17,9 +17,8 @@ import (
 )
 
 const (
-	SpGroup      = "_"
-	Dir          = ".gohost"
-	DefaultGroup = "default"
+	SpGroup = "_"
+	Dir     = ".gohost"
 )
 
 type manager struct {
