@@ -6,7 +6,7 @@ import (
 )
 
 func Open(filePath string) {
-	cmd := exec.Command("vim", filePath)
+	cmd := exec.Command("vim", "-n", filePath)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	err := cmd.Run()
