@@ -2,7 +2,7 @@
  @Author: ingbyr
 */
 
-package main
+package host
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ import (
 
 const (
 	SpGroup = "_"
-	HostDir = ".gohost"
+	Dir     = ".gohost"
 )
 
 type Nodes = map[string]*Node
@@ -26,22 +26,22 @@ type Switcher struct {
 	HostDir string
 }
 
-var h *Switcher
+var Manager *Switcher
 
 func init() {
 	curr, err := user.Current()
 	if err != nil {
 		panic(err)
 	}
-	h = &Switcher{
+	Manager = &Switcher{
 		HomeDir: curr.HomeDir,
-		HostDir: path.Join(curr.HomeDir, HostDir),
+		HostDir: path.Join(curr.HomeDir, Dir),
 	}
-	if _, err := os.Stat(h.HostDir); os.IsNotExist(err) {
-		if err := os.Mkdir(h.HostDir, os.ModePerm); err != nil {
-			panic("can not create dir " + h.HostDir)
+	if _, err := os.Stat(Manager.HostDir); os.IsNotExist(err) {
+		if err := os.Mkdir(Manager.HostDir, os.ModePerm); err != nil {
+			panic("can not create dir " + Manager.HostDir)
 		}
-		fmt.Println("create host dir at", h.HostDir)
+		fmt.Println("create host dir at", Manager.HostDir)
 	}
 }
 

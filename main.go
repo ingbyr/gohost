@@ -4,7 +4,8 @@
 
 package main
 
+import "github.com/ingbyr/gohost/cmd"
 
 func main() {
-	h.LoadHostNodes()
+	cmd.Execute()
 }

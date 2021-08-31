@@ -2,7 +2,7 @@
  @Author: ingbyr
 */
 
-package main
+package host
 
 import "strings"
 
