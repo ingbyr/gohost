@@ -15,6 +15,9 @@ type Node struct {
 
 func NewNode(fileName string, path string) *Node {
 	groups := strings.Split(fileName, SpGroup)
+	if len(groups) > 1 {
+		groups = groups[:len(groups) - 1]
+	}
 	name := groups[len(groups)-1]
 	return &Node{
 		Name:   name,
