@@ -14,15 +14,8 @@ type Node struct {
 }
 
 func NewNode(fileName string, path string) *Node {
-	if fileName == "" {
-		panic("empty file name " + path)
-	}
 	groups := strings.Split(fileName, SpGroup)
 	name := groups[len(groups)-1]
-	groups = groups[:len(groups) - 1]
-	if len(groups) == 0 {
-		groups = append(groups, DefaultGroup)
-	}
 	return &Node{
 		Name:   name,
 		FileName:  fileName,

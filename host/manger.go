@@ -5,6 +5,7 @@
 package host
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/ingbyr/gohost/editor"
 	"io/fs"
@@ -101,6 +102,29 @@ func (m *manager) EditHostFile(name string) error {
 	}
 	editor.Open(node.Path)
 	return nil
+}
+
+func (m *manager) GenerateHost(group string) ([]byte, error) {
+	nodes, exist := m.Groups[group]
+	if !exist {
+		return nil, fmt.Errorf("not found group '%s'", group)
+	}
+	hostLines := make(map[string]*Line)
+	for _, node := range nodes {
+		file, err := os.Open(node.Path)
+		if err != nil {
+			panic(err)
+		}
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			l := parseLine(scanner.Text())
+			if l != nil {
+				hostLines[l.Domain] = l
+			}
+		}
+		_ = file.Close()
+	}
+	return nil, nil
 }
 
 func (m *manager) printNodes() {

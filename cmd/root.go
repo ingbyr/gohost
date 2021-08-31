@@ -16,6 +16,7 @@ var rootCmd = &cobra.Command{
 func Execute() {
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(editCmd)
+	rootCmd.AddCommand(applyCmd)
 	if err := rootCmd.Execute(); err != nil {
 		panic(err)
 	}
