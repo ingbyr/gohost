@@ -148,10 +148,18 @@ func (m *manager) ApplyGroup(group string) {
 	hosts, exist := m.Groups[group]
 	if !exist {
 		display.Err(fmt.Errorf("not found group '%s'", group))
+		return
 	}
-	hostContent := m.combineHosts(hosts, "# Auto generated from group "+group)
-	err := ioutil.WriteFile(m.fullPath(TmpCombinedHost), hostContent, 0664)
-	display.Err(err)
+	combinedHostContent := m.combineHosts(hosts, "# Auto generated from group "+group)
+	combinedHost := m.fullPath(TmpCombinedHost)
+	if err := ioutil.WriteFile(combinedHost, combinedHostContent, 0664); err !=nil {
+		display.Err(err)
+		return
+	}
+	if err := os.Rename(combinedHost, sysHost); err != nil {
+		display.Err(err)
+	}
+	fmt.Printf("applied group '%s' to system host\n", group)
 }
 
 func (m *manager) addHost(host *Host) {
@@ -213,4 +221,8 @@ func (m *manager) combineHosts(hosts []*Host, head string) []byte {
 		_ = file.Close()
 	}
 	return b.Bytes()
+}
+
+func (m *manager) printSysHost() {
+
 }
