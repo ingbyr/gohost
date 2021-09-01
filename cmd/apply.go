@@ -11,9 +11,9 @@ import (
 
 var (
 	applyCmd = &cobra.Command{
-		Use: "apply",
-		Short: "Apply group host",
-		Args: cobra.ExactArgs(1),
+		Use:   "apply",
+		Short: "apply group host",
+		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			host.Manager.GenerateHost(args[0])
 		},

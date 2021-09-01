@@ -10,12 +10,12 @@ import (
 )
 
 var (
-	addCmd = &cobra.Command{
-		Use: "add",
-		Short: "Add host file",
-		Args: cobra.MinimumNArgs(1),
+	newCmd = &cobra.Command{
+		Use:   "new",
+		Short: "create new host file",
+		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			host.Manager.AddHost(args[0], args[1:])
+			host.Manager.CreateNewHost(args[0], args[1:])
 		},
 	}
 )

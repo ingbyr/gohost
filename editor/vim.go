@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	vim = "vim"
+	vim    = "vim"
 	noSwap = "-n"
 )
 

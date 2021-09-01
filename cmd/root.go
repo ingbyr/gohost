@@ -5,6 +5,7 @@
 package cmd
 
 import (
+	"github.com/ingbyr/gohost/display"
 	"github.com/spf13/cobra"
 )
 
@@ -17,8 +18,10 @@ func Execute() {
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(editCmd)
 	rootCmd.AddCommand(applyCmd)
-	rootCmd.AddCommand(addCmd)
+	rootCmd.AddCommand(newCmd)
+	rootCmd.AddCommand(mvCmd)
 	if err := rootCmd.Execute(); err != nil {
-		panic(err)
+		display.Err(err)
+		return
 	}
 }

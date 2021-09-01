@@ -24,8 +24,8 @@ const (
 type manager struct {
 	HomeDir string
 	HostDir string
-	Nodes   map[string]*Node
-	Groups  map[string][]*Node
+	Hosts   map[string]*Host
+	Groups  map[string][]*Host
 }
 
 var Manager *manager
@@ -38,8 +38,8 @@ func init() {
 	Manager = &manager{
 		HomeDir: curr.HomeDir,
 		HostDir: path.Join(curr.HomeDir, Dir),
-		Nodes:   map[string]*Node{},
-		Groups:  map[string][]*Node{},
+		Hosts:   map[string]*Host{},
+		Groups:  map[string][]*Host{},
 	}
 	if _, err := os.Stat(Manager.HostDir); os.IsNotExist(err) {
 		if err := os.Mkdir(Manager.HostDir, os.ModePerm); err != nil {
@@ -61,19 +61,19 @@ func (m *manager) LoadHostNodes() error {
 		if file.IsDir() {
 			continue
 		}
-		node := NewNode(file.Name(), path.Join(m.HostDir, file.Name()))
-		m.addNode(node)
-		m.addGroupNode(node)
+		node := NewHost(file.Name(), path.Join(m.HostDir, file.Name()))
+		m.addHost(node)
+		m.addGroup(node)
 	}
 	return nil
 }
 
 func (m *manager) PrintGroups() {
 	if len(m.Groups) == 0 {
-		fmt.Println("No host group")
+		fmt.Println("no host group")
 		return
 	}
-	fmt.Println("Host groups:")
+	fmt.Println("host groups:")
 	for group, nodes := range Manager.Groups {
 		var sb strings.Builder
 		for _, node := range nodes {
@@ -85,36 +85,56 @@ func (m *manager) PrintGroups() {
 	}
 }
 
-func (m *manager) PrintHostNodes() {
-	if len(Manager.Nodes) == 0 {
-		fmt.Println("No host file")
+func (m *manager) PrintHosts() {
+	if len(Manager.Hosts) == 0 {
+		fmt.Println("no host file")
 	}
-	fmt.Println("Host files:")
-	for name, node := range Manager.Nodes {
+	fmt.Println("host files:")
+	for name, node := range Manager.Hosts {
 		fmt.Printf("  %s (%s)\n", name, node.FileName)
 	}
 }
 
-func (m *manager) AddHost(name string, groups []string) {
-	if _, exist := m.Nodes[name]; exist {
-		display.Err(fmt.Errorf("Host file '%s' is existed\n", name))
+func (m *manager) CreateNewHost(name string, groups []string) {
+	if _, exist := m.Hosts[name]; exist {
+		display.Err(fmt.Errorf("host file '%s' is existed\n", name))
 		return
 	}
-	var sb strings.Builder
-	if len(groups) > 0 {
-		sb.WriteString(strings.Join(groups, SpGroup))
-		sb.WriteString(SpGroup)
-	}
-	sb.WriteString(name)
-	file := path.Join(m.HostDir, sb.String())
-	err := editor.Open(file)
+	filePath := m.hostPath(m.genHostName(name, groups))
+	err := editor.Open(filePath)
 	if err != nil {
-		fmt.Printf("Can not create file '%s'\n", file)
+		fmt.Printf("failed to create file '%s'\n", filePath)
 	}
 }
 
+func (m *manager) ChangeHostName(name string, newName string) {
+	h, exist := m.Hosts[name]
+	if !exist {
+		display.Err(fmt.Errorf("host file '%s' is not existed\n", name))
+		return
+	}
+	newHostName := m.genHostName(newName, h.Groups)
+	if err := os.Rename(h.Path, m.hostPath(newHostName)); err != nil {
+		display.Err(err)
+	}
+	fmt.Printf("renamed '%s' to '%s'\n", h.Name, newName)
+}
+
+func (m *manager) ChangeGroups(name string, newGroups []string) {
+	h, exist := m.Hosts[name]
+	if !exist {
+		display.Err(fmt.Errorf("host file '%s' is not existed\n", name))
+		return
+	}
+	newFile := m.genHostName(name, newGroups)
+	if err := os.Rename(h.Path, m.hostPath(newFile)); err != nil {
+		display.Err(err)
+	}
+	fmt.Printf("chanaged group '%v' to '%v\n", h.Groups, newGroups)
+}
+
 func (m *manager) EditHostFile(name string) error {
-	node, exist := m.Nodes[name]
+	node, exist := m.Hosts[name]
 	if !exist {
 		return fmt.Errorf("not found host file '%s'", name)
 	}
@@ -144,18 +164,18 @@ func (m *manager) GenerateHost(group string) ([]byte, error) {
 	return nil, nil
 }
 
-func (m *manager) addNode(node *Node) {
-	m.Nodes[node.Name] = node
+func (m *manager) addHost(host *Host) {
+	m.Hosts[host.Name] = host
 }
 
-func (m *manager) addGroupNode(node *Node) {
-	for _, group := range node.Groups {
-		m.Groups[group] = append(m.Groups[group], node)
+func (m *manager) addGroup(host *Host) {
+	for _, group := range host.Groups {
+		m.Groups[group] = append(m.Groups[group], host)
 	}
 }
 
 func (m *manager) printNodes() {
-	for name, node := range m.Nodes {
+	for name, node := range m.Hosts {
 		fmt.Printf("name %s, node %+v\n", name, node)
 	}
 }
@@ -167,4 +187,18 @@ func (m *manager) printGroups() {
 			fmt.Printf("node %+v\n", node)
 		}
 	}
+}
+
+func (m *manager) genHostName(name string, groups []string) string {
+	var sb strings.Builder
+	if len(groups) > 0 {
+		sb.WriteString(strings.Join(groups, SpGroup))
+		sb.WriteString(SpGroup)
+	}
+	sb.WriteString(name)
+	return sb.String()
+}
+
+func (m *manager) hostPath(fileName string) string {
+	return path.Join(m.HostDir, fileName)
 }
