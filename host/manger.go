@@ -162,6 +162,26 @@ func (m *manager) ApplyGroup(group string) {
 	fmt.Printf("applied group '%s' to system host\n", group)
 }
 
+func (m *manager) PrintSysHost(max int) {
+	host, err := os.Open(sysHost)
+	if err != nil {
+		panic(err)
+	}
+	defer host.Close()
+	scanner := bufio.NewScanner(host)
+	curr := 0
+	for scanner.Scan() {
+		if max > 0 && curr == max {
+			break
+		}
+		curr++
+		fmt.Println(scanner.Text())
+	}
+	if scanner.Scan() {
+		fmt.Println("...")
+	}
+}
+
 func (m *manager) addHost(host *Host) {
 	m.Hosts[host.Name] = host
 }
@@ -221,8 +241,4 @@ func (m *manager) combineHosts(hosts []*Host, head string) []byte {
 		_ = file.Close()
 	}
 	return b.Bytes()
-}
-
-func (m *manager) printSysHost() {
-
 }

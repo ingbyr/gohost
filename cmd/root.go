@@ -20,6 +20,7 @@ func Execute() {
 	rootCmd.AddCommand(applyCmd)
 	rootCmd.AddCommand(newCmd)
 	rootCmd.AddCommand(mvCmd)
+	rootCmd.AddCommand(sysCmd)
 	if err := rootCmd.Execute(); err != nil {
 		display.Err(err)
 		return
