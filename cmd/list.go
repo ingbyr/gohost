@@ -12,7 +12,7 @@ import (
 var (
 	listCmd = &cobra.Command{
 		Use:   "ls",
-		Short: "list all group",
+		Short: "glist all group",
 		Run: func(cmd *cobra.Command, args []string) {
 			host.Manager.PrintGroups()
 		},
@@ -20,7 +20,7 @@ var (
 
 	listAllCmd = &cobra.Command{
 		Use:   "all",
-		Short: "list all host file",
+		Short: "glist all host file",
 		Run: func(cmd *cobra.Command, args []string) {
 			host.Manager.PrintHosts()
 		},

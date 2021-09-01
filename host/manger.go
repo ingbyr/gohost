@@ -49,19 +49,19 @@ func init() {
 		}
 		fmt.Println("Create host dir", Manager.HostDir)
 	}
-	if err := Manager.LoadHostNodes(); err != nil {
+	if err := Manager.LoadHosts(); err != nil {
 		panic(err)
 	}
 }
 
-func (m *manager) LoadHostNodes() error {
+func (m *manager) LoadHosts() error {
 	files, err := ioutil.ReadDir(m.HostDir)
 	if err != nil {
 		return err
 	}
 	for _, file := range files {
 		// skip dir and .* files
-		if file.IsDir() || strings.HasPrefix(".", file.Name()) {
+		if file.IsDir() || strings.HasPrefix(file.Name(), ".") {
 			continue
 		}
 		node := NewHost(file.Name(), path.Join(m.HostDir, file.Name()))
@@ -96,6 +96,38 @@ func (m *manager) PrintHosts() {
 	for name, node := range Manager.Hosts {
 		fmt.Printf("  %s (%s)\n", name, node.FileName)
 	}
+}
+
+func (m *manager) PrintGroup(hostName string) {
+	host, exist := m.Hosts[hostName]
+	if !exist {
+		display.Err(fmt.Errorf("host file '%s' is not existed\n", hostName))
+		return
+	}
+	fmt.Printf("groups '%s'\n", strings.Join(host.Groups, ", "))
+}
+
+func (m *manager) DeleteGroup(hostName string, delGroups []string) {
+	host := m.hostExit(hostName)
+	// FIXME empty group bug
+	newGroups, removedGroups := sub(host.Groups, delGroups)
+	err := os.Rename(host.Path, m.fullPath(m.hostName(hostName, newGroups)))
+	if err != nil {
+		display.Err(fmt.Errorf("failed to delete groups"))
+	}
+	host.Groups = newGroups
+	fmt.Printf("removed groups '%s'\n", strings.Join(removedGroups, ", "))
+}
+
+func (m *manager) AddGroup(hostName string, groups []string) {
+	host := m.hostExit(hostName)
+	newGroups, addGroups := union(host.Groups, groups)
+	err := os.Rename(host.Path, m.fullPath(m.hostName(hostName, newGroups)))
+	if err != nil {
+		display.Err(fmt.Errorf("failed to delete groups"))
+	}
+	host.Groups = newGroups
+	fmt.Printf("added groups '%s'\n", strings.Join(addGroups, ", "))
 }
 
 func (m *manager) CreateNewHost(name string, groups []string) {
@@ -181,6 +213,24 @@ func (m *manager) PrintSysHost(max int) {
 	if scanner.Scan() {
 		fmt.Println("...")
 	}
+}
+
+func (m *manager) host(hostName string) (*Host, bool) {
+	host, exist := m.Hosts[hostName]
+	if !exist {
+		display.Err(fmt.Errorf("host file '%s' is not existed\n", hostName))
+		return nil, exist
+	}
+	return host, exist
+}
+
+func (m *manager) hostExit(hostName string) *Host {
+	host, exist := m.Hosts[hostName]
+	if !exist {
+		display.Err(fmt.Errorf("host file '%s' is not existed\n", hostName))
+		os.Exit(0)
+	}
+	return host
 }
 
 func (m *manager) addHost(host *Host) {
