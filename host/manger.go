@@ -152,14 +152,15 @@ func (m *manager) ApplyGroup(group string) {
 	}
 	combinedHostContent := m.combineHosts(hosts, "# Auto generated from group "+group)
 	combinedHost := m.fullPath(TmpCombinedHost)
-	if err := ioutil.WriteFile(combinedHost, combinedHostContent, 0664); err !=nil {
+	if err := ioutil.WriteFile(combinedHost, combinedHostContent, 0664); err != nil {
 		display.Err(err)
 		return
 	}
 	if err := os.Rename(combinedHost, sysHost); err != nil {
 		display.Err(err)
 	}
-	fmt.Printf("applied group '%s' to system host\n", group)
+	fmt.Printf("applied group '%s' to system host:\n", group)
+	m.PrintSysHost(10)
 }
 
 func (m *manager) PrintSysHost(max int) {
