@@ -4,7 +4,10 @@
 
 package display
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 func Warn(warn string) {
 	if warn != "" {
@@ -15,5 +18,6 @@ func Warn(warn string) {
 func Err(err error) {
 	if err != nil {
 		fmt.Printf("[error] %s\n", err.Error())
+		os.Exit(1)
 	}
 }

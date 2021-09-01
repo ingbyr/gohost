@@ -33,6 +33,7 @@ type manager struct {
 var Manager *manager
 
 func init() {
+	fmt.Print()
 	curr, err := user.Current()
 	if err != nil {
 		panic(err)
@@ -97,17 +98,12 @@ func (m *manager) PrintHosts() {
 }
 
 func (m *manager) PrintGroup(hostName string) {
-	host, exist := m.Hosts[hostName]
-	if !exist {
-		display.Err(fmt.Errorf("host file '%s' is not existed\n", hostName))
-		return
-	}
+	host := m.mustHost(hostName)
 	fmt.Printf("groups '%s'\n", strings.Join(host.Groups, ", "))
 }
 
 func (m *manager) DeleteGroup(hostName string, delGroups []string) {
-	host := m.hostExit(hostName)
-	// FIXME empty group bug
+	host := m.mustHost(hostName)
 	newGroups, removedGroups := sub(host.Groups, delGroups)
 	err := os.Rename(host.Path, m.fullPath(m.hostName(hostName, newGroups)))
 	if err != nil {
@@ -118,7 +114,7 @@ func (m *manager) DeleteGroup(hostName string, delGroups []string) {
 }
 
 func (m *manager) AddGroup(hostName string, groups []string) {
-	host := m.hostExit(hostName)
+	host := m.mustHost(hostName)
 	newGroups, addGroups := union(host.Groups, groups)
 	err := os.Rename(host.Path, m.fullPath(m.hostName(hostName, newGroups)))
 	if err != nil {
@@ -140,38 +136,44 @@ func (m *manager) CreateNewHost(name string, groups []string) {
 	}
 }
 
-func (m *manager) ChangeHostName(name string, newName string) {
-	h, exist := m.Hosts[name]
-	if !exist {
-		display.Err(fmt.Errorf("host file '%s' is not existed\n", name))
-		return
+func (m *manager) DeleteHosts(hostNames []string) {
+	deleted := make([]string, 0)
+	for _, hostName := range hostNames {
+		if host, exist := m.Hosts[hostName]; exist {
+			err := os.Remove(host.Path)
+			if err != nil {
+				display.Err(err)
+				continue
+			}
+			deleted = append(deleted, host.Name)
+		}
 	}
-	newHostName := m.hostName(newName, h.Groups)
-	if err := os.Rename(h.Path, m.fullPath(newHostName)); err != nil {
-		display.Err(err)
-	}
-	fmt.Printf("renamed '%s' to '%s'\n", h.Name, newName)
+	fmt.Printf("deleted host %s\n", strings.Join(deleted, ","))
 }
 
-func (m *manager) ChangeGroups(name string, newGroups []string) {
-	h, exist := m.Hosts[name]
-	if !exist {
-		display.Err(fmt.Errorf("host file '%s' is not existed\n", name))
-		return
-	}
-	newFile := m.hostName(name, newGroups)
-	if err := os.Rename(h.Path, m.fullPath(newFile)); err != nil {
+func (m *manager) ChangeHostName(hostName string, newHostName string) {
+	h := m.mustHost(hostName)
+	_newHostName := m.hostName(newHostName, h.Groups)
+	if err := os.Rename(h.Path, m.fullPath(_newHostName)); err != nil {
 		display.Err(err)
 	}
-	fmt.Printf("chanaged group '%v' to '%v\n", h.Groups, newGroups)
+	fmt.Printf("renamed '%s' to '%s'\n", h.Name, newHostName)
 }
 
-func (m *manager) EditHostFile(name string) error {
-	node, exist := m.Hosts[name]
-	if !exist {
-		return fmt.Errorf("not found host file '%s'", name)
+func (m *manager) ChangeGroups(hostName string, newGroups []string) {
+	host := m.mustHost(hostName)
+	newFile := m.hostName(hostName, newGroups)
+	if err := os.Rename(host.Path, m.fullPath(newFile)); err != nil {
+		display.Err(err)
 	}
-	return editor.Open(node.Path)
+	fmt.Printf("chanaged group '%v' to '%v\n", host.Groups, newGroups)
+}
+
+func (m *manager) EditHostFile(hostName string) {
+	host := m.mustHost(hostName)
+	if err := editor.Open(host.Path); err != nil {
+		display.Err(err)
+	}
 }
 
 func (m *manager) ApplyGroup(group string) {
@@ -184,7 +186,6 @@ func (m *manager) ApplyGroup(group string) {
 	combinedHost := m.fullPath(TmpCombinedHost)
 	if err := ioutil.WriteFile(combinedHost, combinedHostContent, 0664); err != nil {
 		display.Err(err)
-		return
 	}
 	if err := os.Rename(combinedHost, sysHost); err != nil {
 		display.Err(err)
@@ -222,7 +223,7 @@ func (m *manager) host(hostName string) (*Host, bool) {
 	return host, exist
 }
 
-func (m *manager) hostExit(hostName string) *Host {
+func (m *manager) mustHost(hostName string) *Host {
 	host, exist := m.Hosts[hostName]
 	if !exist {
 		display.Err(fmt.Errorf("host file '%s' is not existed\n", hostName))

@@ -6,7 +6,5 @@
 package host
 
 const (
-	sysHost = "C:\\Windows\\System32\\drivers\\etc\\host"
+	sysHost = "C:\\Windows\\System32\\drivers\\etc\\hosts"
 )
-
-
