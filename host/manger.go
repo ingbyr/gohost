@@ -49,15 +49,14 @@ func init() {
 		}
 		fmt.Println("Create host dir", Manager.HostDir)
 	}
-	if err := Manager.LoadHosts(); err != nil {
-		panic(err)
-	}
+	Manager.LoadHosts()
 }
 
-func (m *manager) LoadHosts() error {
+func (m *manager) LoadHosts() {
 	files, err := ioutil.ReadDir(m.HostDir)
 	if err != nil {
-		return err
+		display.Err(fmt.Errorf("failed to load gohost dir"))
+		os.Exit(1)
 	}
 	for _, file := range files {
 		// skip dir and .* files
@@ -68,7 +67,6 @@ func (m *manager) LoadHosts() error {
 		m.addHost(node)
 		m.addGroup(node)
 	}
-	return nil
 }
 
 func (m *manager) PrintGroups() {
