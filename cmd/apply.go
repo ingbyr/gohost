@@ -15,7 +15,7 @@ var (
 		Short: "apply group host",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			host.Manager.GenerateHost(args[0])
+			host.Manager.ApplyGroup(args[0])
 		},
 	}
 )

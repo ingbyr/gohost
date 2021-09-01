@@ -6,6 +6,7 @@ package host
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"github.com/ingbyr/gohost/display"
 	"github.com/ingbyr/gohost/editor"
@@ -17,8 +18,9 @@ import (
 )
 
 const (
-	SpGroup = "_"
-	Dir     = ".gohost"
+	SpGroup         = "_"
+	BaseDir         = ".gohost"
+	TmpCombinedHost = ".tmp_combined"
 )
 
 type manager struct {
@@ -37,7 +39,7 @@ func init() {
 	}
 	Manager = &manager{
 		HomeDir: curr.HomeDir,
-		HostDir: path.Join(curr.HomeDir, Dir),
+		HostDir: path.Join(curr.HomeDir, BaseDir),
 		Hosts:   map[string]*Host{},
 		Groups:  map[string][]*Host{},
 	}
@@ -58,7 +60,8 @@ func (m *manager) LoadHostNodes() error {
 		return err
 	}
 	for _, file := range files {
-		if file.IsDir() {
+		// skip dir and .* files
+		if file.IsDir() || strings.HasPrefix(".", file.Name()) {
 			continue
 		}
 		node := NewHost(file.Name(), path.Join(m.HostDir, file.Name()))
@@ -100,7 +103,7 @@ func (m *manager) CreateNewHost(name string, groups []string) {
 		display.Err(fmt.Errorf("host file '%s' is existed\n", name))
 		return
 	}
-	filePath := m.hostPath(m.genHostName(name, groups))
+	filePath := m.fullPath(m.hostName(name, groups))
 	err := editor.Open(filePath)
 	if err != nil {
 		fmt.Printf("failed to create file '%s'\n", filePath)
@@ -113,8 +116,8 @@ func (m *manager) ChangeHostName(name string, newName string) {
 		display.Err(fmt.Errorf("host file '%s' is not existed\n", name))
 		return
 	}
-	newHostName := m.genHostName(newName, h.Groups)
-	if err := os.Rename(h.Path, m.hostPath(newHostName)); err != nil {
+	newHostName := m.hostName(newName, h.Groups)
+	if err := os.Rename(h.Path, m.fullPath(newHostName)); err != nil {
 		display.Err(err)
 	}
 	fmt.Printf("renamed '%s' to '%s'\n", h.Name, newName)
@@ -126,8 +129,8 @@ func (m *manager) ChangeGroups(name string, newGroups []string) {
 		display.Err(fmt.Errorf("host file '%s' is not existed\n", name))
 		return
 	}
-	newFile := m.genHostName(name, newGroups)
-	if err := os.Rename(h.Path, m.hostPath(newFile)); err != nil {
+	newFile := m.hostName(name, newGroups)
+	if err := os.Rename(h.Path, m.fullPath(newFile)); err != nil {
 		display.Err(err)
 	}
 	fmt.Printf("chanaged group '%v' to '%v\n", h.Groups, newGroups)
@@ -141,27 +144,14 @@ func (m *manager) EditHostFile(name string) error {
 	return editor.Open(node.Path)
 }
 
-func (m *manager) GenerateHost(group string) ([]byte, error) {
-	nodes, exist := m.Groups[group]
+func (m *manager) ApplyGroup(group string) {
+	hosts, exist := m.Groups[group]
 	if !exist {
-		return nil, fmt.Errorf("not found group '%s'", group)
+		display.Err(fmt.Errorf("not found group '%s'", group))
 	}
-	hostLines := make(map[string]*Line)
-	for _, node := range nodes {
-		file, err := os.Open(node.Path)
-		if err != nil {
-			panic(err)
-		}
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			l := parseLine(scanner.Text())
-			if l != nil {
-				hostLines[l.Domain] = l
-			}
-		}
-		_ = file.Close()
-	}
-	return nil, nil
+	hostContent := m.combineHosts(hosts, "# Auto generated from group "+group)
+	err := ioutil.WriteFile(m.fullPath(TmpCombinedHost), hostContent, 0664)
+	display.Err(err)
 }
 
 func (m *manager) addHost(host *Host) {
@@ -189,7 +179,7 @@ func (m *manager) printGroups() {
 	}
 }
 
-func (m *manager) genHostName(name string, groups []string) string {
+func (m *manager) hostName(name string, groups []string) string {
 	var sb strings.Builder
 	if len(groups) > 0 {
 		sb.WriteString(strings.Join(groups, SpGroup))
@@ -199,6 +189,28 @@ func (m *manager) genHostName(name string, groups []string) string {
 	return sb.String()
 }
 
-func (m *manager) hostPath(fileName string) string {
+func (m *manager) fullPath(fileName string) string {
 	return path.Join(m.HostDir, fileName)
+}
+
+func (m *manager) combineHosts(hosts []*Host, head string) []byte {
+	var b bytes.Buffer
+	b.WriteString(head)
+	b.WriteByte('\n')
+	b.WriteByte('\n')
+	for _, host := range hosts {
+		file, err := os.Open(host.Path)
+		if err != nil {
+			panic(err)
+		}
+		scanner := bufio.NewScanner(file)
+		b.WriteString("# Host section from " + host.Name + "\n")
+		for scanner.Scan() {
+			b.Write(scanner.Bytes())
+			b.WriteByte('\n')
+		}
+		b.WriteByte('\n')
+		_ = file.Close()
+	}
+	return b.Bytes()
 }
