@@ -1,16 +1,22 @@
 package editor
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 )
 
-func Open(filePath string) {
-	cmd := exec.Command("vim", "-n", filePath)
+const (
+	vim = "vim"
+	noSwap = "-n"
+)
+
+func Open(filePath string) error {
+	if _, err := exec.LookPath(vim); err != nil {
+		return fmt.Errorf("please install vim before editing file\n")
+	}
+	cmd := exec.Command(vim, noSwap, filePath)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
-	err := cmd.Run()
-	if err != nil {
-		panic(err)
-	}
+	return cmd.Run()
 }
