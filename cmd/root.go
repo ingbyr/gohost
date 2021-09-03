@@ -11,7 +11,7 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "gohost",
-	Short: "Host switcher written in go",
+	Short: "Host switcher made by ingbyr",
 }
 
 func Execute() {
@@ -22,9 +22,9 @@ func Execute() {
 	rootCmd.AddCommand(renameCmd)
 	rootCmd.AddCommand(sysCmd)
 	rootCmd.AddCommand(groupCommand)
-	rootCmd.AddCommand(delCmd)
+	rootCmd.AddCommand(removeCmd)
 	if err := rootCmd.Execute(); err != nil {
-		display.Err(err)
+		display.ErrExit(err)
 		return
 	}
 }

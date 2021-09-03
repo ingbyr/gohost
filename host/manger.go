@@ -56,7 +56,7 @@ func init() {
 func (m *manager) LoadHosts() {
 	files, err := ioutil.ReadDir(m.HostDir)
 	if err != nil {
-		display.Err(fmt.Errorf("failed to load gohost dir"))
+		display.ErrExit(fmt.Errorf("failed to load gohost dir"))
 		os.Exit(1)
 	}
 	for _, file := range files {
@@ -112,12 +112,26 @@ func (m *manager) PrintGroup(hostName string) {
 	display.Table(header, data)
 }
 
-func (m *manager) DeleteGroup(hostName string, delGroups []string) {
+func (m *manager) DeleteGroups(delGroups []string) {
+	deleted := make([]string, 0)
+	for _, delGroup := range delGroups {
+		if hosts, exist := m.Groups[delGroup]; exist {
+			// delete hosts which belongs to delGroup
+			for _, host := range hosts {
+				_ = os.Remove(host.Path)
+			}
+			deleted = append(deleted, delGroup)
+		}
+	}
+	fmt.Printf("deleted group %s\n", strings.Join(deleted, ","))
+}
+
+func (m *manager) DeleteHostGroups(hostName string, delGroups []string) {
 	host := m.mustHost(hostName)
 	newGroups, removedGroups := sub(host.Groups, delGroups)
 	err := os.Rename(host.Path, m.fullPath(m.hostName(hostName, newGroups)))
 	if err != nil {
-		display.Err(fmt.Errorf("failed to delete groups"))
+		display.ErrExit(fmt.Errorf("failed to delete groups"))
 	}
 	host.Groups = newGroups
 	fmt.Printf("removed groups '%s'\n", strings.Join(removedGroups, ", "))
@@ -128,7 +142,7 @@ func (m *manager) AddGroup(hostName string, groups []string) {
 	newGroups, addGroups := union(host.Groups, groups)
 	err := os.Rename(host.Path, m.fullPath(m.hostName(hostName, newGroups)))
 	if err != nil {
-		display.Err(fmt.Errorf("failed to delete groups"))
+		display.ErrExit(fmt.Errorf("failed to delete groups"))
 	}
 	host.Groups = newGroups
 	fmt.Printf("added groups '%s'\n", strings.Join(addGroups, ", "))
@@ -136,7 +150,7 @@ func (m *manager) AddGroup(hostName string, groups []string) {
 
 func (m *manager) CreateNewHost(name string, groups []string) {
 	if _, exist := m.Hosts[name]; exist {
-		display.Err(fmt.Errorf("host file '%s' is existed\n", name))
+		display.ErrExit(fmt.Errorf("host file '%s' is existed\n", name))
 		return
 	}
 	filePath := m.fullPath(m.hostName(name, groups))
@@ -146,13 +160,13 @@ func (m *manager) CreateNewHost(name string, groups []string) {
 	}
 }
 
-func (m *manager) DeleteHosts(hostNames []string) {
+func (m *manager) DeleteHostsByNames(hostNames []string) {
 	deleted := make([]string, 0)
 	for _, hostName := range hostNames {
 		if host, exist := m.Hosts[hostName]; exist {
 			err := os.Remove(host.Path)
 			if err != nil {
-				display.Err(err)
+				display.ErrExit(err)
 				continue
 			}
 			deleted = append(deleted, host.Name)
@@ -165,7 +179,7 @@ func (m *manager) ChangeHostName(hostName string, newHostName string) {
 	h := m.mustHost(hostName)
 	_newHostName := m.hostName(newHostName, h.Groups)
 	if err := os.Rename(h.Path, m.fullPath(_newHostName)); err != nil {
-		display.Err(err)
+		display.ErrExit(err)
 	}
 	fmt.Printf("renamed '%s' to '%s'\n", h.Name, newHostName)
 }
@@ -174,7 +188,7 @@ func (m *manager) ChangeGroups(hostName string, newGroups []string) {
 	host := m.mustHost(hostName)
 	newFile := m.hostName(hostName, newGroups)
 	if err := os.Rename(host.Path, m.fullPath(newFile)); err != nil {
-		display.Err(err)
+		display.ErrExit(err)
 	}
 	fmt.Printf("chanaged group '%v' to '%v\n", host.Groups, newGroups)
 }
@@ -182,23 +196,23 @@ func (m *manager) ChangeGroups(hostName string, newGroups []string) {
 func (m *manager) EditHostFile(hostName string) {
 	host := m.mustHost(hostName)
 	if err := editor.Open(host.Path); err != nil {
-		display.Err(err)
+		display.ErrExit(err)
 	}
 }
 
 func (m *manager) ApplyGroup(group string) {
 	hosts, exist := m.Groups[group]
 	if !exist {
-		display.Err(fmt.Errorf("not found group '%s'", group))
+		display.ErrExit(fmt.Errorf("not found group '%s'", group))
 		return
 	}
 	combinedHostContent := m.combineHosts(hosts, "# Auto generated from group "+group)
 	combinedHost := m.fullPath(TmpCombinedHost)
 	if err := ioutil.WriteFile(combinedHost, combinedHostContent, 0664); err != nil {
-		display.Err(err)
+		display.ErrExit(err)
 	}
 	if err := os.Rename(combinedHost, sysHost); err != nil {
-		display.Err(err)
+		display.ErrExit(err)
 	}
 	fmt.Printf("applied group '%s' to system host:\n", group)
 	m.PrintSysHost(10)
@@ -227,7 +241,7 @@ func (m *manager) PrintSysHost(max int) {
 func (m *manager) host(hostName string) (*Host, bool) {
 	host, exist := m.Hosts[hostName]
 	if !exist {
-		display.Err(fmt.Errorf("host file '%s' is not existed\n", hostName))
+		display.ErrExit(fmt.Errorf("host file '%s' is not existed\n", hostName))
 		return nil, exist
 	}
 	return host, exist
@@ -236,7 +250,7 @@ func (m *manager) host(hostName string) (*Host, bool) {
 func (m *manager) mustHost(hostName string) *Host {
 	host, exist := m.Hosts[hostName]
 	if !exist {
-		display.Err(fmt.Errorf("host file '%s' is not existed\n", hostName))
+		display.ErrExit(fmt.Errorf("host file '%s' is not existed\n", hostName))
 		os.Exit(0)
 	}
 	return host

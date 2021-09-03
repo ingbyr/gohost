@@ -19,6 +19,12 @@ func Warn(warn string) {
 func Err(err error) {
 	if err != nil {
 		fmt.Printf("[error] %s\n", err.Error())
+	}
+}
+
+func ErrExit(err error) {
+	if err != nil {
+		fmt.Printf("[error] %s\n", err.Error())
 		os.Exit(1)
 	}
 }
