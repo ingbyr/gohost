@@ -11,27 +11,31 @@ import (
 )
 
 var (
-	gdel string
-	gadd string
+	groupList bool
+	groupDel  string
+	groupAdd  string
 
 	groupCommand = &cobra.Command{
-		Use:   "group",
-		Short: "manage host group",
+		Use:   "cg",
+		Short: "change host group",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			hostName := args[0]
-			if gdel != "" {
-				host.Manager.DeleteGroup(hostName, strings.Split(gdel, ","))
+			if groupDel != "" {
+				host.Manager.DeleteGroup(hostName, strings.Split(groupDel, ","))
 			}
-			if gadd != "" {
-				host.Manager.AddGroup(hostName, strings.Split(gadd, ","))
+			if groupAdd != "" {
+				host.Manager.AddGroup(hostName, strings.Split(groupAdd, ","))
 			}
-			host.Manager.PrintGroup(hostName)
+			if groupList {
+				host.Manager.PrintGroup(hostName)
+			}
 		},
 	}
 )
 
 func init() {
-	groupCommand.Flags().StringVarP(&gdel, "delete", "d", "", "delete some groups from host")
-	groupCommand.Flags().StringVarP(&gadd, "add", "a", "", "add some groups to host")
+	groupCommand.Flags().BoolVarP(&groupList, "list", "l", true, "list host groups")
+	groupCommand.Flags().StringVarP(&groupDel, "delete", "d", "", "delete some groups from host")
+	groupCommand.Flags().StringVarP(&groupAdd, "add", "a", "", "add some groups to host")
 }

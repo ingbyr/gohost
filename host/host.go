@@ -13,6 +13,10 @@ type Host struct {
 	Groups   []string
 }
 
+func (h *Host) GroupsAsStr() string {
+	return strings.Join(h.Groups, ", ")
+}
+
 func NewHost(fileName string, path string) *Host {
 	groups := strings.Split(fileName, SpGroup)
 	name := groups[len(groups)-1]

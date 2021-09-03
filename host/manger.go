@@ -75,31 +75,41 @@ func (m *manager) PrintGroups() {
 		fmt.Println("no host group")
 		return
 	}
-	fmt.Println("host groups:")
-	for group, nodes := range Manager.Groups {
-		var sb strings.Builder
-		for _, node := range nodes {
-			sb.WriteString(node.Name)
-			sb.WriteString(", ")
+
+	header := []string{"Group", "Hosts"}
+	data := make([][]string, 0, len(m.Groups))
+	for group, hosts := range m.Groups {
+		var hsb strings.Builder
+		for _, host := range hosts {
+			hsb.WriteString(host.Name)
+			hsb.WriteString(", ")
 		}
-		nodeNames := sb.String()[:sb.Len()-2]
-		fmt.Printf("  %s (%s)\n", group, nodeNames)
+		data = append(data, []string{group, hsb.String()[:hsb.Len()-2]})
 	}
+	display.Table(header, data)
 }
 
 func (m *manager) PrintHosts() {
 	if len(Manager.Hosts) == 0 {
 		fmt.Println("no host file")
+		return
 	}
-	fmt.Println("host files:")
+
+	header := []string{"Host", "Groups"}
+	data := make([][]string, 0, len(m.Groups))
 	for name, node := range Manager.Hosts {
-		fmt.Printf("  %s (%s)\n", name, node.FileName)
+		data = append(data, []string{name, node.GroupsAsStr()})
 	}
+	display.Table(header, data)
 }
 
 func (m *manager) PrintGroup(hostName string) {
 	host := m.mustHost(hostName)
-	fmt.Printf("groups '%s'\n", strings.Join(host.Groups, ", "))
+	header := []string{"Host", "Groups"}
+	data := [][]string{
+		{hostName, host.GroupsAsStr()},
+	}
+	display.Table(header, data)
 }
 
 func (m *manager) DeleteGroup(hostName string, delGroups []string) {
