@@ -8,63 +8,57 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/ingbyr/gohost/const"
 	"github.com/ingbyr/gohost/display"
 	"github.com/ingbyr/gohost/editor"
 	"io/ioutil"
 	"os"
-	"os/user"
 	"path"
 	"strings"
 )
 
-const (
-	SpGroup         = "_"
-	BaseDir         = ".gohost"
-	TmpCombinedHost = ".tmp_combined"
-)
-
 type manager struct {
-	HomeDir string
-	HostDir string
-	Hosts   map[string]*Host
-	Groups  map[string][]*Host
+	BaseDir      string
+	BaseHostFile string
+	Hosts        map[string]*Host
+	Groups       map[string][]*Host
 }
 
 var Manager *manager
 
 func init() {
-	fmt.Print()
-	curr, err := user.Current()
-	if err != nil {
-		panic(err)
-	}
 	Manager = &manager{
-		HomeDir: curr.HomeDir,
-		HostDir: path.Join(curr.HomeDir, BaseDir),
-		Hosts:   map[string]*Host{},
-		Groups:  map[string][]*Host{},
+		BaseDir:      _const.BaseDir,
+		BaseHostFile: _const.BaseHostFile,
+		Hosts:        map[string]*Host{},
+		Groups:       map[string][]*Host{},
 	}
-	if _, err := os.Stat(Manager.HostDir); os.IsNotExist(err) {
-		if err := os.Mkdir(Manager.HostDir, os.ModePerm); err != nil {
-			panic("can not create dir " + Manager.HostDir)
+	if _, err := os.Stat(Manager.BaseDir); os.IsNotExist(err) {
+		if err := os.Mkdir(Manager.BaseDir, os.ModePerm); err != nil {
+			panic("can not create dir " + Manager.BaseDir)
 		}
-		fmt.Println("Create host dir", Manager.HostDir)
+		fmt.Println("create host dir", Manager.BaseDir)
+	}
+	if _, err := os.Stat(Manager.BaseHostFile); os.IsNotExist(err) {
+		if _, err := os.Create(Manager.BaseHostFile); err != nil {
+			panic("can not create base host file")
+		}
+		fmt.Println("create base host file", Manager.BaseHostFile)
 	}
 	Manager.LoadHosts()
 }
 
 func (m *manager) LoadHosts() {
-	files, err := ioutil.ReadDir(m.HostDir)
+	files, err := ioutil.ReadDir(m.BaseDir)
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to load gohost dir"))
-		os.Exit(1)
 	}
 	for _, file := range files {
 		// skip dir and .* files
 		if file.IsDir() || strings.HasPrefix(file.Name(), ".") {
 			continue
 		}
-		node := NewHost(file.Name(), path.Join(m.HostDir, file.Name()))
+		node := NewHost(file.Name(), path.Join(m.BaseDir, file.Name()))
 		m.addHost(node)
 		m.addGroup(node)
 	}
@@ -154,7 +148,7 @@ func (m *manager) CreateNewHost(name string, groups []string) {
 		return
 	}
 	filePath := m.fullPath(m.hostName(name, groups))
-	err := editor.Open(filePath)
+	err := editor.OpenByVim(filePath)
 	if err != nil {
 		fmt.Printf("failed to create file '%s'\n", filePath)
 	}
@@ -195,7 +189,11 @@ func (m *manager) ChangeGroups(hostName string, newGroups []string) {
 
 func (m *manager) EditHostFile(hostName string) {
 	host := m.mustHost(hostName)
-	if err := editor.Open(host.Path); err != nil {
+	//if err := editor.OpenByVim(host.Path); err != nil {
+	//	display.ErrExit(err)
+	//}
+
+	if err := editor.OpenByMicro(host.Path); err != nil {
 		display.ErrExit(err)
 	}
 }
@@ -207,7 +205,7 @@ func (m *manager) ApplyGroup(group string) {
 		return
 	}
 	combinedHostContent := m.combineHosts(hosts, "# Auto generated from group "+group)
-	combinedHost := m.fullPath(TmpCombinedHost)
+	combinedHost := m.fullPath(_const.TmpCombinedHost)
 	if err := ioutil.WriteFile(combinedHost, combinedHostContent, 0664); err != nil {
 		display.ErrExit(err)
 	}
@@ -284,15 +282,15 @@ func (m *manager) printGroups() {
 func (m *manager) hostName(name string, groups []string) string {
 	var sb strings.Builder
 	if len(groups) > 0 {
-		sb.WriteString(strings.Join(groups, SpGroup))
-		sb.WriteString(SpGroup)
+		sb.WriteString(strings.Join(groups, _const.SepGroup))
+		sb.WriteString(_const.SepGroup)
 	}
 	sb.WriteString(name)
 	return sb.String()
 }
 
 func (m *manager) fullPath(fileName string) string {
-	return path.Join(m.HostDir, fileName)
+	return path.Join(m.BaseDir, fileName)
 }
 
 func (m *manager) combineHosts(hosts []*Host, head string) []byte {

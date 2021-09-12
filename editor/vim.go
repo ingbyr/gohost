@@ -11,7 +11,7 @@ const (
 	noSwap = "-n"
 )
 
-func Open(filePath string) error {
+func OpenByVim(filePath string) error {
 	if _, err := exec.LookPath(vim); err != nil {
 		return fmt.Errorf("please install vim before editing file\n")
 	}
