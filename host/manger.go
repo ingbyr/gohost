@@ -8,9 +8,10 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/ingbyr/gohost/const"
+	"github.com/ingbyr/gohost/conf"
 	"github.com/ingbyr/gohost/display"
 	"github.com/ingbyr/gohost/editor"
+	"github.com/ingbyr/gohost/util"
 	"io/ioutil"
 	"os"
 	"path"
@@ -28,8 +29,8 @@ var Manager *manager
 
 func init() {
 	Manager = &manager{
-		BaseDir:      _const.BaseDir,
-		BaseHostFile: _const.BaseHostFile,
+		BaseDir:      conf.BaseDir,
+		BaseHostFile: conf.BaseHostFile,
 		Hosts:        map[string]*Host{},
 		Groups:       map[string][]*Host{},
 	}
@@ -122,19 +123,20 @@ func (m *manager) DeleteGroups(delGroups []string) {
 
 func (m *manager) DeleteHostGroups(hostName string, delGroups []string) {
 	host := m.mustHost(hostName)
-	newGroups, removedGroups := sub(host.Groups, delGroups)
-	err := os.Rename(host.Path, m.fullPath(m.hostName(hostName, newGroups)))
+	newGroups, removedGroups := util.SliceSub(host.Groups, delGroups)
+	hostName = m.hostName(hostName, newGroups)
+	err := os.Rename(host.Path, m.fullFilePath(hostName))
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to delete groups"))
 	}
-	host.Groups = newGroups
+	host.Groups = m.groupsFromHostName(hostName)
 	fmt.Printf("removed groups '%s'\n", strings.Join(removedGroups, ", "))
 }
 
 func (m *manager) AddGroup(hostName string, groups []string) {
 	host := m.mustHost(hostName)
-	newGroups, addGroups := union(host.Groups, groups)
-	err := os.Rename(host.Path, m.fullPath(m.hostName(hostName, newGroups)))
+	newGroups, addGroups := util.SliceUnion(host.Groups, groups)
+	err := os.Rename(host.Path, m.fullFilePath(m.hostName(hostName, newGroups)))
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to delete groups"))
 	}
@@ -147,7 +149,7 @@ func (m *manager) CreateNewHost(name string, groups []string) {
 		display.ErrExit(fmt.Errorf("host file '%s' is existed\n", name))
 		return
 	}
-	filePath := m.fullPath(m.hostName(name, groups))
+	filePath := m.fullFilePath(m.hostName(name, groups))
 	err := editor.OpenByVim(filePath)
 	if err != nil {
 		fmt.Printf("failed to create file '%s'\n", filePath)
@@ -172,19 +174,10 @@ func (m *manager) DeleteHostsByNames(hostNames []string) {
 func (m *manager) ChangeHostName(hostName string, newHostName string) {
 	h := m.mustHost(hostName)
 	_newHostName := m.hostName(newHostName, h.Groups)
-	if err := os.Rename(h.Path, m.fullPath(_newHostName)); err != nil {
+	if err := os.Rename(h.Path, m.fullFilePath(_newHostName)); err != nil {
 		display.ErrExit(err)
 	}
 	fmt.Printf("renamed '%s' to '%s'\n", h.Name, newHostName)
-}
-
-func (m *manager) ChangeGroups(hostName string, newGroups []string) {
-	host := m.mustHost(hostName)
-	newFile := m.hostName(hostName, newGroups)
-	if err := os.Rename(host.Path, m.fullPath(newFile)); err != nil {
-		display.ErrExit(err)
-	}
-	fmt.Printf("chanaged group '%v' to '%v\n", host.Groups, newGroups)
 }
 
 func (m *manager) EditHostFile(hostName string) {
@@ -201,7 +194,7 @@ func (m *manager) ApplyGroup(group string) {
 		return
 	}
 	combinedHostContent := m.combineHosts(hosts, "# Auto generated from group "+group)
-	combinedHost := m.fullPath(_const.TmpCombinedHost)
+	combinedHost := m.fullFilePath(conf.TmpCombinedHost)
 	if err := ioutil.WriteFile(combinedHost, combinedHostContent, 0664); err != nil {
 		display.ErrExit(err)
 	}
@@ -276,16 +269,19 @@ func (m *manager) printGroups() {
 }
 
 func (m *manager) hostName(name string, groups []string) string {
-	var sb strings.Builder
-	if len(groups) > 0 {
-		sb.WriteString(strings.Join(groups, _const.SepGroup))
-		sb.WriteString(_const.SepGroup)
+	if groups == nil || len(groups) == 0 {
+		// use same name as group if no groups specified
+		groups = append(groups, name)
 	}
-	sb.WriteString(name)
-	return sb.String()
+	return strings.Join(append(groups, name), conf.SepGroupInFile)
 }
 
-func (m *manager) fullPath(fileName string) string {
+func (m *manager) groupsFromHostName(hostName string) []string {
+	groups := strings.Split(hostName, conf.SepGroupInFile)
+	return groups[:len(groups)-1]
+}
+
+func (m *manager) fullFilePath(fileName string) string {
 	return path.Join(m.BaseDir, fileName)
 }
 

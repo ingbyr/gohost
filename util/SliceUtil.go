@@ -2,9 +2,9 @@
  @Author: ingbyr
 */
 
-package host
+package util
 
-func sub(s1 []string, s2 []string) (res, removed []string) {
+func SliceSub(s1 []string, s2 []string) (res, removed []string) {
 	s2Cache := cache(s2)
 	for _, s := range s1 {
 		if _, exist := s2Cache[s]; exist {
@@ -16,7 +16,7 @@ func sub(s1 []string, s2 []string) (res, removed []string) {
 	return
 }
 
-func union(s1 []string, s2 []string) (res []string, add []string) {
+func SliceUnion(s1 []string, s2 []string) (res []string, add []string) {
 	s1Cache := cache(s1)
 	for _, s1i := range s1 {
 		res = append(res, s1i)

@@ -1,4 +1,4 @@
-package _const
+package conf
 
 import (
 	"os/user"
@@ -6,7 +6,8 @@ import (
 )
 
 const (
-	SepGroup        = "_"
+	SepGroupInFile  = "_"
+	SepGroupInCmd   = ","
 	TmpCombinedHost = ".tmp_combined"
 )
 

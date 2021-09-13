@@ -5,7 +5,7 @@
 package host
 
 import (
-	"github.com/ingbyr/gohost/const"
+	"github.com/ingbyr/gohost/conf"
 	"strings"
 )
 
@@ -21,7 +21,7 @@ func (h *Host) GroupsAsStr() string {
 }
 
 func NewHost(fileName string, path string) *Host {
-	groups := strings.Split(fileName, _const.SepGroup)
+	groups := strings.Split(fileName, conf.SepGroupInFile)
 	name := groups[len(groups)-1]
 	if len(groups) > 1 {
 		groups = groups[:len(groups)-1]

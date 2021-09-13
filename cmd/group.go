@@ -5,6 +5,7 @@
 package cmd
 
 import (
+	"github.com/ingbyr/gohost/conf"
 	"github.com/ingbyr/gohost/host"
 	"github.com/spf13/cobra"
 	"strings"
@@ -22,10 +23,10 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			hostName := args[0]
 			if groupDel != "" {
-				host.Manager.DeleteHostGroups(hostName, strings.Split(groupDel, ","))
+				host.Manager.DeleteHostGroups(hostName, strings.Split(groupDel, conf.SepGroupInCmd))
 			}
 			if groupAdd != "" {
-				host.Manager.AddGroup(hostName, strings.Split(groupAdd, ","))
+				host.Manager.AddGroup(hostName, strings.Split(groupAdd, conf.SepGroupInCmd))
 			}
 			if groupList {
 				host.Manager.PrintGroup(hostName)
