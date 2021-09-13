@@ -189,11 +189,7 @@ func (m *manager) ChangeGroups(hostName string, newGroups []string) {
 
 func (m *manager) EditHostFile(hostName string) {
 	host := m.mustHost(hostName)
-	//if err := editor.OpenByVim(host.Path); err != nil {
-	//	display.ErrExit(err)
-	//}
-
-	if err := editor.OpenByMicro(host.Path); err != nil {
+	if err := editor.OpenByVim(host.Path); err != nil {
 		display.ErrExit(err)
 	}
 }

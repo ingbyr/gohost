@@ -1,9 +1,8 @@
 ## gohost
 
-Gohost is a simple host switcher tool supporting Linux, macOS and Windows.
+Gohost is a simple host switcher tool supporting Linux and macOS.
 
-**To modify the system host file gohost need running in admin mode, such as `sudo gohost` in Linux and macOS
-or `Admin CMD` in Windows.**
+**To modify the system host file gohost need running in admin mode, such as `sudo gohost`.
 
 ## Usage
 
@@ -56,7 +55,7 @@ For example
 ```
 
 
-### Add group to existed host
+### Edit group
 
 `gohost cg HOST_NAME [ -a | -d ] GROUP_NAME_1,GROUP_NAME_2...`
 
