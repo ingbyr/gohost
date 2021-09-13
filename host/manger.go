@@ -171,7 +171,7 @@ func (m *manager) CreateNewHost(name string, groups []string) {
 	}
 }
 
-func (m *manager) DeleteHostsByNames(hostNames []string) {
+func (m *manager) DeleteHosts(hostNames []string) {
 	deleted := make([]string, 0)
 	for _, hostName := range hostNames {
 		if host, exist := m.Hosts[hostName]; exist {

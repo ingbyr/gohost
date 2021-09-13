@@ -20,7 +20,7 @@ var (
 			if len(args) == 1 {
 				host.Manager.CreateNewHost(args[0], []string{})
 			} else {
-				host.Manager.CreateNewHost(args[0], strings.Split(args[1], conf.SepGroupInCmd))
+				host.Manager.CreateNewHost(args[0], strings.Split(args[1], conf.SepInCmd))
 			}
 		},
 	}
