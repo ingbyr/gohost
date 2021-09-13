@@ -17,7 +17,7 @@ var rootCmd = &cobra.Command{
 func Execute() {
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(editCmd)
-	rootCmd.AddCommand(applyCmd)
+	rootCmd.AddCommand(useCmd)
 	rootCmd.AddCommand(newCmd)
 	rootCmd.AddCommand(renameCmd)
 	rootCmd.AddCommand(sysCmd)

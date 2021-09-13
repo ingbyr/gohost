@@ -6,15 +6,15 @@ import (
 )
 
 const (
-	SepGroupInFile  = "_"
-	SepGroupInCmd   = ","
-	TmpCombinedHost = ".tmp_combined"
+	SepGroupInFile        = "_"
+	SepGroupInCmd         = ","
+	TmpCombinedHost       = ".tmp_combined"
+	BaseHostFileName = "base"
 )
 
 var (
-	BaseHostFile string
 	BaseDir      string
-	ConfigFile   string
+	BaseHostFile string
 )
 
 func init() {
@@ -22,7 +22,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
 	BaseDir = filepath.Join(curr.HomeDir, ".gohost")
-	BaseHostFile = filepath.Join(BaseDir, "base")
-	ConfigFile = filepath.Join(BaseDir, ".conf")
+	BaseHostFile = filepath.Join(BaseDir, "."+BaseHostFileName)
 }
