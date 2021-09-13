@@ -8,9 +8,10 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/ingbyr/gohost/const"
+	"github.com/ingbyr/gohost/conf"
 	"github.com/ingbyr/gohost/display"
 	"github.com/ingbyr/gohost/editor"
+	"github.com/ingbyr/gohost/util"
 	"io/ioutil"
 	"os"
 	"path"
@@ -18,32 +19,45 @@ import (
 )
 
 type manager struct {
-	BaseDir      string
-	BaseHostFile string
-	Hosts        map[string]*Host
-	Groups       map[string][]*Host
+	BaseDir  string
+	BaseHost *Host
+	Hosts    map[string]*Host
+	Groups   map[string][]*Host
 }
 
 var Manager *manager
 
 func init() {
+	// init manager
 	Manager = &manager{
-		BaseDir:      _const.BaseDir,
-		BaseHostFile: _const.BaseHostFile,
-		Hosts:        map[string]*Host{},
-		Groups:       map[string][]*Host{},
+		BaseDir: conf.BaseDir,
+		BaseHost: &Host{
+			Name:     conf.BaseHostFileName,
+			FileName: conf.BaseHostFileName,
+			Path:     conf.BaseHostFile,
+			Groups:   nil,
+		},
+		Hosts:  map[string]*Host{},
+		Groups: map[string][]*Host{},
 	}
+
+	// create base dir
 	if _, err := os.Stat(Manager.BaseDir); os.IsNotExist(err) {
 		if err := os.Mkdir(Manager.BaseDir, os.ModePerm); err != nil {
-			panic("can not create dir " + Manager.BaseDir)
+			display.Panic("can not create dir "+Manager.BaseDir, err)
 		}
-		fmt.Println("create host dir", Manager.BaseDir)
 	}
-	if _, err := os.Stat(Manager.BaseHostFile); os.IsNotExist(err) {
-		if _, err := os.Create(Manager.BaseHostFile); err != nil {
-			panic("can not create base host file")
+
+	// create base host file
+	if _, err := os.Stat(Manager.BaseHost.Path); os.IsNotExist(err) {
+		var content bytes.Buffer
+		content.WriteString("127.0.0.1 localhost")
+		content.WriteByte(NewLine)
+		content.WriteString("::1 localhost")
+		content.WriteByte(NewLine)
+		if err := os.WriteFile(Manager.BaseHost.Path, content.Bytes(), 0644); err != nil {
+			display.Panic("can not create base host file", err)
 		}
-		fmt.Println("create base host file", Manager.BaseHostFile)
 	}
 	Manager.LoadHosts()
 }
@@ -53,8 +67,9 @@ func (m *manager) LoadHosts() {
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to load gohost dir"))
 	}
+	// load host files
 	for _, file := range files {
-		// skip dir and .* files
+		// skip dir and files started with '.'
 		if file.IsDir() || strings.HasPrefix(file.Name(), ".") {
 			continue
 		}
@@ -69,7 +84,6 @@ func (m *manager) PrintGroups() {
 		fmt.Println("no host group")
 		return
 	}
-
 	header := []string{"Group", "Hosts"}
 	data := make([][]string, 0, len(m.Groups))
 	for group, hosts := range m.Groups {
@@ -122,19 +136,20 @@ func (m *manager) DeleteGroups(delGroups []string) {
 
 func (m *manager) DeleteHostGroups(hostName string, delGroups []string) {
 	host := m.mustHost(hostName)
-	newGroups, removedGroups := sub(host.Groups, delGroups)
-	err := os.Rename(host.Path, m.fullPath(m.hostName(hostName, newGroups)))
+	newGroups, removedGroups := util.SliceSub(host.Groups, delGroups)
+	hostName = m.hostName(hostName, newGroups)
+	err := os.Rename(host.Path, m.fullFilePath(hostName))
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to delete groups"))
 	}
-	host.Groups = newGroups
+	host.Groups = m.groupsFromHostName(hostName)
 	fmt.Printf("removed groups '%s'\n", strings.Join(removedGroups, ", "))
 }
 
 func (m *manager) AddGroup(hostName string, groups []string) {
 	host := m.mustHost(hostName)
-	newGroups, addGroups := union(host.Groups, groups)
-	err := os.Rename(host.Path, m.fullPath(m.hostName(hostName, newGroups)))
+	newGroups, addGroups := util.SliceUnion(host.Groups, groups)
+	err := os.Rename(host.Path, m.fullFilePath(m.hostName(hostName, newGroups)))
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to delete groups"))
 	}
@@ -143,18 +158,20 @@ func (m *manager) AddGroup(hostName string, groups []string) {
 }
 
 func (m *manager) CreateNewHost(name string, groups []string) {
-	if _, exist := m.Hosts[name]; exist {
-		display.ErrExit(fmt.Errorf("host file '%s' is existed\n", name))
-		return
+	if name == m.BaseHost.Name {
+		display.ErrExit(fmt.Errorf("host file '%s' already exists\n", name))
 	}
-	filePath := m.fullPath(m.hostName(name, groups))
+	if _, exist := m.Hosts[name]; exist {
+		display.ErrExit(fmt.Errorf("host file '%s' already exists\n", name))
+	}
+	filePath := m.fullFilePath(m.hostName(name, groups))
 	err := editor.OpenByVim(filePath)
 	if err != nil {
 		fmt.Printf("failed to create file '%s'\n", filePath)
 	}
 }
 
-func (m *manager) DeleteHostsByNames(hostNames []string) {
+func (m *manager) DeleteHosts(hostNames []string) {
 	deleted := make([]string, 0)
 	for _, hostName := range hostNames {
 		if host, exist := m.Hosts[hostName]; exist {
@@ -170,56 +187,59 @@ func (m *manager) DeleteHostsByNames(hostNames []string) {
 }
 
 func (m *manager) ChangeHostName(hostName string, newHostName string) {
+	if hostName == m.BaseHost.Name || newHostName == m.BaseHost.Name {
+		display.ErrExit(fmt.Errorf("can not change base host file name"))
+	}
 	h := m.mustHost(hostName)
 	_newHostName := m.hostName(newHostName, h.Groups)
-	if err := os.Rename(h.Path, m.fullPath(_newHostName)); err != nil {
+	if err := os.Rename(h.Path, m.fullFilePath(_newHostName)); err != nil {
 		display.ErrExit(err)
 	}
 	fmt.Printf("renamed '%s' to '%s'\n", h.Name, newHostName)
 }
 
-func (m *manager) ChangeGroups(hostName string, newGroups []string) {
-	host := m.mustHost(hostName)
-	newFile := m.hostName(hostName, newGroups)
-	if err := os.Rename(host.Path, m.fullPath(newFile)); err != nil {
-		display.ErrExit(err)
-	}
-	fmt.Printf("chanaged group '%v' to '%v\n", host.Groups, newGroups)
-}
-
 func (m *manager) EditHostFile(hostName string) {
 	host := m.mustHost(hostName)
-	//if err := editor.OpenByVim(host.Path); err != nil {
-	//	display.ErrExit(err)
-	//}
-
-	if err := editor.OpenByMicro(host.Path); err != nil {
+	if err := editor.OpenByVim(host.Path); err != nil {
 		display.ErrExit(err)
 	}
 }
 
-func (m *manager) ApplyGroup(group string) {
+func (m *manager) ApplyGroup(group string, simulate bool) {
 	hosts, exist := m.Groups[group]
 	if !exist {
 		display.ErrExit(fmt.Errorf("not found group '%s'", group))
 		return
 	}
+	hosts = append(hosts, m.BaseHost)
 	combinedHostContent := m.combineHosts(hosts, "# Auto generated from group "+group)
-	combinedHost := m.fullPath(_const.TmpCombinedHost)
+
+	// just print
+	if simulate {
+		fmt.Println(string(combinedHostContent))
+		return
+	}
+
+	// write to tmp file
+	combinedHost := m.fullFilePath(conf.TmpCombinedHost)
 	if err := ioutil.WriteFile(combinedHost, combinedHostContent, 0664); err != nil {
 		display.ErrExit(err)
 	}
-	if err := os.Rename(combinedHost, sysHost); err != nil {
+
+	// replace system host
+	if err := os.Rename(combinedHost, SysHost); err != nil {
 		display.ErrExit(err)
 	}
 	fmt.Printf("applied group '%s' to system host:\n", group)
+
+	// display system host
 	m.PrintSysHost(10)
 }
 
 func (m *manager) PrintSysHost(max int) {
-	host, err := os.Open(sysHost)
+	host, err := os.Open(SysHost)
 	if err != nil {
-		panic(err)
+		display.Panic("can not read system host file", err)
 	}
 	defer host.Close()
 	scanner := bufio.NewScanner(host)
@@ -237,6 +257,10 @@ func (m *manager) PrintSysHost(max int) {
 }
 
 func (m *manager) host(hostName string) (*Host, bool) {
+	if hostName == m.BaseHost.Name {
+		return m.BaseHost, true
+	}
+
 	host, exist := m.Hosts[hostName]
 	if !exist {
 		display.ErrExit(fmt.Errorf("host file '%s' is not existed\n", hostName))
@@ -246,6 +270,10 @@ func (m *manager) host(hostName string) (*Host, bool) {
 }
 
 func (m *manager) mustHost(hostName string) *Host {
+	if hostName == m.BaseHost.Name {
+		return m.BaseHost
+	}
+
 	host, exist := m.Hosts[hostName]
 	if !exist {
 		display.ErrExit(fmt.Errorf("host file '%s' is not existed\n", hostName))
@@ -280,16 +308,19 @@ func (m *manager) printGroups() {
 }
 
 func (m *manager) hostName(name string, groups []string) string {
-	var sb strings.Builder
-	if len(groups) > 0 {
-		sb.WriteString(strings.Join(groups, _const.SepGroup))
-		sb.WriteString(_const.SepGroup)
+	if groups == nil || len(groups) == 0 {
+		// use same name as group if no groups specified
+		groups = append(groups, name)
 	}
-	sb.WriteString(name)
-	return sb.String()
+	return strings.Join(append(groups, name), conf.SepGroupInFile)
 }
 
-func (m *manager) fullPath(fileName string) string {
+func (m *manager) groupsFromHostName(hostName string) []string {
+	groups := strings.Split(hostName, conf.SepGroupInFile)
+	return groups[:len(groups)-1]
+}
+
+func (m *manager) fullFilePath(fileName string) string {
 	return path.Join(m.BaseDir, fileName)
 }
 
@@ -301,7 +332,7 @@ func (m *manager) combineHosts(hosts []*Host, head string) []byte {
 	for _, host := range hosts {
 		file, err := os.Open(host.Path)
 		if err != nil {
-			panic(err)
+			display.Panic("can not combine host", err)
 		}
 		scanner := bufio.NewScanner(file)
 		b.WriteString("# Host section from " + host.Name + "\n")

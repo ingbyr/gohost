@@ -6,7 +6,6 @@ package display
 
 import (
 	"fmt"
-	"github.com/olekukonko/tablewriter"
 	"os"
 )
 
@@ -29,9 +28,7 @@ func ErrExit(err error) {
 	}
 }
 
-func Table(header []string, data [][]string) {
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader(header)
-	table.AppendBulk(data)
-	table.Render()
+func Panic(msg string, err error) {
+	fmt.Printf("[panic] %s\n", msg)
+	ErrExit(err)
 }

@@ -1,4 +1,4 @@
-package _const
+package conf
 
 import (
 	"os/user"
@@ -6,14 +6,15 @@ import (
 )
 
 const (
-	SepGroup        = "_"
+	SepGroupInFile  = "_"
+	SepInCmd        = ","
 	TmpCombinedHost = ".tmp_combined"
+	BaseHostFileName = "base"
 )
 
 var (
-	BaseHostFile string
 	BaseDir      string
-	ConfigFile   string
+	BaseHostFile string
 )
 
 func init() {
@@ -21,7 +22,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
 	BaseDir = filepath.Join(curr.HomeDir, ".gohost")
-	BaseHostFile = filepath.Join(BaseDir, "base")
-	ConfigFile = filepath.Join(BaseDir, ".conf")
+	BaseHostFile = filepath.Join(BaseDir, "."+BaseHostFileName)
 }

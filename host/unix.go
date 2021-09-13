@@ -7,5 +7,6 @@
 package host
 
 const (
-	sysHost = "/etc/hosts"
+	SysHost = "/etc/hosts"
+	NewLine = '\n'
 )

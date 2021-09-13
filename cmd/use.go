@@ -10,12 +10,18 @@ import (
 )
 
 var (
-	applyCmd = &cobra.Command{
+	useSimulateFlag bool
+
+	useCmd = &cobra.Command{
 		Use:   "use",
-		Short: "apply group host to system host",
+		Short: "use group host as system host",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			host.Manager.ApplyGroup(args[0])
+			host.Manager.ApplyGroup(args[0], useSimulateFlag)
 		},
 	}
 )
+
+func init() {
+	useCmd.PersistentFlags().BoolVarP(&useSimulateFlag, "simulate", "s", false, "just print host content")
+}

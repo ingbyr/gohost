@@ -6,12 +6,9 @@ import (
 	"os/exec"
 )
 
-const (
-	vim    = "vim"
-	noSwap = "-n"
-)
-
 func OpenByVim(filePath string) error {
+	const vim = "vim"
+	const noSwap = "-n"
 	if _, err := exec.LookPath(vim); err != nil {
 		return fmt.Errorf("please install vim before editing file\n")
 	}
