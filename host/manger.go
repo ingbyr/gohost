@@ -99,14 +99,20 @@ func (m *manager) PrintGroups() {
 		return
 	}
 	header := []string{"Group", "Hosts"}
+	groupNames := make([]string, 0, len(m.Groups))
+	for groupName := range m.Groups {
+		groupNames = append(groupNames, groupName)
+	}
+	sort.Strings(groupNames)
 	data := make([][]string, 0, len(m.Groups))
-	for group, hosts := range m.Groups {
+	for _, groupName := range groupNames {
+		hosts := m.Groups[groupName]
 		var hsb strings.Builder
 		for _, host := range hosts {
 			hsb.WriteString(host.Name)
 			hsb.WriteString(", ")
 		}
-		data = append(data, []string{group, hsb.String()[:hsb.Len()-2]})
+		data = append(data, []string{groupName, hsb.String()[:hsb.Len()-2]})
 	}
 	display.Table(header, data)
 }
