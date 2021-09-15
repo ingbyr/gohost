@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestNewHost(t *testing.T) {
+func TestNewHostByFileName(t *testing.T) {
 	var tests = []struct {
 		fileName string
 		want     *Host
@@ -24,10 +24,14 @@ func TestNewHost(t *testing.T) {
 	}
 	for _, test := range tests {
 		host := NewHostByFileName(test.fileName)
-		if !cmp.Equal(test.want, host, cmpopts.IgnoreFields(Host{},"FilePath")) {
+		if diff := cmp.Diff(test.want, host, cmpopts.IgnoreFields(Host{},"FilePath")); diff != "" {
 			fmt.Printf("input %v\n", test.fileName)
-			fmt.Printf("diff\n%+v\n", cmp.Diff(test.want, host, cmpopts.IgnoreFields(Host{},"FilePath")))
+			fmt.Printf("diff \n%s\n", diff)
 			t.Fail()
 		}
 	}
+}
+
+func TestManager_CreateNewHost(t *testing.T) {
+
 }

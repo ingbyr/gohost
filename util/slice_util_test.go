@@ -23,14 +23,14 @@ func TestUnion(t *testing.T) {
 
 	for _, test := range tests {
 		union, add := SliceUnion(test.input[0], test.input[1])
-		if !cmp.Equal(union, test.wantUnion) {
+		if diff := cmp.Diff(union, test.wantUnion); diff != "" {
 			fmt.Printf("input %v, %v\n", test.input[0], test.input[1])
-			fmt.Printf("diff union\n%v\n", cmp.Diff(union, test.wantUnion))
+			fmt.Printf("diff union \n%s\n", diff)
 			t.Fail()
 		}
-		if !cmp.Equal(add, test.wantAdd) {
+		if diff := cmp.Diff(add, test.wantAdd); diff != "" {
 			fmt.Printf("input %v, %v\n", test.input[0], test.input[1])
-			fmt.Printf("diff add\n%v\n", cmp.Diff(union, test.wantUnion))
+			fmt.Printf("diff add \n%s\n", diff)
 			t.Fail()
 		}
 	}
@@ -49,9 +49,9 @@ func TestSortUniqueStringSlice(t *testing.T) {
 
 	for _, test := range tests {
 		res := SortUniqueStringSlice(test.input)
-		if !cmp.Equal(res, test.want) {
+		if diff := cmp.Diff(res, test.want); diff != "" {
 			fmt.Printf("input %v\n", test.input)
-			fmt.Printf("diff %v\n", cmp.Diff(res, test.want))
+			fmt.Printf("diff %s\n", diff)
 			t.Fail()
 		}
 	}
