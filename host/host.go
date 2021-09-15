@@ -26,7 +26,6 @@ func NewHostByFileName(fileName string) *Host {
 	groups := strings.Split(fileName, conf.SepGroupInFile)
 	name := groups[len(groups)-1]
 	groups = groups[:len(groups)-1]
-	groups = util.SortUniqueStringSlice(groups)
 	return &Host{
 		Name:     name,
 		FileName: fileName,
@@ -36,9 +35,11 @@ func NewHostByFileName(fileName string) *Host {
 }
 
 func NewHostByNameGroups(hostName string, groups []string) *Host {
+	// use host name as group if no specified groups
 	if len(groups) == 0 {
 		groups = append(groups, hostName)
 	} else {
+		// sort and unique the groups
 		groups = util.SortUniqueStringSlice(groups)
 	}
 	fileName := strings.Join(append(groups, hostName), conf.SepGroupInFile)

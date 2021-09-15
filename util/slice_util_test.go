@@ -23,10 +23,14 @@ func TestUnion(t *testing.T) {
 
 	for _, test := range tests {
 		union, add := SliceUnion(test.input[0], test.input[1])
-		if !cmp.Equal(union, test.wantUnion) || !cmp.Equal(add, test.wantAdd) {
+		if !cmp.Equal(union, test.wantUnion) {
 			fmt.Printf("input %v, %v\n", test.input[0], test.input[1])
-			fmt.Printf("want union: %v, add: %v\n", test.wantUnion, test.wantAdd)
-			fmt.Printf("got union: %v, add: %v\n\n", union, add)
+			fmt.Printf("diff union\n%v\n", cmp.Diff(union, test.wantUnion))
+			t.Fail()
+		}
+		if !cmp.Equal(add, test.wantAdd) {
+			fmt.Printf("input %v, %v\n", test.input[0], test.input[1])
+			fmt.Printf("diff add\n%v\n", cmp.Diff(union, test.wantUnion))
 			t.Fail()
 		}
 	}
@@ -42,12 +46,12 @@ func TestSortUniqueStringSlice(t *testing.T) {
 		{[]string{"a", "c", "b", "d"}, []string{"a", "b", "c", "d"}},
 		{[]string{"a", "c", "a", "d", "b", "d"}, []string{"a", "b", "c", "d"}},
 	}
+
 	for _, test := range tests {
 		res := SortUniqueStringSlice(test.input)
 		if !cmp.Equal(res, test.want) {
 			fmt.Printf("input %v\n", test.input)
-			fmt.Printf("want %v\n", test.want)
-			fmt.Printf("got %v\n", res)
+			fmt.Printf("diff %v\n", cmp.Diff(res, test.want))
 			t.Fail()
 		}
 	}
