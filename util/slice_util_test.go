@@ -11,10 +11,25 @@ import (
 )
 
 func TestUnion(t *testing.T) {
-	s1 := []string{"a", "b", "c"}
-	s2 := []string{"c", "d"}
-	fmt.Println(SliceUnion(s1, s2))
-	fmt.Println(SliceUnion(s2, s1))
+	var tests = []struct {
+		input     [2][]string
+		wantUnion []string
+		wantAdd   []string
+	}{
+		{[2][]string{{"a", "b", "c"}, {"c", "d"}}, []string{"a", "b", "c", "d"}, []string{"d"}},
+		{[2][]string{{}, {"c", "d"}}, []string{"c", "d"}, []string{"c", "d"}},
+		{[2][]string{{"a", "b", "b"}, {"a"}}, []string{"a", "b", "b"}, []string{}},
+	}
+
+	for _, test := range tests {
+		union, add := SliceUnion(test.input[0], test.input[1])
+		if !cmp.Equal(union, test.wantUnion) || !cmp.Equal(add, test.wantAdd) {
+			fmt.Printf("input %v, %v\n", test.input[0], test.input[1])
+			fmt.Printf("want union: %v, add: %v\n", test.wantUnion, test.wantAdd)
+			fmt.Printf("got union: %v, add: %v\n\n", union, add)
+			t.Fail()
+		}
+	}
 }
 
 func TestSortUniqueStringSlice(t *testing.T) {
@@ -30,8 +45,9 @@ func TestSortUniqueStringSlice(t *testing.T) {
 	for _, test := range tests {
 		res := SortUniqueStringSlice(test.input)
 		if !cmp.Equal(res, test.want) {
-			fmt.Printf("%+v\n", test)
-			fmt.Printf("got %+v\n", res)
+			fmt.Printf("input %v\n", test.input)
+			fmt.Printf("want %v\n", test.want)
+			fmt.Printf("got %v\n", res)
 			t.Fail()
 		}
 	}

@@ -4,7 +4,8 @@
 
 package util
 
-func SliceSub(s1 []string, s2 []string) (res, removed []string) {
+func SliceSub(s1 []string, s2 []string) ([]string, []string) {
+	res, removed := make([]string, 0), make([]string, 0)
 	s2Cache := cache(s2)
 	for _, s := range s1 {
 		if _, exist := s2Cache[s]; exist {
@@ -13,10 +14,11 @@ func SliceSub(s1 []string, s2 []string) (res, removed []string) {
 			res = append(res, s)
 		}
 	}
-	return
+	return res, removed
 }
 
-func SliceUnion(s1 []string, s2 []string) (res []string, add []string) {
+func SliceUnion(s1 []string, s2 []string) ([]string, []string) {
+	res, add := make([]string, 0), make([]string, 0)
 	s1Cache := cache(s1)
 	for _, s1i := range s1 {
 		res = append(res, s1i)
@@ -27,7 +29,7 @@ func SliceUnion(s1 []string, s2 []string) (res []string, add []string) {
 			add = append(add, s2i)
 		}
 	}
-	return
+	return res, add
 }
 
 func SortUniqueStringSlice(arr []string) []string {
