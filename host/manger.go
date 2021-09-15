@@ -15,6 +15,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"sort"
 	"strings"
 )
 
@@ -73,10 +74,23 @@ func (m *manager) LoadHosts() {
 		if file.IsDir() || strings.HasPrefix(file.Name(), ".") {
 			continue
 		}
-		node := NewHost(file.Name(), path.Join(m.BaseDir, file.Name()))
-		m.addHost(node)
-		m.addGroup(node)
+		host := NewHost(file.Name(), path.Join(m.BaseDir, file.Name()))
+		// add host
+		m.Hosts[host.Name] = host
+		// add groups
+		for _, group := range host.Groups {
+			m.Groups[group] = append(m.Groups[group], host)
+		}
 	}
+}
+
+func (m *manager) PrintGroup(hostName string) {
+	host := m.mustHost(hostName)
+	header := []string{"Host", "Groups"}
+	data := [][]string{
+		{hostName, host.GroupsAsStr()},
+	}
+	display.Table(header, data)
 }
 
 func (m *manager) PrintGroups() {
@@ -102,20 +116,17 @@ func (m *manager) PrintHosts() {
 		fmt.Println("no host file")
 		return
 	}
-
 	header := []string{"Host", "Groups"}
+	// sort host names
 	data := make([][]string, 0, len(m.Groups))
-	for name, node := range Manager.Hosts {
-		data = append(data, []string{name, node.GroupsAsStr()})
+	hostNames := make([]string, 0, len(Manager.Hosts))
+	for hostName := range Manager.Hosts {
+		hostNames = append(hostNames, hostName)
 	}
-	display.Table(header, data)
-}
-
-func (m *manager) PrintGroup(hostName string) {
-	host := m.mustHost(hostName)
-	header := []string{"Host", "Groups"}
-	data := [][]string{
-		{hostName, host.GroupsAsStr()},
+	sort.Strings(hostNames)
+	// append display data
+	for _, hostName := range hostNames {
+		data = append(data, []string{hostName, Manager.Hosts[hostName].GroupsAsStr()})
 	}
 	display.Table(header, data)
 }
@@ -280,16 +291,6 @@ func (m *manager) mustHost(hostName string) *Host {
 		os.Exit(0)
 	}
 	return host
-}
-
-func (m *manager) addHost(host *Host) {
-	m.Hosts[host.Name] = host
-}
-
-func (m *manager) addGroup(host *Host) {
-	for _, group := range host.Groups {
-		m.Groups[group] = append(m.Groups[group], host)
-	}
 }
 
 func (m *manager) printNodes() {
