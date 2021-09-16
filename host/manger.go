@@ -11,6 +11,7 @@ import (
 	"github.com/ingbyr/gohost/conf"
 	"github.com/ingbyr/gohost/display"
 	"github.com/ingbyr/gohost/editor"
+	"github.com/ingbyr/gohost/fss"
 	"github.com/ingbyr/gohost/util"
 	"io/ioutil"
 	"os"
@@ -22,6 +23,7 @@ type manager struct {
 	BaseHost *Host
 	Hosts    map[string]*Host
 	Groups   map[string][]*Host
+	Fs       fss.HostFs
 }
 
 var Manager *manager
@@ -37,23 +39,24 @@ func init() {
 		},
 		Hosts:  map[string]*Host{},
 		Groups: map[string][]*Host{},
+		Fs:     fss.NewOsFs(),
 	}
 
 	// create base dir
-	if _, err := os.Stat(conf.BaseDir); os.IsNotExist(err) {
-		if err := os.Mkdir(conf.BaseDir, os.ModePerm); err != nil {
+	if _, err := Manager.Fs.Stat(conf.BaseDir); Manager.Fs.IsNotExist(err) {
+		if err := Manager.Fs.MkdirAll(conf.BaseDir, 0664); err != nil {
 			display.Panic("can not create dir "+conf.BaseDir, err)
 		}
 	}
 
 	// create base host file
-	if _, err := os.Stat(Manager.BaseHost.FilePath); os.IsNotExist(err) {
+	if _, err := Manager.Fs.Stat(Manager.BaseHost.FilePath); Manager.Fs.IsNotExist(err) {
 		var content bytes.Buffer
 		content.WriteString("127.0.0.1 localhost")
 		content.WriteString(NewLine)
 		content.WriteString("::1 localhost")
 		content.WriteString(NewLine)
-		if err := os.WriteFile(Manager.BaseHost.FilePath, content.Bytes(), 0644); err != nil {
+		if err := Manager.Fs.WriteFile(Manager.BaseHost.FilePath, content.Bytes(), 0644); err != nil {
 			display.Panic("can not create base host file", err)
 		}
 	}
@@ -61,7 +64,7 @@ func init() {
 }
 
 func (m *manager) LoadHosts() {
-	files, err := os.ReadDir(conf.BaseDir)
+	files, err := Manager.Fs.ReadDir(conf.BaseDir)
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to load gohost dir"))
 	}

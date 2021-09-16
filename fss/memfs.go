@@ -6,8 +6,6 @@ package fss
 
 import (
 	"bytes"
-	"errors"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -15,7 +13,9 @@ import (
 	"time"
 )
 
-var _ HostFs = NewMemFs()
+var (
+	_ HostFs = NewMemFs()
+)
 
 type MemFs struct {
 	rootDir *MemDir
@@ -24,7 +24,6 @@ type MemFs struct {
 func NewMemFs() *MemFs {
 	return &MemFs{
 		rootDir: &MemDir{
-			name: "root",
 			children: make(map[string]fs.DirEntry),
 		},
 	}
@@ -75,7 +74,7 @@ func (m *MemFs) Open(path string) (fs.File, error) {
 			return nil, &fs.PathError{
 				Op:   "open",
 				Path: path,
-				Err:  errors.New("not a directory"),
+				Err:  ErrNotDir,
 			}
 		}
 
@@ -95,7 +94,7 @@ func (m *MemFs) ReadDir(path string) ([]fs.DirEntry, error) {
 			Err:  fs.ErrInvalid,
 		}
 	}
-	dir, err := m.getDir(path)
+	dir, err := m.dir(path)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +129,7 @@ func (m *MemFs) WriteFile(path string, data []byte, perm os.FileMode) error {
 	dir := m.rootDir
 	parentPath := filepath.Dir(path)
 	if parentPath != "." {
-		dir, err = m.getDir(parentPath)
+		dir, err = m.dir(parentPath)
 		if err != nil {
 			return err
 		}
@@ -150,7 +149,7 @@ func (m *MemFs) MkdirAll(path string, perm os.FileMode) error {
 	path = validPath(path)
 	if path == "" {
 		return &fs.PathError{
-			Op:   "mkdir",
+			Op:   "MkdirAll",
 			Path: path,
 			Err:  fs.ErrInvalid,
 		}
@@ -164,14 +163,18 @@ func (m *MemFs) MkdirAll(path string, perm os.FileMode) error {
 				name:     part,
 				modTime:  time.Now(),
 				children: make(map[string]fs.DirEntry),
-				mode:     perm,
+				mode:     fs.ModeDir | perm,
 			}
 			cur.children[part] = childDir
 			cur = childDir
 		} else {
 			childDir, ok := child.(*MemDir)
 			if !ok {
-				return fmt.Errorf("%s is not directory", part)
+				return &fs.PathError{
+					Op:   "MkdirAll",
+					Path: path,
+					Err:  ErrNotDir,
+				}
 			}
 			cur = childDir
 		}
@@ -179,18 +182,63 @@ func (m *MemFs) MkdirAll(path string, perm os.FileMode) error {
 	return nil
 }
 
-// getDir path is already validated by caller
-func (m *MemFs) getDir(path string) (*MemDir, error) {
+func (m *MemFs) Stat(path string) (fs.FileInfo, error) {
+	path = validPath(path)
+	if path == "" {
+		return nil, &fs.PathError{
+			Op:   "Stat",
+			Path: path,
+			Err:  fs.ErrInvalid,
+		}
+	}
+
+	dirPath := filepath.Dir(path)
+	dir, err := m.dir(dirPath)
+	if err != nil {
+		return nil, err
+	}
+	dirEntry, ok := dir.children[filepath.Base(path)]
+	if !ok {
+		return nil, &fs.PathError{
+			Op:   "Stat",
+			Path: path,
+			Err:  fs.ErrNotExist,
+		}
+	}
+	if dirEntry.IsDir() {
+		return dirEntry.(*MemDir).Stat()
+	}
+	return dirEntry.(*MemFile).Stat()
+}
+
+func (m *MemFs) IsNotExist(err error) bool {
+	fsPathError, ok := err.(*fs.PathError)
+	if !ok {
+		return false
+	}
+	return fsPathError.Err == fs.ErrNotExist
+}
+
+// dir path is already validated by caller
+func (m *MemFs) dir(path string) (*MemDir, error) {
 	parts := strings.Split(path, "/")
 	cur := m.rootDir
 	for _, part := range parts {
 		child := cur.children[part]
 		if child == nil {
-			return nil, fmt.Errorf("%s is not exists", path)
+			return nil, &fs.PathError{
+				Op:   "dir",
+				Path: path,
+				Err:  fs.ErrNotExist,
+			}
 		}
 		childDir, ok := child.(*MemDir)
 		if !ok {
-			return nil, fmt.Errorf("%s is not directory", path)
+			return nil, &fs.PathError{
+				Op:   "dir",
+				Path: path,
+				Err:  ErrNotDir,
+			}
 		}
 		cur = childDir
 	}

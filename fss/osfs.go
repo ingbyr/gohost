@@ -9,25 +9,41 @@ import (
 	"os"
 )
 
-type DiskFs struct {
+var (
+	_ HostFs = NewOsFs()
+)
+
+type OsFs struct {
 }
 
-func (d *DiskFs) Open(path string) (fs.File, error) {
+func (o *OsFs) Stat(name string) (fs.FileInfo, error) {
+	return os.Stat(name)
+}
+
+func NewOsFs() *OsFs {
+	return &OsFs{}
+}
+
+func (o *OsFs) Open(path string) (fs.File, error) {
 	return os.Open(path)
 }
 
-func (d *DiskFs) ReadDir(path string) ([]fs.DirEntry, error) {
+func (o *OsFs) ReadDir(path string) ([]fs.DirEntry, error) {
 	return os.ReadDir(path)
 }
 
-func (d *DiskFs) ReadFile(path string) ([]byte, error) {
+func (o *OsFs) ReadFile(path string) ([]byte, error) {
 	return os.ReadFile(path)
 }
 
-func (d *DiskFs) WriteFile(path string, data []byte, perm os.FileMode) error {
+func (o *OsFs) WriteFile(path string, data []byte, perm os.FileMode) error {
 	return os.WriteFile(path, data, perm)
 }
 
-func (d *DiskFs) MkdirAll(path string, perm os.FileMode) error {
+func (o *OsFs) MkdirAll(path string, perm os.FileMode) error {
 	return os.MkdirAll(path, perm)
+}
+
+func (o *OsFs) IsNotExist(err error) bool {
+	return os.IsNotExist(err)
 }

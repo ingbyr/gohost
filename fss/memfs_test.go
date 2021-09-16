@@ -91,11 +91,11 @@ func TestMemFs_CreateDirFile(t *testing.T) {
 func TestMemFs(t *testing.T) {
 	var memFs HostFs = NewMemFs()
 	dir := "/x/y"
-	if err := memFs.MkdirAll(dir, fs.ModeDir|0644); err != nil {
+	if err := memFs.MkdirAll(dir, 0644); err != nil {
 		t.Fatal(err)
 	}
-	filePath := dir + "/name.txt"
-	fileContent := []byte("from ingbyr")
+	filePath := dir + "/name"
+	fileContent := []byte("test content")
 	if err := memFs.WriteFile(filePath, fileContent, 0664); err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +117,14 @@ func TestMemFs(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(result[:n], fileContent); diff != "" {
-		t.Error("diff", diff)
+		t.Fatalf("diff %s", diff)
 	}
 
+	if _, err := memFs.Open("/x/not_y"); !memFs.IsNotExist(err) {
+		t.Fatal("should be 'not exist' err", err)
+	}
+
+	if err := memFs.MkdirAll("/x/y/name/rush-b", 0664); err.(*fs.PathError).Err != ErrNotDir {
+		t.Fatal("should be 'not a directory' err", err)
+	}
 }
