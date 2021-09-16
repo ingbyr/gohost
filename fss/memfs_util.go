@@ -4,29 +4,22 @@
 
 package fss
 
-import "unicode/utf8"
+import "io/fs"
 
-// validPath input must start with root "/" and not contains any ".", ".."
-func validPath(path string) bool {
-	if path == "" || !utf8.ValidString(path) || path[0] != '/'{
-		return false
+// validPath path must start with root "/" and not contains any ".", ".."
+// return "mem/path"
+func validPath(path string) string {
+	invalidPath := ""
+	rootPath := "mem"
+	if path == "" || path == "." || path == ".." {
+		return invalidPath
 	}
 	if path == "/" {
-		return true
+		return rootPath
 	}
-	path = path[1:]
-	for {
-		i := 0
-		for i < len(path) && path[i] != '/' {
-			i++
-		}
-		part := path[:i]
-		if part == "" || part == "." || part == ".." {
-			return false
-		}
-		if i == len(path) {
-			return true
-		}
-		path = path[i+1:]
+	path = rootPath + path
+	if fs.ValidPath(path) {
+		return path
 	}
+	return invalidPath
 }

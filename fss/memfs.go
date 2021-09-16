@@ -28,7 +28,8 @@ func NewMemFs() *MemFs {
 }
 
 func (m *MemFs) Open(path string) (fs.File, error) {
-	if !validPath(path) {
+	path = validPath(path)
+	if path == "" {
 		return nil, &fs.PathError{
 			Op:   "open",
 			Path: path,
@@ -83,6 +84,14 @@ func (m *MemFs) Open(path string) (fs.File, error) {
 }
 
 func (m *MemFs) ReadDir(path string) ([]fs.DirEntry, error) {
+	path = validPath(path)
+	if path == "" {
+		return nil, &fs.PathError{
+			Op:   "write",
+			Path: path,
+			Err:  fs.ErrInvalid,
+		}
+	}
 	dir, err := m.getDir(path)
 	if err != nil {
 		return nil, err
@@ -105,7 +114,8 @@ func (m *MemFs) ReadFile(path string) ([]byte, error) {
 }
 
 func (m *MemFs) WriteFile(path string, data []byte, perm os.FileMode) error {
-	if !fs.ValidPath(path) {
+	path = validPath(path)
+	if path == "" {
 		return &fs.PathError{
 			Op:   "write",
 			Path: path,
@@ -133,27 +143,9 @@ func (m *MemFs) WriteFile(path string, data []byte, perm os.FileMode) error {
 	return nil
 }
 
-func (m *MemFs) getDir(path string) (*MemDir, error) {
-	parts := strings.Split(path, "/")
-
-	cur := m.rootDir
-	for _, part := range parts {
-		child := cur.children[part]
-		if child == nil {
-			return nil, fmt.Errorf("%s is not exists", path)
-		}
-		childDir, ok := child.(*MemDir)
-		if !ok {
-			return nil, fmt.Errorf("%s is not directory", path)
-		}
-		cur = childDir
-	}
-
-	return cur, nil
-}
-
 func (m *MemFs) MkdirAll(path string, perm os.FileMode) error {
-	if !validPath(path) {
+	path = validPath(path)
+	if path == "" {
 		return &fs.PathError{
 			Op:   "mkdir",
 			Path: path,
@@ -182,4 +174,23 @@ func (m *MemFs) MkdirAll(path string, perm os.FileMode) error {
 		}
 	}
 	return nil
+}
+
+// getDir path is already validated by caller
+func (m *MemFs) getDir(path string) (*MemDir, error) {
+	parts := strings.Split(path, "/")
+	cur := m.rootDir
+	for _, part := range parts {
+		child := cur.children[part]
+		if child == nil {
+			return nil, fmt.Errorf("%s is not exists", path)
+		}
+		childDir, ok := child.(*MemDir)
+		if !ok {
+			return nil, fmt.Errorf("%s is not directory", path)
+		}
+		cur = childDir
+	}
+
+	return cur, nil
 }

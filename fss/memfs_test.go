@@ -10,35 +10,60 @@ import (
 	"testing"
 )
 
+func TestAssertHostFs(t *testing.T) {
+	var _ HostFs = NewMemFs()
+}
+
 func TestMemFsUtil_ValidatePath(t *testing.T) {
 	var tests = []struct{
-		input string
-		want  bool
+		path string
+		want string
 	} {
-		{"", false},
-		{"./", false},
-		{"..", false},
-		{"/", true},
-		{"/a/bb/ccc/d", true},
-		{"/a/bbb/ccc/", false},
-		{"/a/bb/ccc/./d", false},
-		{"/a/bbb/../ccc", false},
+		{"", ""},
+		{"./", ""},
+		{"..", ""},
+		{"/", "mem"},
+		{"/a/bb/ccc/d","mem/a/bb/ccc/d"},
+		{"/a/bbb/ccc/", ""},
+		{"/a/bb/ccc/./d", ""},
+		{"/a/bbb/../ccc", ""},
 	}
 
 	for _, test := range tests {
-		if diff := cmp.Diff(test.want, validPath(test.input)); diff != "" {
-			t.Fatalf("\n input %s\n diff: %s", test.input, diff)
+		if diff := cmp.Diff(test.want, validPath(test.path)); diff != "" {
+			t.Fatalf("\n path %s\n diff: %s", test.path, diff)
+		}
+	}
+}
+
+func TestMemFs_ReadDir(t *testing.T) {
+	var memFs HostFs = NewMemFs()
+	dirs := []string {
+		"/d1/d11",
+		"/d1/d12/d111",
+		"/d2",
+	}
+	for _, dir := range dirs {
+		if err := memFs.MkdirAll(dir, fs.ModeDir | 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if dirs, err := memFs.ReadDir("/d1"); err != nil {
+		t.Fatal(err)
+	} else {
+		for _, dir := range dirs {
+			t.Log(dir.Name(), dir.IsDir())
 		}
 	}
 }
 
 func TestMemFs(t *testing.T) {
-	memFs := NewMemFs()
+	var memFs HostFs = NewMemFs()
 	dir := "/x/y"
 	if err := memFs.MkdirAll(dir, fs.ModeDir | 0644); err != nil {
 		t.Fatal(err)
 	}
-	filePath := "x/y/name.txt"
+	filePath := dir + "/name.txt"
 	fileContent := []byte("from ingbyr")
 	if err := memFs.WriteFile(filePath, fileContent, 0664); err != nil {
 		t.Fatal(err)
@@ -66,6 +91,12 @@ func TestMemFs(t *testing.T) {
 		t.Error("diff", diff)
 	}
 
+	if dirs, err := memFs.ReadDir("/"); err != nil {
+		t.Fatal(err)
+	} else {
+		for _, dir := range dirs {
+			t.Log(dir.Name(), dir.IsDir())
+		}
+	}
 
-	t.Log(memFs.ReadDir(""))
 }
