@@ -5,7 +5,6 @@
 package host
 
 import (
-	"fmt"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"testing"
@@ -25,8 +24,8 @@ func TestNewHostByFileName(t *testing.T) {
 	for _, test := range tests {
 		host := NewHostByFileName(test.fileName)
 		if diff := cmp.Diff(test.want, host, cmpopts.IgnoreFields(Host{},"FilePath")); diff != "" {
-			fmt.Printf("input %v\n", test.fileName)
-			fmt.Printf("diff \n%s\n", diff)
+			t.Logf("input %v\n", test.fileName)
+			t.Logf("diff \n%s\n", diff)
 			t.Fail()
 		}
 	}
