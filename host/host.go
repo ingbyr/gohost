@@ -6,13 +6,15 @@ package host
 
 import (
 	"github.com/ingbyr/gohost/conf"
+	"github.com/ingbyr/gohost/util"
+	"path"
 	"strings"
 )
 
 type Host struct {
 	Name     string
 	FileName string
-	Path     string
+	FilePath string
 	Groups   []string
 }
 
@@ -20,16 +22,31 @@ func (h *Host) GroupsAsStr() string {
 	return strings.Join(h.Groups, ", ")
 }
 
-func NewHost(fileName string, path string) *Host {
+func NewHostByFileName(fileName string) *Host {
 	groups := strings.Split(fileName, conf.SepGroupInFile)
 	name := groups[len(groups)-1]
-	if len(groups) > 1 {
-		groups = groups[:len(groups)-1]
-	}
+	groups = groups[:len(groups)-1]
 	return &Host{
 		Name:     name,
 		FileName: fileName,
-		Path:     path,
+		FilePath: path.Join(conf.BaseDir, fileName),
+		Groups:   groups,
+	}
+}
+
+func NewHostByNameGroups(hostName string, groups []string) *Host {
+	// use host name as group if no specified groups
+	if len(groups) == 0 {
+		groups = append(groups, hostName)
+	} else {
+		// sort and unique the groups
+		groups = util.SortUniqueStringSlice(groups)
+	}
+	fileName := strings.Join(append(groups, hostName), conf.SepGroupInFile)
+	return &Host{
+		Name:     hostName,
+		FileName: fileName,
+		FilePath: path.Join(conf.BaseDir, fileName),
 		Groups:   groups,
 	}
 }

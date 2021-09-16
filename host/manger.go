@@ -14,12 +14,11 @@ import (
 	"github.com/ingbyr/gohost/util"
 	"io/ioutil"
 	"os"
-	"path"
+	"sort"
 	"strings"
 )
 
 type manager struct {
-	BaseDir  string
 	BaseHost *Host
 	Hosts    map[string]*Host
 	Groups   map[string][]*Host
@@ -30,11 +29,10 @@ var Manager *manager
 func init() {
 	// init manager
 	Manager = &manager{
-		BaseDir: conf.BaseDir,
 		BaseHost: &Host{
 			Name:     conf.BaseHostFileName,
 			FileName: conf.BaseHostFileName,
-			Path:     conf.BaseHostFile,
+			FilePath: conf.BaseHostFile,
 			Groups:   nil,
 		},
 		Hosts:  map[string]*Host{},
@@ -42,20 +40,20 @@ func init() {
 	}
 
 	// create base dir
-	if _, err := os.Stat(Manager.BaseDir); os.IsNotExist(err) {
-		if err := os.Mkdir(Manager.BaseDir, os.ModePerm); err != nil {
-			display.Panic("can not create dir "+Manager.BaseDir, err)
+	if _, err := os.Stat(conf.BaseDir); os.IsNotExist(err) {
+		if err := os.Mkdir(conf.BaseDir, os.ModePerm); err != nil {
+			display.Panic("can not create dir "+conf.BaseDir, err)
 		}
 	}
 
 	// create base host file
-	if _, err := os.Stat(Manager.BaseHost.Path); os.IsNotExist(err) {
+	if _, err := os.Stat(Manager.BaseHost.FilePath); os.IsNotExist(err) {
 		var content bytes.Buffer
 		content.WriteString("127.0.0.1 localhost")
-		content.WriteByte(NewLine)
+		content.WriteString(NewLine)
 		content.WriteString("::1 localhost")
-		content.WriteByte(NewLine)
-		if err := os.WriteFile(Manager.BaseHost.Path, content.Bytes(), 0644); err != nil {
+		content.WriteString(NewLine)
+		if err := os.WriteFile(Manager.BaseHost.FilePath, content.Bytes(), 0644); err != nil {
 			display.Panic("can not create base host file", err)
 		}
 	}
@@ -63,7 +61,7 @@ func init() {
 }
 
 func (m *manager) LoadHosts() {
-	files, err := ioutil.ReadDir(m.BaseDir)
+	files, err := os.ReadDir(conf.BaseDir)
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to load gohost dir"))
 	}
@@ -73,42 +71,14 @@ func (m *manager) LoadHosts() {
 		if file.IsDir() || strings.HasPrefix(file.Name(), ".") {
 			continue
 		}
-		node := NewHost(file.Name(), path.Join(m.BaseDir, file.Name()))
-		m.addHost(node)
-		m.addGroup(node)
-	}
-}
-
-func (m *manager) PrintGroups() {
-	if len(m.Groups) == 0 {
-		fmt.Println("no host group")
-		return
-	}
-	header := []string{"Group", "Hosts"}
-	data := make([][]string, 0, len(m.Groups))
-	for group, hosts := range m.Groups {
-		var hsb strings.Builder
-		for _, host := range hosts {
-			hsb.WriteString(host.Name)
-			hsb.WriteString(", ")
+		host := NewHostByFileName(file.Name())
+		// add host
+		m.Hosts[host.Name] = host
+		// add groups
+		for _, group := range host.Groups {
+			m.Groups[group] = append(m.Groups[group], host)
 		}
-		data = append(data, []string{group, hsb.String()[:hsb.Len()-2]})
 	}
-	display.Table(header, data)
-}
-
-func (m *manager) PrintHosts() {
-	if len(Manager.Hosts) == 0 {
-		fmt.Println("no host file")
-		return
-	}
-
-	header := []string{"Host", "Groups"}
-	data := make([][]string, 0, len(m.Groups))
-	for name, node := range Manager.Hosts {
-		data = append(data, []string{name, node.GroupsAsStr()})
-	}
-	display.Table(header, data)
 }
 
 func (m *manager) PrintGroup(hostName string) {
@@ -120,41 +90,86 @@ func (m *manager) PrintGroup(hostName string) {
 	display.Table(header, data)
 }
 
+func (m *manager) PrintGroups() {
+	if len(m.Groups) == 0 {
+		fmt.Println("no host group")
+		return
+	}
+	header := []string{"Group", "Hosts"}
+	groupNames := make([]string, 0, len(m.Groups))
+	for groupName := range m.Groups {
+		groupNames = append(groupNames, groupName)
+	}
+	sort.Strings(groupNames)
+	data := make([][]string, 0, len(m.Groups))
+	for _, groupName := range groupNames {
+		hosts := m.Groups[groupName]
+		var hsb strings.Builder
+		for _, host := range hosts {
+			hsb.WriteString(host.Name)
+			hsb.WriteString(", ")
+		}
+		data = append(data, []string{groupName, hsb.String()[:hsb.Len()-2]})
+	}
+	display.Table(header, data)
+}
+
+func (m *manager) PrintHosts() {
+	if len(Manager.Hosts) == 0 {
+		fmt.Println("no host file")
+		return
+	}
+	header := []string{"Host", "Groups"}
+	// sort host names
+	data := make([][]string, 0, len(m.Groups))
+	hostNames := make([]string, 0, len(Manager.Hosts))
+	for hostName := range Manager.Hosts {
+		hostNames = append(hostNames, hostName)
+	}
+	sort.Strings(hostNames)
+	// append display data
+	for _, hostName := range hostNames {
+		data = append(data, []string{hostName, Manager.Hosts[hostName].GroupsAsStr()})
+	}
+	display.Table(header, data)
+}
+
 func (m *manager) DeleteGroups(delGroups []string) {
 	deleted := make([]string, 0)
 	for _, delGroup := range delGroups {
 		if hosts, exist := m.Groups[delGroup]; exist {
 			// delete hosts which belongs to delGroup
 			for _, host := range hosts {
-				_ = os.Remove(host.Path)
+				_ = os.Remove(host.FilePath)
 			}
 			deleted = append(deleted, delGroup)
 		}
 	}
-	fmt.Printf("deleted group %s\n", strings.Join(deleted, ","))
+	fmt.Printf("deleted group [%s]\n", strings.Join(deleted, ","))
 }
 
 func (m *manager) DeleteHostGroups(hostName string, delGroups []string) {
 	host := m.mustHost(hostName)
 	newGroups, removedGroups := util.SliceSub(host.Groups, delGroups)
-	hostName = m.hostName(hostName, newGroups)
-	err := os.Rename(host.Path, m.fullFilePath(hostName))
+	newHost := NewHostByNameGroups(hostName, newGroups)
+	err := os.Rename(host.FilePath, newHost.FilePath)
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to delete groups"))
 	}
-	host.Groups = m.groupsFromHostName(hostName)
-	fmt.Printf("removed groups '%s'\n", strings.Join(removedGroups, ", "))
+	m.Hosts[newHost.Name] = newHost
+	fmt.Printf("removed groups [%s]\n", strings.Join(removedGroups, ", "))
 }
 
 func (m *manager) AddGroup(hostName string, groups []string) {
 	host := m.mustHost(hostName)
 	newGroups, addGroups := util.SliceUnion(host.Groups, groups)
-	err := os.Rename(host.Path, m.fullFilePath(m.hostName(hostName, newGroups)))
+	newHost := NewHostByNameGroups(hostName, newGroups)
+	err := os.Rename(host.FilePath, newHost.FilePath)
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to delete groups"))
 	}
-	host.Groups = newGroups
-	fmt.Printf("added groups '%s'\n", strings.Join(addGroups, ", "))
+	m.Hosts[newHost.Name] = newHost
+	fmt.Printf("added groups [%s]\n", strings.Join(addGroups, ", "))
 }
 
 func (m *manager) CreateNewHost(name string, groups []string) {
@@ -164,10 +179,10 @@ func (m *manager) CreateNewHost(name string, groups []string) {
 	if _, exist := m.Hosts[name]; exist {
 		display.ErrExit(fmt.Errorf("host file '%s' already exists\n", name))
 	}
-	filePath := m.fullFilePath(m.hostName(name, groups))
-	err := editor.OpenByVim(filePath)
+	host := NewHostByNameGroups(name, groups)
+	err := editor.OpenByVim(host.FilePath)
 	if err != nil {
-		fmt.Printf("failed to create file '%s'\n", filePath)
+		fmt.Printf("failed to create file '%s'\n", host.FilePath)
 	}
 }
 
@@ -175,7 +190,7 @@ func (m *manager) DeleteHosts(hostNames []string) {
 	deleted := make([]string, 0)
 	for _, hostName := range hostNames {
 		if host, exist := m.Hosts[hostName]; exist {
-			err := os.Remove(host.Path)
+			err := os.Remove(host.FilePath)
 			if err != nil {
 				display.ErrExit(err)
 				continue
@@ -183,7 +198,7 @@ func (m *manager) DeleteHosts(hostNames []string) {
 			deleted = append(deleted, host.Name)
 		}
 	}
-	fmt.Printf("deleted host %s\n", strings.Join(deleted, ","))
+	fmt.Printf("deleted host [%s]\n", strings.Join(deleted, ","))
 }
 
 func (m *manager) ChangeHostName(hostName string, newHostName string) {
@@ -191,8 +206,8 @@ func (m *manager) ChangeHostName(hostName string, newHostName string) {
 		display.ErrExit(fmt.Errorf("can not change base host file name"))
 	}
 	h := m.mustHost(hostName)
-	_newHostName := m.hostName(newHostName, h.Groups)
-	if err := os.Rename(h.Path, m.fullFilePath(_newHostName)); err != nil {
+	newHost := NewHostByNameGroups(newHostName, h.Groups)
+	if err := os.Rename(h.FilePath, newHost.FilePath); err != nil {
 		display.ErrExit(err)
 	}
 	fmt.Printf("renamed '%s' to '%s'\n", h.Name, newHostName)
@@ -200,7 +215,7 @@ func (m *manager) ChangeHostName(hostName string, newHostName string) {
 
 func (m *manager) EditHostFile(hostName string) {
 	host := m.mustHost(hostName)
-	if err := editor.OpenByVim(host.Path); err != nil {
+	if err := editor.OpenByVim(host.FilePath); err != nil {
 		display.ErrExit(err)
 	}
 }
@@ -221,13 +236,13 @@ func (m *manager) ApplyGroup(group string, simulate bool) {
 	}
 
 	// write to tmp file
-	combinedHost := m.fullFilePath(conf.TmpCombinedHost)
-	if err := ioutil.WriteFile(combinedHost, combinedHostContent, 0664); err != nil {
+	combinedHost := NewHostByNameGroups(conf.TmpCombinedHost, nil)
+	if err := ioutil.WriteFile(combinedHost.FilePath, combinedHostContent, 0664); err != nil {
 		display.ErrExit(err)
 	}
 
 	// replace system host
-	if err := os.Rename(combinedHost, SysHost); err != nil {
+	if err := os.Rename(combinedHost.FilePath, SysHost); err != nil {
 		display.ErrExit(err)
 	}
 	fmt.Printf("applied group '%s' to system host:\n", group)
@@ -260,7 +275,6 @@ func (m *manager) host(hostName string) (*Host, bool) {
 	if hostName == m.BaseHost.Name {
 		return m.BaseHost, true
 	}
-
 	host, exist := m.Hosts[hostName]
 	if !exist {
 		display.ErrExit(fmt.Errorf("host file '%s' is not existed\n", hostName))
@@ -273,23 +287,12 @@ func (m *manager) mustHost(hostName string) *Host {
 	if hostName == m.BaseHost.Name {
 		return m.BaseHost
 	}
-
 	host, exist := m.Hosts[hostName]
 	if !exist {
 		display.ErrExit(fmt.Errorf("host file '%s' is not existed\n", hostName))
 		os.Exit(0)
 	}
 	return host
-}
-
-func (m *manager) addHost(host *Host) {
-	m.Hosts[host.Name] = host
-}
-
-func (m *manager) addGroup(host *Host) {
-	for _, group := range host.Groups {
-		m.Groups[group] = append(m.Groups[group], host)
-	}
 }
 
 func (m *manager) printNodes() {
@@ -307,40 +310,22 @@ func (m *manager) printGroups() {
 	}
 }
 
-func (m *manager) hostName(name string, groups []string) string {
-	if groups == nil || len(groups) == 0 {
-		// use same name as group if no groups specified
-		groups = append(groups, name)
-	}
-	return strings.Join(append(groups, name), conf.SepGroupInFile)
-}
-
-func (m *manager) groupsFromHostName(hostName string) []string {
-	groups := strings.Split(hostName, conf.SepGroupInFile)
-	return groups[:len(groups)-1]
-}
-
-func (m *manager) fullFilePath(fileName string) string {
-	return path.Join(m.BaseDir, fileName)
-}
-
 func (m *manager) combineHosts(hosts []*Host, head string) []byte {
 	var b bytes.Buffer
 	b.WriteString(head)
-	b.WriteByte('\n')
-	b.WriteByte('\n')
+	b.WriteString(NewLine + NewLine)
 	for _, host := range hosts {
-		file, err := os.Open(host.Path)
+		file, err := os.Open(host.FilePath)
 		if err != nil {
 			display.Panic("can not combine host", err)
 		}
 		scanner := bufio.NewScanner(file)
-		b.WriteString("# Host section from " + host.Name + "\n")
+		b.WriteString("# Host section from " + host.Name + NewLine)
 		for scanner.Scan() {
 			b.Write(scanner.Bytes())
-			b.WriteByte('\n')
+			b.WriteString(NewLine)
 		}
-		b.WriteByte('\n')
+		b.WriteString(NewLine)
 		_ = file.Close()
 	}
 	return b.Bytes()

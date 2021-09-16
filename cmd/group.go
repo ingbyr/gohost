@@ -22,11 +22,11 @@ var (
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			hostName := args[0]
-			if groupDel != "" {
-				host.Manager.DeleteHostGroups(hostName, strings.Split(groupDel, conf.SepInCmd))
-			}
 			if groupAdd != "" {
 				host.Manager.AddGroup(hostName, strings.Split(groupAdd, conf.SepInCmd))
+			}
+			if groupDel != "" {
+				host.Manager.DeleteHostGroups(hostName, strings.Split(groupDel, conf.SepInCmd))
 			}
 			if groupList {
 				host.Manager.PrintGroup(hostName)
