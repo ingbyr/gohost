@@ -61,7 +61,7 @@ func init() {
 }
 
 func (m *manager) LoadHosts() {
-	files, err := ioutil.ReadDir(conf.BaseDir)
+	files, err := os.ReadDir(conf.BaseDir)
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to load gohost dir"))
 	}
