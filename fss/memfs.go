@@ -15,6 +15,8 @@ import (
 	"time"
 )
 
+var _ HostFs = NewMemFs()
+
 type MemFs struct {
 	rootDir *MemDir
 }
@@ -22,6 +24,7 @@ type MemFs struct {
 func NewMemFs() *MemFs {
 	return &MemFs{
 		rootDir: &MemDir{
+			name: "root",
 			children: make(map[string]fs.DirEntry),
 		},
 	}
