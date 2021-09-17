@@ -6,7 +6,6 @@ package myfs
 
 import (
 	"bytes"
-	"errors"
 	"io/fs"
 	"os"
 	"time"
@@ -22,14 +21,14 @@ type MemFile struct {
 
 func (m *MemFile) Stat() (fs.FileInfo, error) {
 	if m.closed {
-		return nil, errors.New("getFile closed")
+		return nil, ErrClosedFile
 	}
 	return m, nil
 }
 
 func (m *MemFile) Read(bytes []byte) (int, error) {
 	if m.closed {
-		return 0, errors.New("getFile closed")
+		return 0, ErrClosedFile
 	}
 	return m.content.Read(bytes)
 }

@@ -12,9 +12,11 @@ import (
 
 var (
 	Perm664        = fs.FileMode(0644)
+
 	ErrNotDir      = errors.New("not a directory")
 	ErrIsDir       = errors.New("is a directory")
 	ErrNotEmptyDir = errors.New("not an empty directory")
+	ErrClosedFile  = errors.New("file closed")
 )
 
 type HostFs interface {
