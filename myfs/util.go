@@ -2,14 +2,16 @@
  @Author: ingbyr
 */
 
-package fss
+package myfs
 
 import "io/fs"
 
 // validPath path must start with root "/" and not contains any ".", ".."
 // return "mem/path"
+
+const invalidPath = ""
+
 func validPath(path string) string {
-	invalidPath := ""
 	rootPath := "mem"
 	if path == "" || path == "." || path == ".." {
 		return invalidPath

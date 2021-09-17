@@ -11,19 +11,18 @@ import (
 	"github.com/ingbyr/gohost/conf"
 	"github.com/ingbyr/gohost/display"
 	"github.com/ingbyr/gohost/editor"
-	"github.com/ingbyr/gohost/fss"
+	"github.com/ingbyr/gohost/myfs"
 	"github.com/ingbyr/gohost/util"
 	"io/ioutil"
-	"os"
 	"sort"
 	"strings"
 )
 
 type manager struct {
 	baseHost *Host
-	hosts  map[string]*Host
+	hosts    map[string]*Host
 	groups map[string][]*Host
-	fs     fss.HostFs
+	fs     myfs.HostFs
 }
 
 var M *manager
@@ -39,12 +38,12 @@ func init() {
 		},
 		hosts:  map[string]*Host{},
 		groups: map[string][]*Host{},
-		fs:     fss.NewOsFs(),
+		fs:     myfs.NewOsFs(),
 	}
 
 	// create base dir
 	if _, err := M.fs.Stat(conf.BaseDir); M.fs.IsNotExist(err) {
-		if err := M.fs.MkdirAll(conf.BaseDir, fss.PermNormal); err != nil {
+		if err := M.fs.MkdirAll(conf.BaseDir, myfs.Perm664); err != nil {
 			display.Panic("can not create dir "+conf.BaseDir, err)
 		}
 	}
@@ -143,7 +142,7 @@ func (m *manager) DeleteGroups(delGroups []string) {
 		if hosts, exist := m.groups[delGroup]; exist {
 			// delete hosts which belongs to delGroup
 			for _, host := range hosts {
-				_ = os.Remove(host.FilePath)
+				_ = M.fs.Remove(host.FilePath)
 			}
 			deleted = append(deleted, delGroup)
 		}
@@ -155,7 +154,7 @@ func (m *manager) DeleteHostGroups(hostName string, delGroups []string) {
 	host := m.mustHost(hostName)
 	newGroups, removedGroups := util.SliceSub(host.Groups, delGroups)
 	newHost := NewHostByNameGroups(hostName, newGroups)
-	err := os.Rename(host.FilePath, newHost.FilePath)
+	err := M.fs.Rename(host.FilePath, newHost.FilePath)
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to delete groups"))
 	}
@@ -167,7 +166,7 @@ func (m *manager) AddGroup(hostName string, groups []string) {
 	host := m.mustHost(hostName)
 	newGroups, addGroups := util.SliceUnion(host.Groups, groups)
 	newHost := NewHostByNameGroups(hostName, newGroups)
-	err := os.Rename(host.FilePath, newHost.FilePath)
+	err := M.fs.Rename(host.FilePath, newHost.FilePath)
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to delete groups"))
 	}
@@ -193,7 +192,7 @@ func (m *manager) DeleteHosts(hostNames []string) {
 	deleted := make([]string, 0)
 	for _, hostName := range hostNames {
 		if host, exist := m.hosts[hostName]; exist {
-			err := os.Remove(host.FilePath)
+			err := M.fs.Remove(host.FilePath)
 			if err != nil {
 				display.ErrExit(err)
 				continue
@@ -210,7 +209,7 @@ func (m *manager) ChangeHostName(hostName string, newHostName string) {
 	}
 	h := m.mustHost(hostName)
 	newHost := NewHostByNameGroups(newHostName, h.Groups)
-	if err := os.Rename(h.FilePath, newHost.FilePath); err != nil {
+	if err := M.fs.Rename(h.FilePath, newHost.FilePath); err != nil {
 		display.ErrExit(err)
 	}
 	fmt.Printf("renamed '%s' to '%s'\n", h.Name, newHostName)
@@ -245,7 +244,7 @@ func (m *manager) ApplyGroup(group string, simulate bool) {
 	}
 
 	// replace system host
-	if err := os.Rename(combinedHost.FilePath, SysHost); err != nil {
+	if err := M.fs.Rename(combinedHost.FilePath, SysHost); err != nil {
 		display.ErrExit(err)
 	}
 	fmt.Printf("applied group '%s' to system host:\n", group)
@@ -255,7 +254,7 @@ func (m *manager) ApplyGroup(group string, simulate bool) {
 }
 
 func (m *manager) PrintSysHost(max int) {
-	host, err := os.Open(SysHost)
+	host, err := M.fs.Open(SysHost)
 	if err != nil {
 		display.Panic("can not read system host file", err)
 	}
@@ -293,7 +292,6 @@ func (m *manager) mustHost(hostName string) *Host {
 	host, exist := m.hosts[hostName]
 	if !exist {
 		display.ErrExit(fmt.Errorf("host file '%s' is not existed\n", hostName))
-		os.Exit(0)
 	}
 	return host
 }
@@ -318,7 +316,7 @@ func (m *manager) combineHosts(hosts []*Host, head string) []byte {
 	b.WriteString(head)
 	b.WriteString(NewLine + NewLine)
 	for _, host := range hosts {
-		file, err := os.Open(host.FilePath)
+		file, err := M.fs.Open(host.FilePath)
 		if err != nil {
 			display.Panic("can not combine host", err)
 		}

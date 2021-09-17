@@ -2,7 +2,7 @@
  @Author: ingbyr
 */
 
-package fss
+package myfs
 
 import (
 	"errors"
@@ -14,8 +14,6 @@ type MemDir struct {
 	name string
 	modTime time.Time
 	children map[string]fs.DirEntry
-	// idx file index in current dir
-	idx int
 	mode fs.FileMode
 }
 
@@ -46,23 +44,21 @@ func (m *MemDir) ReadDir(n int) ([]fs.DirEntry, error) {
 		n = totalEntry
 	}
 
-	dirEntries := make([]fs.DirEntry, 0, n)
-	for i := m.idx; i < n && i < totalEntry; i++ {
+	entries := make([]fs.DirEntry, 0, n)
+	for i := 0; i < n && i < totalEntry; i++ {
 		name := names[i]
 		child := m.children[name]
 
 		f, isFile := child.(*MemFile)
 		if isFile {
-			dirEntries = append(dirEntries, f)
+			entries = append(entries, f)
 		} else {
 			dirEntry := child.(*MemDir)
-			dirEntries = append(dirEntries, dirEntry)
+			entries = append(entries, dirEntry)
 		}
-
-		m.idx = i
 	}
 
-	return dirEntries, nil
+	return entries, nil
 }
 
 func (m *MemDir) Name() string {

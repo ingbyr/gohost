@@ -2,7 +2,7 @@
  @Author: ingbyr
 */
 
-package fss
+package myfs
 
 import (
 	"bytes"

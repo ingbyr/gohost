@@ -2,7 +2,7 @@
  @Author: ingbyr
 */
 
-package fss
+package myfs
 
 import (
 	"errors"
@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	PermNormal fs.FileMode = 0644
-	ErrNotDir = errors.New("not a directory")
+	Perm664   fs.FileMode = 0644
+	ErrNotDir             = errors.New("not a directory")
 )
 
 type HostFs interface {
@@ -23,4 +23,6 @@ type HostFs interface {
 	MkdirAll(path string, perm os.FileMode) error
 	Stat(name string) (fs.FileInfo, error)
 	IsNotExist(err error) bool
+    Remove(name string) error
+    Rename(oldPath, newPath string) error
 }

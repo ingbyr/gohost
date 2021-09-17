@@ -2,7 +2,7 @@
  @Author: ingbyr
 */
 
-package fss
+package myfs
 
 import (
 	"io/fs"
@@ -46,4 +46,12 @@ func (o *OsFs) MkdirAll(path string, perm os.FileMode) error {
 
 func (o *OsFs) IsNotExist(err error) bool {
 	return os.IsNotExist(err)
+}
+
+func (o *OsFs) Remove(name string) error {
+	return os.Remove(name)
+}
+
+func (o *OsFs) Rename(oldPath, newPath string) error {
+	return os.Rename(oldPath, newPath)
 }

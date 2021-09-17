@@ -2,7 +2,7 @@
  @Author: ingbyr
 */
 
-package fss
+package myfs
 
 import (
 	"bytes"
@@ -31,17 +31,12 @@ func NewMemFs() *MemFs {
 
 func (m *MemFs) Open(path string) (fs.File, error) {
 	path = validPath(path)
-	if path == "" {
+	if path == invalidPath {
 		return nil, &fs.PathError{
 			Op:   "open",
 			Path: path,
 			Err:  fs.ErrInvalid,
 		}
-	}
-
-	if path == "/" || path == "" {
-		m.rootDir.idx = 0
-		return m.rootDir, nil
 	}
 
 	cur := m.rootDir
@@ -78,7 +73,6 @@ func (m *MemFs) Open(path string) (fs.File, error) {
 			}
 		}
 
-		d.idx = 0
 		cur = d
 	}
 
@@ -87,7 +81,7 @@ func (m *MemFs) Open(path string) (fs.File, error) {
 
 func (m *MemFs) ReadDir(path string) ([]fs.DirEntry, error) {
 	path = validPath(path)
-	if path == "" {
+	if path == invalidPath {
 		return nil, &fs.PathError{
 			Op:   "write",
 			Path: path,
@@ -117,7 +111,7 @@ func (m *MemFs) ReadFile(path string) ([]byte, error) {
 
 func (m *MemFs) WriteFile(path string, data []byte, perm os.FileMode) error {
 	path = validPath(path)
-	if path == "" {
+	if path == invalidPath {
 		return &fs.PathError{
 			Op:   "write",
 			Path: path,
@@ -147,7 +141,7 @@ func (m *MemFs) WriteFile(path string, data []byte, perm os.FileMode) error {
 
 func (m *MemFs) MkdirAll(path string, perm os.FileMode) error {
 	path = validPath(path)
-	if path == "" {
+	if path == invalidPath {
 		return &fs.PathError{
 			Op:   "MkdirAll",
 			Path: path,
@@ -184,7 +178,7 @@ func (m *MemFs) MkdirAll(path string, perm os.FileMode) error {
 
 func (m *MemFs) Stat(path string) (fs.FileInfo, error) {
 	path = validPath(path)
-	if path == "" {
+	if path == invalidPath {
 		return nil, &fs.PathError{
 			Op:   "Stat",
 			Path: path,
@@ -219,6 +213,21 @@ func (m *MemFs) IsNotExist(err error) bool {
 	return fsPathError.Err == fs.ErrNotExist
 }
 
+func (m *MemFs) Remove(name string) error {
+	path := validPath(name)
+	parentPath := filepath.Dir(path)
+	dir, err := m.dir(parentPath)
+	if err != nil {
+		panic(err)
+	}
+	delete(dir.children, filepath.Base(name))
+	return err
+}
+
+func (m *MemFs) Rename(oldPath, newPath string) error {
+	panic("implement me")
+}
+
 // dir path is already validated by caller
 func (m *MemFs) dir(path string) (*MemDir, error) {
 	parts := strings.Split(path, "/")
@@ -242,6 +251,5 @@ func (m *MemFs) dir(path string) (*MemDir, error) {
 		}
 		cur = childDir
 	}
-
 	return cur, nil
 }
