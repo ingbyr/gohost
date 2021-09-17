@@ -21,8 +21,8 @@ import (
 type manager struct {
 	baseHost *Host
 	hosts    map[string]*Host
-	groups map[string][]*Host
-	fs     myfs.HostFs
+	groups   map[string][]*Host
+	fs       myfs.HostFs
 }
 
 var M *manager
@@ -38,8 +38,10 @@ func init() {
 		},
 		hosts:  map[string]*Host{},
 		groups: map[string][]*Host{},
-		fs:     myfs.NewOsFs(),
 	}
+
+	// setup fs
+	M.ChangeFs(myfs.NewOsFs())
 
 	// create base dir
 	if _, err := M.fs.Stat(conf.BaseDir); M.fs.IsNotExist(err) {
@@ -81,6 +83,10 @@ func (m *manager) LoadHosts() {
 			m.groups[group] = append(m.groups[group], host)
 		}
 	}
+}
+
+func (m *manager) ChangeFs(newFs myfs.HostFs) {
+	m.fs = newFs
 }
 
 func (m *manager) PrintGroup(hostName string) {
