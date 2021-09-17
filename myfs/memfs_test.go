@@ -120,12 +120,12 @@ func TestMemFs_WriteRead(t *testing.T) {
 		if err := memFs.MkdirAll(test.dir, Perm664); err != nil {
 			t.Fatal(err)
 		}
-		// write file
+		// write getFile
 		filePath := filepath.Join(test.dir, test.file)
 		if err := memFs.WriteFile(filePath, test.content, Perm664); err != nil {
 			t.Fatal(err)
 		}
-		// open file
+		// open getFile
 		file, err := memFs.Open(filePath)
 		if err != nil {
 			t.Fatal(err)
@@ -155,18 +155,31 @@ func TestMemFs_Remove(t *testing.T) {
 	if err := memFs.MkdirAll(dir, Perm664); err != nil {
 		t.Fatal(err)
 	}
-	if err := memFs.WriteFile(filepath.Join(dir, "c1.txt"), []byte("c1"), Perm664); err != nil {
+	if err := memFs.WriteFile(filepath.Join(dir, "c1"), []byte("c1"), Perm664); err != nil {
 		t.Fatal(err)
 	}
-	if err := memFs.WriteFile(filepath.Join(dir, "c2.txt"), []byte("c2"), Perm664); err != nil {
+	if err := memFs.WriteFile(filepath.Join(dir, "c2"), []byte("c2"), Perm664); err != nil {
 		t.Fatal(err)
 	}
+
+	// remove /a/b/c1
+	if err := memFs.Remove(filepath.Join(dir, "c1")); err != nil {
+		t.Fatal(err)
+	}
+
+	// left /a/b/c2
 	entries, _ := memFs.ReadDir(dir)
-	if err := memFs.Remove(filepath.Join(dir, "c1.txt")); err != nil {
-		t.Fatal(err)
-	}
-	entries, _ = memFs.ReadDir(dir)
-	if len(entries) != 1 || entries[0].Name() != "c2.txt" {
+	if len(entries) != 1 || entries[0].Name() != "c2" {
 		t.Fatal("error entries", entries)
+	}
+
+	// try to remove /a which has children entry
+	if err := memFs.Remove("/a"); err == nil || err.(*fs.PathError).Err != ErrNotEmptyDir {
+		t.Fatal("should bee ErrNotEmptyDir error")
+	}
+
+	// try to remove /what which has children entry
+	if err := memFs.Remove("/what"); err != nil{
+		t.Fatal("should no error here")
 	}
 }

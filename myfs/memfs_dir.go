@@ -92,3 +92,4 @@ func (m *MemDir) Type() fs.FileMode {
 func (m *MemDir) Info() (fs.FileInfo, error) {
 	return m.Stat()
 }
+

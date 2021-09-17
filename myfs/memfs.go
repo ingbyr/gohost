@@ -88,7 +88,7 @@ func (m *MemFs) ReadDir(path string) ([]fs.DirEntry, error) {
 			Err:  fs.ErrInvalid,
 		}
 	}
-	dir, err := m.dir(path)
+	dir, err := m.getDir(path)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (m *MemFs) WriteFile(path string, data []byte, perm os.FileMode) error {
 	dir := m.rootDir
 	parentPath := filepath.Dir(path)
 	if parentPath != "." {
-		dir, err = m.dir(parentPath)
+		dir, err = m.getDir(parentPath)
 		if err != nil {
 			return err
 		}
@@ -187,7 +187,7 @@ func (m *MemFs) Stat(path string) (fs.FileInfo, error) {
 	}
 
 	dirPath := filepath.Dir(path)
-	dir, err := m.dir(dirPath)
+	dir, err := m.getDir(dirPath)
 	if err != nil {
 		return nil, err
 	}
@@ -213,9 +213,9 @@ func (m *MemFs) IsNotExist(err error) bool {
 	return fsPathError.Err == fs.ErrNotExist
 }
 
-func (m *MemFs) Remove(name string) error {
-	path := validPath(name)
-	if path == invalidPath {
+func (m *MemFs) Remove(path string) error {
+	_path := validPath(path)
+	if _path == invalidPath {
 		return &fs.PathError{
 			Op:   "Remove",
 			Path: path,
@@ -223,11 +223,21 @@ func (m *MemFs) Remove(name string) error {
 		}
 	}
 
-	parentPath := filepath.Dir(path)
-	if dir, err := m.dir(parentPath); err != nil {
+	parentDir, err := m.getDir(filepath.Dir(_path))
+	if err != nil {
 		return err
-	} else {
-		delete(dir.children, filepath.Base(name))
+	}
+	name := filepath.Base(_path)
+	if entry, ok := parentDir.children[name]; ok {
+		// if target entry has children return ErrNotEmptyDir error
+		if entry.IsDir() && len(entry.(*MemDir).children) > 0 {
+			return &fs.PathError{
+				Op:   "Remove",
+				Path: path,
+				Err:  ErrNotEmptyDir,
+			}
+		}
+		delete(parentDir.children, name)
 	}
 	return nil
 }
@@ -236,28 +246,67 @@ func (m *MemFs) Rename(oldPath, newPath string) error {
 	panic("implement me")
 }
 
-// dir path is already validated by caller
-func (m *MemFs) dir(path string) (*MemDir, error) {
+// getFile path must be valid by caller
+func (m *MemFs) getFile(path string) (*MemFile, error) {
+	entry, err := m.getEntry(path)
+	if err != nil {
+		return nil, err
+	}
+	if entry.IsDir() {
+		return nil, &fs.PathError{
+			Op:   "getFile",
+			Path: path,
+			Err:  ErrIsDir,
+		}
+	}
+	return entry.(*MemFile), nil
+}
+
+// getDir path must be valid by caller
+func (m *MemFs) getDir(path string) (*MemDir, error) {
+	entry, err := m.getEntry(path)
+	if err != nil {
+		return nil, err
+	}
+	if !entry.IsDir() {
+		return nil, &fs.PathError{
+			Op:   "getDir",
+			Path: path,
+			Err:  ErrNotDir,
+		}
+	}
+	return entry.(*MemDir), nil
+}
+
+// getEntry path must be valid by caller
+func (m *MemFs) getEntry(path string) (fs.DirEntry, error) {
 	parts := strings.Split(path, "/")
-	cur := m.rootDir
-	for _, part := range parts {
-		child := cur.children[part]
-		if child == nil {
+	dir := m.rootDir
+	var targetEntry fs.DirEntry
+	parentDirLen := len(parts) - 1
+	for i, part := range parts {
+		entry := dir.children[part]
+		if entry == nil {
 			return nil, &fs.PathError{
-				Op:   "dir",
+				Op:   "getEntry",
 				Path: path,
 				Err:  fs.ErrNotExist,
 			}
 		}
-		childDir, ok := child.(*MemDir)
-		if !ok {
-			return nil, &fs.PathError{
-				Op:   "dir",
-				Path: path,
-				Err:  ErrNotDir,
+		if i < parentDirLen {
+			// getDir is in parent getDir paths
+			if !entry.IsDir() {
+				return nil, &fs.PathError{
+					Op:   "getDir",
+					Path: path,
+					Err:  ErrNotDir,
+				}
 			}
+			dir = entry.(*MemDir)
+		} else {
+			// find target
+			targetEntry = entry
 		}
-		cur = childDir
 	}
-	return cur, nil
+	return targetEntry, nil
 }
