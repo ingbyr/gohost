@@ -17,7 +17,7 @@ var (
 		Short: "use group host as system host",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			host.Manager.ApplyGroup(args[0], useSimulateFlag)
+			host.M.ApplyGroup(args[0], useSimulateFlag)
 		},
 	}
 )

@@ -15,7 +15,7 @@ var (
 		Use:   "sys",
 		Short: "display current system host",
 		Run: func(cmd *cobra.Command, args []string) {
-			host.Manager.PrintSysHost(maxLine)
+			host.M.PrintSysHost(maxLine)
 		},
 	}
 )

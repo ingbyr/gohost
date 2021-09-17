@@ -20,51 +20,51 @@ import (
 )
 
 type manager struct {
-	BaseHost *Host
-	Hosts    map[string]*Host
-	Groups   map[string][]*Host
-	Fs       fss.HostFs
+	baseHost *Host
+	hosts  map[string]*Host
+	groups map[string][]*Host
+	fs     fss.HostFs
 }
 
-var Manager *manager
+var M *manager
 
 func init() {
 	// init manager
-	Manager = &manager{
-		BaseHost: &Host{
+	M = &manager{
+		baseHost: &Host{
 			Name:     conf.BaseHostFileName,
 			FileName: conf.BaseHostFileName,
 			FilePath: conf.BaseHostFile,
 			Groups:   nil,
 		},
-		Hosts:  map[string]*Host{},
-		Groups: map[string][]*Host{},
-		Fs:     fss.NewOsFs(),
+		hosts:  map[string]*Host{},
+		groups: map[string][]*Host{},
+		fs:     fss.NewOsFs(),
 	}
 
 	// create base dir
-	if _, err := Manager.Fs.Stat(conf.BaseDir); Manager.Fs.IsNotExist(err) {
-		if err := Manager.Fs.MkdirAll(conf.BaseDir, 0664); err != nil {
+	if _, err := M.fs.Stat(conf.BaseDir); M.fs.IsNotExist(err) {
+		if err := M.fs.MkdirAll(conf.BaseDir, fss.PermNormal); err != nil {
 			display.Panic("can not create dir "+conf.BaseDir, err)
 		}
 	}
 
 	// create base host file
-	if _, err := Manager.Fs.Stat(Manager.BaseHost.FilePath); Manager.Fs.IsNotExist(err) {
+	if _, err := M.fs.Stat(M.baseHost.FilePath); M.fs.IsNotExist(err) {
 		var content bytes.Buffer
 		content.WriteString("127.0.0.1 localhost")
 		content.WriteString(NewLine)
 		content.WriteString("::1 localhost")
 		content.WriteString(NewLine)
-		if err := Manager.Fs.WriteFile(Manager.BaseHost.FilePath, content.Bytes(), 0644); err != nil {
+		if err := M.fs.WriteFile(M.baseHost.FilePath, content.Bytes(), 0644); err != nil {
 			display.Panic("can not create base host file", err)
 		}
 	}
-	Manager.LoadHosts()
+	M.LoadHosts()
 }
 
 func (m *manager) LoadHosts() {
-	files, err := Manager.Fs.ReadDir(conf.BaseDir)
+	files, err := M.fs.ReadDir(conf.BaseDir)
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to load gohost dir"))
 	}
@@ -76,17 +76,17 @@ func (m *manager) LoadHosts() {
 		}
 		host := NewHostByFileName(file.Name())
 		// add host
-		m.Hosts[host.Name] = host
+		m.hosts[host.Name] = host
 		// add groups
 		for _, group := range host.Groups {
-			m.Groups[group] = append(m.Groups[group], host)
+			m.groups[group] = append(m.groups[group], host)
 		}
 	}
 }
 
 func (m *manager) PrintGroup(hostName string) {
 	host := m.mustHost(hostName)
-	header := []string{"Host", "Groups"}
+	header := []string{"Host", "groups"}
 	data := [][]string{
 		{hostName, host.GroupsAsStr()},
 	}
@@ -94,19 +94,19 @@ func (m *manager) PrintGroup(hostName string) {
 }
 
 func (m *manager) PrintGroups() {
-	if len(m.Groups) == 0 {
+	if len(m.groups) == 0 {
 		fmt.Println("no host group")
 		return
 	}
-	header := []string{"Group", "Hosts"}
-	groupNames := make([]string, 0, len(m.Groups))
-	for groupName := range m.Groups {
+	header := []string{"Group", "hosts"}
+	groupNames := make([]string, 0, len(m.groups))
+	for groupName := range m.groups {
 		groupNames = append(groupNames, groupName)
 	}
 	sort.Strings(groupNames)
-	data := make([][]string, 0, len(m.Groups))
+	data := make([][]string, 0, len(m.groups))
 	for _, groupName := range groupNames {
-		hosts := m.Groups[groupName]
+		hosts := m.groups[groupName]
 		var hsb strings.Builder
 		for _, host := range hosts {
 			hsb.WriteString(host.Name)
@@ -118,21 +118,21 @@ func (m *manager) PrintGroups() {
 }
 
 func (m *manager) PrintHosts() {
-	if len(Manager.Hosts) == 0 {
+	if len(M.hosts) == 0 {
 		fmt.Println("no host file")
 		return
 	}
-	header := []string{"Host", "Groups"}
+	header := []string{"Host", "groups"}
 	// sort host names
-	data := make([][]string, 0, len(m.Groups))
-	hostNames := make([]string, 0, len(Manager.Hosts))
-	for hostName := range Manager.Hosts {
+	data := make([][]string, 0, len(m.groups))
+	hostNames := make([]string, 0, len(M.hosts))
+	for hostName := range M.hosts {
 		hostNames = append(hostNames, hostName)
 	}
 	sort.Strings(hostNames)
 	// append display data
 	for _, hostName := range hostNames {
-		data = append(data, []string{hostName, Manager.Hosts[hostName].GroupsAsStr()})
+		data = append(data, []string{hostName, M.hosts[hostName].GroupsAsStr()})
 	}
 	display.Table(header, data)
 }
@@ -140,7 +140,7 @@ func (m *manager) PrintHosts() {
 func (m *manager) DeleteGroups(delGroups []string) {
 	deleted := make([]string, 0)
 	for _, delGroup := range delGroups {
-		if hosts, exist := m.Groups[delGroup]; exist {
+		if hosts, exist := m.groups[delGroup]; exist {
 			// delete hosts which belongs to delGroup
 			for _, host := range hosts {
 				_ = os.Remove(host.FilePath)
@@ -159,7 +159,7 @@ func (m *manager) DeleteHostGroups(hostName string, delGroups []string) {
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to delete groups"))
 	}
-	m.Hosts[newHost.Name] = newHost
+	m.hosts[newHost.Name] = newHost
 	fmt.Printf("removed groups [%s]\n", strings.Join(removedGroups, ", "))
 }
 
@@ -171,15 +171,15 @@ func (m *manager) AddGroup(hostName string, groups []string) {
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to delete groups"))
 	}
-	m.Hosts[newHost.Name] = newHost
+	m.hosts[newHost.Name] = newHost
 	fmt.Printf("added groups [%s]\n", strings.Join(addGroups, ", "))
 }
 
 func (m *manager) CreateNewHost(name string, groups []string) {
-	if name == m.BaseHost.Name {
+	if name == m.baseHost.Name {
 		display.ErrExit(fmt.Errorf("host file '%s' already exists\n", name))
 	}
-	if _, exist := m.Hosts[name]; exist {
+	if _, exist := m.hosts[name]; exist {
 		display.ErrExit(fmt.Errorf("host file '%s' already exists\n", name))
 	}
 	host := NewHostByNameGroups(name, groups)
@@ -192,7 +192,7 @@ func (m *manager) CreateNewHost(name string, groups []string) {
 func (m *manager) DeleteHosts(hostNames []string) {
 	deleted := make([]string, 0)
 	for _, hostName := range hostNames {
-		if host, exist := m.Hosts[hostName]; exist {
+		if host, exist := m.hosts[hostName]; exist {
 			err := os.Remove(host.FilePath)
 			if err != nil {
 				display.ErrExit(err)
@@ -205,7 +205,7 @@ func (m *manager) DeleteHosts(hostNames []string) {
 }
 
 func (m *manager) ChangeHostName(hostName string, newHostName string) {
-	if hostName == m.BaseHost.Name || newHostName == m.BaseHost.Name {
+	if hostName == m.baseHost.Name || newHostName == m.baseHost.Name {
 		display.ErrExit(fmt.Errorf("can not change base host file name"))
 	}
 	h := m.mustHost(hostName)
@@ -224,12 +224,12 @@ func (m *manager) EditHostFile(hostName string) {
 }
 
 func (m *manager) ApplyGroup(group string, simulate bool) {
-	hosts, exist := m.Groups[group]
+	hosts, exist := m.groups[group]
 	if !exist {
 		display.ErrExit(fmt.Errorf("not found group '%s'", group))
 		return
 	}
-	hosts = append(hosts, m.BaseHost)
+	hosts = append(hosts, m.baseHost)
 	combinedHostContent := m.combineHosts(hosts, "# Auto generated from group "+group)
 
 	// just print
@@ -275,10 +275,10 @@ func (m *manager) PrintSysHost(max int) {
 }
 
 func (m *manager) host(hostName string) (*Host, bool) {
-	if hostName == m.BaseHost.Name {
-		return m.BaseHost, true
+	if hostName == m.baseHost.Name {
+		return m.baseHost, true
 	}
-	host, exist := m.Hosts[hostName]
+	host, exist := m.hosts[hostName]
 	if !exist {
 		display.ErrExit(fmt.Errorf("host file '%s' is not existed\n", hostName))
 		return nil, exist
@@ -287,10 +287,10 @@ func (m *manager) host(hostName string) (*Host, bool) {
 }
 
 func (m *manager) mustHost(hostName string) *Host {
-	if hostName == m.BaseHost.Name {
-		return m.BaseHost
+	if hostName == m.baseHost.Name {
+		return m.baseHost
 	}
-	host, exist := m.Hosts[hostName]
+	host, exist := m.hosts[hostName]
 	if !exist {
 		display.ErrExit(fmt.Errorf("host file '%s' is not existed\n", hostName))
 		os.Exit(0)
@@ -299,13 +299,13 @@ func (m *manager) mustHost(hostName string) *Host {
 }
 
 func (m *manager) printNodes() {
-	for name, node := range m.Hosts {
+	for name, node := range m.hosts {
 		fmt.Printf("name %s, node %+v\n", name, node)
 	}
 }
 
 func (m *manager) printGroups() {
-	for group, nodes := range m.Groups {
+	for group, nodes := range m.groups {
 		fmt.Println("group", group)
 		for _, node := range nodes {
 			fmt.Printf("node %+v\n", node)

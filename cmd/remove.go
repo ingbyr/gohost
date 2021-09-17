@@ -19,9 +19,9 @@ var (
 		Args: cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if removeGroup {
-				host.Manager.DeleteGroups(strings.Split(args[0], conf.SepInCmd))
+				host.M.DeleteGroups(strings.Split(args[0], conf.SepInCmd))
 			} else {
-				host.Manager.DeleteHosts(strings.Split(args[0], conf.SepInCmd))
+				host.M.DeleteHosts(strings.Split(args[0], conf.SepInCmd))
 			}
 		},
 	}

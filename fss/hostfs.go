@@ -11,6 +11,7 @@ import (
 )
 
 var (
+	PermNormal fs.FileMode = 0644
 	ErrNotDir = errors.New("not a directory")
 )
 

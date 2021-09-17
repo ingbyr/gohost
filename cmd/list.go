@@ -16,9 +16,9 @@ var (
 		Short: "list all group",
 		Run: func(cmd *cobra.Command, args []string) {
 			if listAll {
-				host.Manager.PrintHosts()
+				host.M.PrintHosts()
 			} else {
-				host.Manager.PrintGroups()
+				host.M.PrintGroups()
 			}
 		},
 	}

@@ -15,7 +15,7 @@ var (
 		Short: "edit one host file",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			host.Manager.EditHostFile(args[0])
+			host.M.EditHostFile(args[0])
 		},
 	}
 )
