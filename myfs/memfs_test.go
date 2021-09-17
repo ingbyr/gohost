@@ -166,7 +166,7 @@ func TestMemFs_Remove(t *testing.T) {
 		t.Fatal(err)
 	}
 	entries, _ = memFs.ReadDir(dir)
-	for _, entry := range entries {
-		t.Logf("%+v\n", entry)
+	if len(entries) != 1 || entries[0].Name() != "c2.txt" {
+		t.Fatal("error entries", entries)
 	}
 }

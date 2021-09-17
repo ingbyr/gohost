@@ -215,13 +215,21 @@ func (m *MemFs) IsNotExist(err error) bool {
 
 func (m *MemFs) Remove(name string) error {
 	path := validPath(name)
-	parentPath := filepath.Dir(path)
-	dir, err := m.dir(parentPath)
-	if err != nil {
-		panic(err)
+	if path == invalidPath {
+		return &fs.PathError{
+			Op:   "Remove",
+			Path: path,
+			Err:  fs.ErrInvalid,
+		}
 	}
-	delete(dir.children, filepath.Base(name))
-	return err
+
+	parentPath := filepath.Dir(path)
+	if dir, err := m.dir(parentPath); err != nil {
+		return err
+	} else {
+		delete(dir.children, filepath.Base(name))
+	}
+	return nil
 }
 
 func (m *MemFs) Rename(oldPath, newPath string) error {
