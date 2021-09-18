@@ -1,5 +1,7 @@
 ## gohost
 
+![gohost](https://github.com/ingbyr/gohost/actions/workflows/go.yml/badge.svg)
+
 Gohost is a simple host switcher tool supporting Linux and macOS.
 
 **To modify the system host file gohost need running in admin mode, such as `sudo gohost`.**
