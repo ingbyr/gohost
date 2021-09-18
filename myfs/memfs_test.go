@@ -37,6 +37,7 @@ func TestMemFs_Stat(t *testing.T) {
 			t.Fatal("diff", diff)
 		}
 	}
+
 }
 
 func TestMemFs_CreateDir(t *testing.T) {

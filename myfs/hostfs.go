@@ -6,6 +6,7 @@ package myfs
 
 import (
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 )
@@ -31,13 +32,12 @@ type HostFs interface {
 	Rename(oldPath, newPath string) error
 }
 
-//func PrintEntryTree(hostFs HostFs)  {
-//	err := fs.WalkDir(hostFs, rootDirPath, func(path string, entry fs.DirEntry, err error) error {
-//		fmt.Println(path)
-//		fmt.Println(entry.Name())
-//		return err
-//	})
-//	if err != nil {
-//		panic(err)
-//	}
-//}
+func printEntryTree(hfs HostFs)  {
+	err := fs.WalkDir(hfs, "/", func(path string, entry fs.DirEntry, err error) error {
+		fmt.Printf("path %s, name %s, dir %t\n", path, entry.Name(), entry.IsDir())
+		return err
+	})
+	if err != nil {
+		panic(err)
+	}
+}
