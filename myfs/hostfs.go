@@ -30,3 +30,14 @@ type HostFs interface {
 	Remove(path string) error
 	Rename(oldPath, newPath string) error
 }
+
+//func PrintEntryTree(hostFs HostFs)  {
+//	err := fs.WalkDir(hostFs, rootDirPath, func(path string, entry fs.DirEntry, err error) error {
+//		fmt.Println(path)
+//		fmt.Println(entry.Name())
+//		return err
+//	})
+//	if err != nil {
+//		panic(err)
+//	}
+//}

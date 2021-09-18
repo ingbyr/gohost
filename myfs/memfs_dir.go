@@ -7,14 +7,15 @@ package myfs
 import (
 	"errors"
 	"io/fs"
+	"sort"
 	"time"
 )
 
 type MemDir struct {
-	name string
-	modTime time.Time
+	name     string
+	modTime  time.Time
 	children map[string]fs.DirEntry
-	mode fs.FileMode
+	mode     fs.FileMode
 }
 
 func (m *MemDir) Read(p []byte) (int, error) {
@@ -57,7 +58,9 @@ func (m *MemDir) ReadDir(n int) ([]fs.DirEntry, error) {
 			entries = append(entries, dirEntry)
 		}
 	}
-
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Name() < entries[j].Name()
+	})
 	return entries, nil
 }
 
@@ -92,4 +95,3 @@ func (m *MemDir) Type() fs.FileMode {
 func (m *MemDir) Info() (fs.FileInfo, error) {
 	return m.Stat()
 }
-

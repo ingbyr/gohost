@@ -20,9 +20,6 @@ type MemFile struct {
 }
 
 func (m *MemFile) Stat() (fs.FileInfo, error) {
-	if m.closed {
-		return nil, ErrClosedFile
-	}
 	return m, nil
 }
 

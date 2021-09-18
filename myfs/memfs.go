@@ -17,6 +17,10 @@ var (
 	_ HostFs = NewMemFs()
 )
 
+const (
+	rootDirName = "mem"
+)
+
 type MemFs struct {
 	rootDir *MemDir
 }
@@ -30,8 +34,8 @@ func NewMemFs() *MemFs {
 }
 
 func (m *MemFs) Open(path string) (fs.File, error) {
-	path = validPath(path)
-	if path == invalidPath {
+	path, ok :=  m.validPath(path)
+	if !ok {
 		return nil, &fs.PathError{
 			Op:   "open",
 			Path: path,
@@ -80,8 +84,8 @@ func (m *MemFs) Open(path string) (fs.File, error) {
 }
 
 func (m *MemFs) ReadDir(path string) ([]fs.DirEntry, error) {
-	path = validPath(path)
-	if path == invalidPath {
+	path, ok :=  m.validPath(path)
+	if !ok {
 		return nil, &fs.PathError{
 			Op:   "write",
 			Path: path,
@@ -110,8 +114,8 @@ func (m *MemFs) ReadFile(path string) ([]byte, error) {
 }
 
 func (m *MemFs) WriteFile(path string, data []byte, perm os.FileMode) error {
-	path = validPath(path)
-	if path == invalidPath {
+	path, ok :=  m.validPath(path)
+	if !ok {
 		return &fs.PathError{
 			Op:   "write",
 			Path: path,
@@ -140,8 +144,8 @@ func (m *MemFs) WriteFile(path string, data []byte, perm os.FileMode) error {
 }
 
 func (m *MemFs) MkdirAll(path string, perm os.FileMode) error {
-	path = validPath(path)
-	if path == invalidPath {
+	path, ok :=  m.validPath(path)
+	if !ok {
 		return &fs.PathError{
 			Op:   "MkdirAll",
 			Path: path,
@@ -177,8 +181,8 @@ func (m *MemFs) MkdirAll(path string, perm os.FileMode) error {
 }
 
 func (m *MemFs) Stat(path string) (fs.FileInfo, error) {
-	path = validPath(path)
-	if path == invalidPath {
+	path, ok :=  m.validPath(path)
+	if !ok {
 		return nil, &fs.PathError{
 			Op:   "Stat",
 			Path: path,
@@ -214,8 +218,8 @@ func (m *MemFs) IsNotExist(err error) bool {
 }
 
 func (m *MemFs) Remove(path string) error {
-	_path := validPath(path)
-	if _path == invalidPath {
+	path, ok :=  m.validPath(path)
+	if !ok {
 		return &fs.PathError{
 			Op:   "Remove",
 			Path: path,
@@ -223,11 +227,11 @@ func (m *MemFs) Remove(path string) error {
 		}
 	}
 
-	parentDir, err := m.getDir(filepath.Dir(_path))
+	parentDir, err := m.getDir(filepath.Dir(path))
 	if err != nil {
 		return err
 	}
-	name := filepath.Base(_path)
+	name := filepath.Base(path)
 	if entry, ok := parentDir.children[name]; ok {
 		// if target entry has children return ErrNotEmptyDir error
 		if entry.IsDir() && len(entry.(*MemDir).children) > 0 {
@@ -280,6 +284,9 @@ func (m *MemFs) getDir(path string) (*MemDir, error) {
 
 // getEntry path must be valid by caller
 func (m *MemFs) getEntry(path string) (fs.DirEntry, error) {
+	if path == "." {
+		return m.rootDir, nil
+	}
 	parts := strings.Split(path, "/")
 	dir := m.rootDir
 	var targetEntry fs.DirEntry
@@ -309,4 +316,12 @@ func (m *MemFs) getEntry(path string) (fs.DirEntry, error) {
 		}
 	}
 	return targetEntry, nil
+}
+
+func (m *MemFs) validPath(path string) (string, bool) {
+	memPath := filepath.Join(rootDirName, path)
+	if fs.ValidPath(memPath) {
+		return memPath, true
+	}
+	return "", false
 }

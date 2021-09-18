@@ -5,7 +5,6 @@
 package myfs
 
 import (
-	"fmt"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/ingbyr/gohost/util"
@@ -14,29 +13,28 @@ import (
 	"testing"
 )
 
-func TestDemo(t *testing.T) {
-	diff := cmp.Diff([]string{"a", "b"}, []string{"b", "a"}, cmpopts.SortSlices(util.CmpStringSliceLess))
-	fmt.Println(diff)
-}
-
-func TestMemFsUtil_ValidatePath(t *testing.T) {
-	var tests = []struct {
-		path string
+func TestMemFs_Stat(t *testing.T) {
+	var memFs HostFs = NewMemFs()
+	var tests = []struct{
+		dir string
 		want string
-	}{
-		{"", ""},
-		{"./", ""},
-		{"..", ""},
-		{"/", "mem"},
-		{"/a/bb/ccc/d", "mem/a/bb/ccc/d"},
-		{"/a/bbb/ccc/", ""},
-		{"/a/bb/ccc/./d", ""},
-		{"/a/bbb/../ccc", ""},
+	} {
+		{"/", rootDirName},
+		{"/a/b", "b"},
+		{"/a", "a"},
+		{"/c", "c"},
 	}
 
 	for _, test := range tests {
-		if diff := cmp.Diff(test.want, validPath(test.path)); diff != "" {
-			t.Fatalf("\n path %s\n diff: %s", test.path, diff)
+		if err := memFs.MkdirAll(test.dir, Perm664); err != nil {
+			t.Fatal(err)
+		}
+		stat, err := memFs.Stat(test.dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if diff := cmp.Diff(stat.Name(), test.want); diff != "" {
+			t.Fatal("diff", diff)
 		}
 	}
 }
@@ -104,11 +102,11 @@ func TestMemFs_CreateDir(t *testing.T) {
 }
 
 func TestMemFs_WriteRead(t *testing.T) {
-	var tests =  []struct{
-		dir string
-		file string
+	var tests = []struct {
+		dir     string
+		file    string
 		content []byte
-	} {
+	}{
 		{"/", "f1", []byte("f1")},
 		{"/a/b", "f2", []byte("f2")},
 		{"/a/c", "f3", []byte("f3")},
@@ -143,7 +141,7 @@ func TestMemFs_WriteRead(t *testing.T) {
 		if diff := cmp.Diff(result[:n], test.content); diff != "" {
 			t.Fatalf("diff %s", diff)
 		}
-		if err := file.Close(); err != nil{
+		if err := file.Close(); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -179,7 +177,7 @@ func TestMemFs_Remove(t *testing.T) {
 	}
 
 	// try to remove /what which has children entry
-	if err := memFs.Remove("/what"); err != nil{
+	if err := memFs.Remove("/what"); err != nil {
 		t.Fatal("should no error here")
 	}
 }
