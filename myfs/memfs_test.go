@@ -16,10 +16,10 @@ import (
 
 func TestMemFs_Stat(t *testing.T) {
 	var memFs HostFs = NewMemFs()
-	var tests = []struct{
-		dir string
+	var tests = []struct {
+		dir  string
 		want string
-	} {
+	}{
 		{"/", rootDirName},
 		{"/a/b", "b"},
 		{"/a", "a"},
@@ -27,7 +27,7 @@ func TestMemFs_Stat(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		if err := memFs.MkdirAll(test.dir, Perm664); err != nil {
+		if err := memFs.MkdirAll(test.dir, Perm644); err != nil {
 			t.Fatal(err)
 		}
 		stat, err := memFs.Stat(test.dir)
@@ -88,17 +88,17 @@ func TestMemFs_CreateDir(t *testing.T) {
 	}
 
 	dir := "/x/y"
-	if err := memFs.MkdirAll(dir, Perm664); err != nil {
+	if err := memFs.MkdirAll(dir, Perm644); err != nil {
 		t.Fatal(err)
 	}
 
 	if _, err := memFs.Open("/x/not_y"); !memFs.IsNotExist(err) {
 		t.Fatal("should be 'not exist' err", err)
 	}
-	if err := memFs.WriteFile("/x/y/f", []byte("content"), Perm664); err != nil {
+	if err := memFs.WriteFile("/x/y/f", []byte("content"), Perm644); err != nil {
 		t.Fatal(err)
 	}
-	if err := memFs.MkdirAll("/x/y/f/rush-b", Perm664); err.(*fs.PathError).Err != ErrNotDir {
+	if err := memFs.MkdirAll("/x/y/f/rush-b", Perm644); err.(*fs.PathError).Err != ErrNotDir {
 		t.Fatal("should be 'not a directory' err", err)
 	}
 }
@@ -117,12 +117,12 @@ func TestMemFs_WriteRead(t *testing.T) {
 	var memFs HostFs = NewMemFs()
 	for _, test := range tests {
 		// create dirs
-		if err := memFs.MkdirAll(test.dir, Perm664); err != nil {
+		if err := memFs.MkdirAll(test.dir, Perm644); err != nil {
 			t.Fatal(err)
 		}
 		// write getFile
 		filePath := filepath.Join(test.dir, test.file)
-		if err := memFs.WriteFile(filePath, test.content, Perm664); err != nil {
+		if err := memFs.WriteFile(filePath, test.content, Perm644); err != nil {
 			t.Fatal(err)
 		}
 		// open getFile
@@ -152,13 +152,13 @@ func TestMemFs_WriteRead(t *testing.T) {
 func TestMemFs_Remove(t *testing.T) {
 	memFs := NewMemFs()
 	dir := "/a/b"
-	if err := memFs.MkdirAll(dir, Perm664); err != nil {
+	if err := memFs.MkdirAll(dir, Perm644); err != nil {
 		t.Fatal(err)
 	}
-	if err := memFs.WriteFile(filepath.Join(dir, "c1"), []byte("c1"), Perm664); err != nil {
+	if err := memFs.WriteFile(filepath.Join(dir, "c1"), []byte("c1"), Perm644); err != nil {
 		t.Fatal(err)
 	}
-	if err := memFs.WriteFile(filepath.Join(dir, "c2"), []byte("c2"), Perm664); err != nil {
+	if err := memFs.WriteFile(filepath.Join(dir, "c2"), []byte("c2"), Perm644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -187,13 +187,13 @@ func TestMemFs_Remove(t *testing.T) {
 func TestMemFs_Rename(t *testing.T) {
 	memFs := NewMemFs()
 	dir := "/a/b"
-	if err := memFs.MkdirAll(dir, Perm664); err != nil {
+	if err := memFs.MkdirAll(dir, Perm644); err != nil {
 		t.Fatal(err)
 	}
-	if err := memFs.WriteFile(filepath.Join(dir, "c1"), []byte("c1"), Perm664); err != nil {
+	if err := memFs.WriteFile(filepath.Join(dir, "c1"), []byte("c1"), Perm644); err != nil {
 		t.Fatal(err)
 	}
-	if err := memFs.WriteFile(filepath.Join(dir, "c2"), []byte("c2"), Perm664); err != nil {
+	if err := memFs.WriteFile(filepath.Join(dir, "c2"), []byte("c2"), Perm644); err != nil {
 		t.Fatal(err)
 	}
 	fmt.Println()

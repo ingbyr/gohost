@@ -47,7 +47,7 @@ func (m *manager) SetFs(newFs myfs.HostFs) {
 
 	// create base dir
 	if _, err := M.fs.Stat(conf.BaseDir); M.fs.IsNotExist(err) {
-		if err := M.fs.MkdirAll(conf.BaseDir, myfs.Perm664); err != nil {
+		if err := M.fs.MkdirAll(conf.BaseDir, myfs.Perm644); err != nil {
 			display.Panic("can not create dir "+conf.BaseDir, err)
 		}
 	}
@@ -196,7 +196,7 @@ func (m *manager) CreateNewHost(name string, groups []string, edit bool) {
 			display.ErrExit(fmt.Errorf("failed to create file '%s'\n", host.FilePath))
 		}
 	} else {
-		if err := m.fs.WriteFile(host.FilePath, []byte(""), myfs.Perm664); err != nil {
+		if err := m.fs.WriteFile(host.FilePath, []byte(""), myfs.Perm644); err != nil {
 			display.ErrExit(fmt.Errorf("can not create %s file\n", host.FilePath))
 		}
 	}

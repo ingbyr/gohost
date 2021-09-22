@@ -66,4 +66,3 @@ func (m *MemFile) Type() fs.FileMode {
 func (m *MemFile) Info() (fs.FileInfo, error) {
 	return m.Stat()
 }
-

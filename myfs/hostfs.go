@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	Perm664 = fs.FileMode(0644)
+	Perm644 = fs.FileMode(0644)
 
 	ErrNotDir      = errors.New("not a directory")
 	ErrIsDir       = errors.New("is a directory")

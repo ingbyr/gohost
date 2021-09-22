@@ -16,7 +16,7 @@ func TestNewHostByFileName(t *testing.T) {
 		fileName string
 		want     *Host
 	}{
-		{"", &Host{Name: "", FileName: "", Groups: []string{}} },
+		{"", &Host{Name: "", FileName: "", Groups: []string{}}},
 		{"dev", &Host{Name: "dev", FileName: "dev", Groups: []string{}}},
 		{"dev_dev", &Host{Name: "dev", FileName: "dev_dev", Groups: []string{"dev"}}},
 		{"dev_test_prod_host1", &Host{Name: "host1", FileName: "dev_test_prod_host1", Groups: []string{"dev", "test", "prod"}}},
@@ -24,7 +24,7 @@ func TestNewHostByFileName(t *testing.T) {
 	}
 	for _, test := range tests {
 		host := NewHostByFileName(test.fileName)
-		if diff := cmp.Diff(test.want, host, cmpopts.IgnoreFields(Host{},"FilePath")); diff != "" {
+		if diff := cmp.Diff(test.want, host, cmpopts.IgnoreFields(Host{}, "FilePath")); diff != "" {
 			t.Logf("input %v\n", test.fileName)
 			t.Logf("diff \n%s\n", diff)
 			t.Fail()

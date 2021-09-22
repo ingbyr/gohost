@@ -6,9 +6,9 @@ import (
 )
 
 const (
-	SepGroupInFile  = "_"
-	SepInCmd        = ","
-	TmpCombinedHost = ".tmp_combined"
+	SepGroupInFile   = "_"
+	SepInCmd         = ","
+	TmpCombinedHost  = ".tmp_combined"
 	BaseHostFileName = "base"
 )
 

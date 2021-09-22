@@ -16,7 +16,7 @@ var (
 	removeCmd   = &cobra.Command{
 		Use:   "rm",
 		Short: "Delete host or group",
-		Args: cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if removeGroup {
 				host.M.DeleteGroups(strings.Split(args[0], conf.SepInCmd))
