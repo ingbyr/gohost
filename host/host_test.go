@@ -33,5 +33,9 @@ func TestNewHostByFileName(t *testing.T) {
 }
 
 func TestManager_CreateRemoveNewHost(t *testing.T) {
-	M.ChangeFs(myfs.NewMemFs())
+	M.SetFs(myfs.NewMemFs())
+	M.CreateNewHost("dev1", []string{"dev"}, false)
+	M.LoadHosts()
+	M.PrintGroups()
+	M.PrintHosts()
 }

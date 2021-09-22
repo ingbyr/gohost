@@ -18,9 +18,9 @@ var (
 		Args:  cobra.RangeArgs(1, 2),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 1 {
-				host.M.CreateNewHost(args[0], []string{})
+				host.M.CreateNewHost(args[0], []string{}, true)
 			} else {
-				host.M.CreateNewHost(args[0], strings.Split(args[1], conf.SepInCmd))
+				host.M.CreateNewHost(args[0], strings.Split(args[1], conf.SepInCmd), true)
 			}
 		},
 	}

@@ -36,12 +36,14 @@ func init() {
 			FilePath: conf.BaseHostFile,
 			Groups:   nil,
 		},
-		hosts:  map[string]*Host{},
-		groups: map[string][]*Host{},
 	}
 
-	// setup fs
-	M.ChangeFs(myfs.NewOsFs())
+	// setup default fs
+	M.SetFs(myfs.NewOsFs())
+}
+
+func (m *manager) SetFs(newFs myfs.HostFs) {
+	m.fs = newFs
 
 	// create base dir
 	if _, err := M.fs.Stat(conf.BaseDir); M.fs.IsNotExist(err) {
@@ -61,10 +63,15 @@ func init() {
 			display.Panic("can not create base host file", err)
 		}
 	}
-	M.LoadHosts()
+
+	m.LoadHosts()
 }
 
 func (m *manager) LoadHosts() {
+	// reset map
+	m.hosts = map[string]*Host{}
+	m.groups = map[string][]*Host{}
+
 	files, err := M.fs.ReadDir(conf.BaseDir)
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to load gohost dir"))
@@ -83,10 +90,6 @@ func (m *manager) LoadHosts() {
 			m.groups[group] = append(m.groups[group], host)
 		}
 	}
-}
-
-func (m *manager) ChangeFs(newFs myfs.HostFs) {
-	m.fs = newFs
 }
 
 func (m *manager) PrintGroup(hostName string) {
@@ -180,7 +183,7 @@ func (m *manager) AddGroup(hostName string, groups []string) {
 	fmt.Printf("added groups [%s]\n", strings.Join(addGroups, ", "))
 }
 
-func (m *manager) CreateNewHost(name string, groups []string) {
+func (m *manager) CreateNewHost(name string, groups []string, edit bool) {
 	if name == m.baseHost.Name {
 		display.ErrExit(fmt.Errorf("host file '%s' already exists\n", name))
 	}
@@ -188,9 +191,14 @@ func (m *manager) CreateNewHost(name string, groups []string) {
 		display.ErrExit(fmt.Errorf("host file '%s' already exists\n", name))
 	}
 	host := NewHostByNameGroups(name, groups)
-	err := editor.OpenByVim(host.FilePath)
-	if err != nil {
-		fmt.Printf("failed to create file '%s'\n", host.FilePath)
+	if edit {
+		if err := editor.OpenByVim(host.FilePath); err != nil {
+			display.ErrExit(fmt.Errorf("failed to create file '%s'\n", host.FilePath))
+		}
+	} else {
+		if err := m.fs.WriteFile(host.FilePath, []byte(""), myfs.Perm664); err != nil {
+			display.ErrExit(fmt.Errorf("can not create %s file\n", host.FilePath))
+		}
 	}
 }
 
