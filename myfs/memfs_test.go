@@ -5,6 +5,7 @@
 package myfs
 
 import (
+	"fmt"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/ingbyr/gohost/util"
@@ -180,5 +181,52 @@ func TestMemFs_Remove(t *testing.T) {
 	// try to remove /what which has children entry
 	if err := memFs.Remove("/what"); err != nil {
 		t.Fatal("should no error here")
+	}
+}
+
+func TestMemFs_Rename(t *testing.T) {
+	memFs := NewMemFs()
+	dir := "/a/b"
+	if err := memFs.MkdirAll(dir, Perm664); err != nil {
+		t.Fatal(err)
+	}
+	if err := memFs.WriteFile(filepath.Join(dir, "c1"), []byte("c1"), Perm664); err != nil {
+		t.Fatal(err)
+	}
+	if err := memFs.WriteFile(filepath.Join(dir, "c2"), []byte("c2"), Perm664); err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println()
+
+	if err := memFs.Rename("/a/b/c1", "/a/b/new"); err != nil {
+		t.Fatal(err)
+	}
+	_, err := memFs.Stat("/a/b/c1")
+	if !memFs.IsNotExist(err) {
+		t.Fatal(err)
+	}
+	_, err = memFs.Stat("/a/b/new")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := memFs.Rename("/a/b/new", "/a/b/c2"); err != nil {
+		t.Fatal(err)
+	}
+	_, err = memFs.Stat("/a/b/c2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = memFs.Stat("/a/b/new")
+	if !memFs.IsNotExist(err) {
+		t.Fatal(err)
+	}
+
+	if err := memFs.Rename("/a/b/c2", "/a"); err.(*fs.PathError).Err != ErrIsDir {
+		t.Fatal(err)
+	}
+
+	if err := memFs.Rename("/a/b/c2", "/c/new"); err.(*fs.PathError).Err != fs.ErrNotExist {
+		t.Fatal(err)
 	}
 }

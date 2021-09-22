@@ -34,7 +34,7 @@ func NewMemFs() *MemFs {
 }
 
 func (m *MemFs) Open(path string) (fs.File, error) {
-	path, ok :=  m.validPath(path)
+	path, ok := m.validPath(path)
 	if !ok {
 		return nil, &fs.PathError{
 			Op:   "open",
@@ -84,7 +84,7 @@ func (m *MemFs) Open(path string) (fs.File, error) {
 }
 
 func (m *MemFs) ReadDir(path string) ([]fs.DirEntry, error) {
-	path, ok :=  m.validPath(path)
+	path, ok := m.validPath(path)
 	if !ok {
 		return nil, &fs.PathError{
 			Op:   "write",
@@ -114,7 +114,7 @@ func (m *MemFs) ReadFile(path string) ([]byte, error) {
 }
 
 func (m *MemFs) WriteFile(path string, data []byte, perm os.FileMode) error {
-	path, ok :=  m.validPath(path)
+	path, ok := m.validPath(path)
 	if !ok {
 		return &fs.PathError{
 			Op:   "write",
@@ -144,7 +144,7 @@ func (m *MemFs) WriteFile(path string, data []byte, perm os.FileMode) error {
 }
 
 func (m *MemFs) MkdirAll(path string, perm os.FileMode) error {
-	path, ok :=  m.validPath(path)
+	path, ok := m.validPath(path)
 	if !ok {
 		return &fs.PathError{
 			Op:   "MkdirAll",
@@ -181,7 +181,7 @@ func (m *MemFs) MkdirAll(path string, perm os.FileMode) error {
 }
 
 func (m *MemFs) Stat(path string) (fs.FileInfo, error) {
-	path, ok :=  m.validPath(path)
+	path, ok := m.validPath(path)
 	if !ok {
 		return nil, &fs.PathError{
 			Op:   "Stat",
@@ -218,7 +218,7 @@ func (m *MemFs) IsNotExist(err error) bool {
 }
 
 func (m *MemFs) Remove(path string) error {
-	path, ok :=  m.validPath(path)
+	path, ok := m.validPath(path)
 	if !ok {
 		return &fs.PathError{
 			Op:   "Remove",
@@ -246,8 +246,64 @@ func (m *MemFs) Remove(path string) error {
 	return nil
 }
 
+// Rename only support rename file name
 func (m *MemFs) Rename(oldPath, newPath string) error {
-	panic("implement me")
+	oldPath, ok := m.validPath(oldPath)
+	if !ok {
+		return &fs.PathError{
+			Op:   "Rename",
+			Path: oldPath,
+			Err:  fs.ErrInvalid,
+		}
+	}
+	newPath, ok = m.validPath(newPath)
+	if !ok {
+		return &fs.PathError{
+			Op:   "Rename",
+			Path: oldPath,
+			Err:  fs.ErrInvalid,
+		}
+	}
+
+	oldParentDir, err := m.getDir(filepath.Dir(oldPath))
+	if err != nil {
+		return err
+	}
+	oldFileName := filepath.Base(oldPath)
+	oldEntry, ok := oldParentDir.children[oldFileName]
+	if !ok {
+		return &fs.PathError{
+			Op:   "Rename",
+			Path: oldPath,
+			Err:  fs.ErrNotExist,
+		}
+	}
+	if oldEntry.IsDir() {
+		return &fs.PathError{
+			Op:   "Rename",
+			Path: oldPath,
+			Err:  ErrIsDir,
+		}
+	}
+	oldFile := oldEntry.(*MemFile)
+
+	newParent, err := m.getDir(filepath.Dir(newPath))
+	if err != nil {
+		return err
+	}
+	newFileName := filepath.Base(newPath)
+	newEntry, ok := newParent.children[newFileName]
+	if ok && newEntry.IsDir() {
+		return &fs.PathError{
+			Op:   "Rename",
+			Path: newPath,
+			Err:  ErrIsDir,
+		}
+	}
+	oldFile.name = newFileName
+	newParent.children[newFileName] = oldFile
+	delete(oldParentDir.children, oldFileName)
+	return nil
 }
 
 // getFile path must be valid by caller

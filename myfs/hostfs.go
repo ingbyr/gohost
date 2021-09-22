@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	Perm664        = fs.FileMode(0644)
+	Perm664 = fs.FileMode(0644)
 
 	ErrNotDir      = errors.New("not a directory")
 	ErrIsDir       = errors.New("is a directory")
@@ -32,7 +32,7 @@ type HostFs interface {
 	Rename(oldPath, newPath string) error
 }
 
-func printEntryTree(hfs HostFs)  {
+func printEntryTree(hfs HostFs) {
 	err := fs.WalkDir(hfs, "/", func(path string, entry fs.DirEntry, err error) error {
 		fmt.Printf("path %s, name %s, dir %t\n", path, entry.Name(), entry.IsDir())
 		return err
