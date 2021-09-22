@@ -1,6 +1,6 @@
 ## gohost
 
-![gohost](https://github.com/ingbyr/gohost/actions/workflows/go.yml/badge.svg)
+![test](https://github.com/ingbyr/gohost/actions/workflows/go.yml/badge.svg)
 
 Gohost is a simple host switcher tool supporting Linux and macOS.
 
