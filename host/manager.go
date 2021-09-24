@@ -146,7 +146,8 @@ func (m *manager) DisplayGroups() {
 	}
 	display.Table(header, data)
 	if m.HasNoGroupHost() {
-		fmt.Printf("no group hosts: %v\n", HostsToStr(m.noGroupHost))
+		fmt.Printf("no group hosts [%v]\n", HostsToStr(m.noGroupHost))
+		fmt.Printf("please add groups before using hosts\n")
 	}
 }
 
@@ -350,17 +351,25 @@ func (m *manager) group(groupName string) ([]*Host, bool) {
 	return group, ok
 }
 
-func (m *manager) printNodes() {
-	for name, node := range m.hosts {
-		fmt.Printf("name %s, node %+v\n", name, node)
+func (m *manager) printHosts() {
+	if len(m._hosts) != len(m.hosts) {
+		panic("the size of _hosts and hosts is not equal")
+	}
+	fmt.Printf("All Hosts\n")
+	for _, host := range m._hosts {
+		fmt.Printf("\t[host] %+v\n", m.hosts[host])
 	}
 }
 
 func (m *manager) printGroups() {
-	for group, nodes := range m.groups {
-		fmt.Println("group", group)
-		for _, node := range nodes {
-			fmt.Printf("node %+v\n", node)
+	if len(m._groups) != len(m.groups) {
+		panic("the size of _groups and groups is not equal")
+	}
+	fmt.Printf("All Groups\n")
+	for _, group := range m._groups {
+		fmt.Println("\t[group]", group)
+		for _, host := range m.groups[group] {
+			fmt.Printf("\t\t[host] %+v\n", host)
 		}
 	}
 }

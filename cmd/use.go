@@ -12,6 +12,7 @@ import (
 var (
 	useSimulateFlag bool
 
+	// TODO use multi groups
 	useCmd = &cobra.Command{
 		Use:   "use",
 		Short: "use group host as system host",
