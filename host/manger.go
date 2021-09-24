@@ -46,20 +46,20 @@ func (m *manager) SetFs(newFs myfs.HostFs) {
 	m.fs = newFs
 
 	// create base dir
-	if _, err := M.fs.Stat(conf.BaseDir); M.fs.IsNotExist(err) {
-		if err := M.fs.MkdirAll(conf.BaseDir, myfs.Perm644); err != nil {
+	if _, err := m.fs.Stat(conf.BaseDir); m.fs.IsNotExist(err) {
+		if err := m.fs.MkdirAll(conf.BaseDir, myfs.Perm644); err != nil {
 			display.Panic("can not create dir "+conf.BaseDir, err)
 		}
 	}
 
 	// create base host file
-	if _, err := M.fs.Stat(M.baseHost.FilePath); M.fs.IsNotExist(err) {
+	if _, err := m.fs.Stat(m.baseHost.FilePath); m.fs.IsNotExist(err) {
 		var content bytes.Buffer
 		content.WriteString("127.0.0.1 localhost")
 		content.WriteString(NewLine)
 		content.WriteString("::1 localhost")
 		content.WriteString(NewLine)
-		if err := M.fs.WriteFile(M.baseHost.FilePath, content.Bytes(), 0644); err != nil {
+		if err := m.fs.WriteFile(m.baseHost.FilePath, content.Bytes(), 0644); err != nil {
 			display.Panic("can not create base host file", err)
 		}
 	}
@@ -72,7 +72,7 @@ func (m *manager) LoadHosts() {
 	m.hosts = map[string]*Host{}
 	m.groups = map[string][]*Host{}
 
-	files, err := M.fs.ReadDir(conf.BaseDir)
+	files, err := m.fs.ReadDir(conf.BaseDir)
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to load gohost dir"))
 	}
@@ -126,21 +126,21 @@ func (m *manager) PrintGroups() {
 }
 
 func (m *manager) PrintHosts() {
-	if len(M.hosts) == 0 {
+	if len(m.hosts) == 0 {
 		fmt.Println("no host file")
 		return
 	}
 	header := []string{"Host", "groups"}
 	// sort host names
 	data := make([][]string, 0, len(m.groups))
-	hostNames := make([]string, 0, len(M.hosts))
-	for hostName := range M.hosts {
+	hostNames := make([]string, 0, len(m.hosts))
+	for hostName := range m.hosts {
 		hostNames = append(hostNames, hostName)
 	}
 	sort.Strings(hostNames)
 	// append display data
 	for _, hostName := range hostNames {
-		data = append(data, []string{hostName, M.hosts[hostName].GroupsAsStr()})
+		data = append(data, []string{hostName, m.hosts[hostName].GroupsAsStr()})
 	}
 	display.Table(header, data)
 }
@@ -151,7 +151,7 @@ func (m *manager) DeleteGroups(delGroups []string) {
 		if hosts, exist := m.groups[delGroup]; exist {
 			// delete hosts which belongs to delGroup
 			for _, host := range hosts {
-				_ = M.fs.Remove(host.FilePath)
+				_ = m.fs.Remove(host.FilePath)
 			}
 			deleted = append(deleted, delGroup)
 		}
@@ -163,7 +163,7 @@ func (m *manager) DeleteHostGroups(hostName string, delGroups []string) {
 	host := m.mustHost(hostName)
 	newGroups, removedGroups := util.SliceSub(host.Groups, delGroups)
 	newHost := NewHostByNameGroups(hostName, newGroups)
-	err := M.fs.Rename(host.FilePath, newHost.FilePath)
+	err := m.fs.Rename(host.FilePath, newHost.FilePath)
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to delete groups"))
 	}
@@ -175,7 +175,7 @@ func (m *manager) AddGroup(hostName string, groups []string) {
 	host := m.mustHost(hostName)
 	newGroups, addGroups := util.SliceUnion(host.Groups, groups)
 	newHost := NewHostByNameGroups(hostName, newGroups)
-	err := M.fs.Rename(host.FilePath, newHost.FilePath)
+	err := m.fs.Rename(host.FilePath, newHost.FilePath)
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to delete groups"))
 	}
@@ -206,7 +206,7 @@ func (m *manager) DeleteHosts(hostNames []string) {
 	deleted := make([]string, 0)
 	for _, hostName := range hostNames {
 		if host, exist := m.hosts[hostName]; exist {
-			err := M.fs.Remove(host.FilePath)
+			err := m.fs.Remove(host.FilePath)
 			if err != nil {
 				display.ErrExit(err)
 				continue
@@ -223,7 +223,7 @@ func (m *manager) ChangeHostName(hostName string, newHostName string) {
 	}
 	h := m.mustHost(hostName)
 	newHost := NewHostByNameGroups(newHostName, h.Groups)
-	if err := M.fs.Rename(h.FilePath, newHost.FilePath); err != nil {
+	if err := m.fs.Rename(h.FilePath, newHost.FilePath); err != nil {
 		display.ErrExit(err)
 	}
 	fmt.Printf("renamed '%s' to '%s'\n", h.Name, newHostName)
@@ -258,7 +258,7 @@ func (m *manager) ApplyGroup(group string, simulate bool) {
 	}
 
 	// replace system host
-	if err := M.fs.Rename(combinedHost.FilePath, SysHost); err != nil {
+	if err := m.fs.Rename(combinedHost.FilePath, SysHost); err != nil {
 		display.ErrExit(err)
 	}
 	fmt.Printf("applied group '%s' to system host:\n", group)
@@ -268,7 +268,7 @@ func (m *manager) ApplyGroup(group string, simulate bool) {
 }
 
 func (m *manager) PrintSysHost(max int) {
-	host, err := M.fs.Open(SysHost)
+	host, err := m.fs.Open(SysHost)
 	if err != nil {
 		display.Panic("can not read system host file", err)
 	}
@@ -330,7 +330,7 @@ func (m *manager) combineHosts(hosts []*Host, head string) []byte {
 	b.WriteString(head)
 	b.WriteString(NewLine + NewLine)
 	for _, host := range hosts {
-		file, err := M.fs.Open(host.FilePath)
+		file, err := m.fs.Open(host.FilePath)
 		if err != nil {
 			display.Panic("can not combine host", err)
 		}
