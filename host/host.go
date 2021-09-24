@@ -12,10 +12,22 @@ import (
 )
 
 type Host struct {
-	Name     string
+	Name   string
+	Groups []string
+	// FileName based on Name ang Groups
 	FileName string
+	// FilePath based on FileName and conf.BaseDir
 	FilePath string
-	Groups   []string
+}
+
+func (h *Host) GenAutoFields() {
+	h.FileName = strings.Join(append(h.Groups, h.Name), conf.SepGroupInFile)
+	h.FilePath = path.Join(conf.BaseDir, h.FileName)
+}
+
+func (h *Host) RemoveGroup(group string) int {
+	h.Groups = util.SliceRemove(h.Groups, group)
+	return len(h.Groups)
 }
 
 func (h *Host) GroupsAsStr() string {
@@ -42,11 +54,10 @@ func NewHostByNameGroups(hostName string, groups []string) *Host {
 		// sort and unique the groups
 		groups = util.SortUniqueStringSlice(groups)
 	}
-	fileName := strings.Join(append(groups, hostName), conf.SepGroupInFile)
-	return &Host{
-		Name:     hostName,
-		FileName: fileName,
-		FilePath: path.Join(conf.BaseDir, fileName),
-		Groups:   groups,
+	host := &Host{
+		Name:   hostName,
+		Groups: groups,
 	}
+	host.GenAutoFields()
+	return host
 }

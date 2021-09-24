@@ -21,7 +21,9 @@ import (
 type manager struct {
 	baseHost *Host
 	hosts    map[string]*Host
+	_hosts   []string
 	groups   map[string][]*Host
+	_groups  []string
 	fs       myfs.HostFs
 }
 
@@ -70,18 +72,22 @@ func (m *manager) SetFs(newFs myfs.HostFs) {
 func (m *manager) LoadHosts() {
 	// reset map
 	m.hosts = map[string]*Host{}
+	m._hosts = make([]string, 0)
 	m.groups = map[string][]*Host{}
+	m._groups = make([]string, 0)
 
 	files, err := m.fs.ReadDir(conf.BaseDir)
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to load gohost dir"))
 	}
+
 	// load host files
 	for _, file := range files {
 		// skip dir and files started with '.'
 		if file.IsDir() || strings.HasPrefix(file.Name(), ".") {
 			continue
 		}
+		// create host
 		host := NewHostByFileName(file.Name())
 		// add host
 		m.hosts[host.Name] = host
@@ -90,11 +96,24 @@ func (m *manager) LoadHosts() {
 			m.groups[group] = append(m.groups[group], host)
 		}
 	}
+
+	// sort hosts and groups
+	for hostName := range m.hosts {
+		m._hosts = append(m._hosts, hostName)
+	}
+	for groupName, group := range m.groups {
+		m._groups = append(m._groups, groupName)
+		sort.Slice(group, func(i, j int) bool {
+			return group[i].Name < group[j].Name
+		})
+	}
+	sort.Strings(m._hosts)
+	sort.Strings(m._groups)
 }
 
 func (m *manager) PrintGroup(hostName string) {
 	host := m.mustHost(hostName)
-	header := []string{"Host", "groups"}
+	header := []string{"Host", "Groups"}
 	data := [][]string{
 		{hostName, host.GroupsAsStr()},
 	}
@@ -106,21 +125,16 @@ func (m *manager) PrintGroups() {
 		fmt.Println("no host group")
 		return
 	}
-	header := []string{"Group", "hosts"}
-	groupNames := make([]string, 0, len(m.groups))
-	for groupName := range m.groups {
-		groupNames = append(groupNames, groupName)
-	}
-	sort.Strings(groupNames)
+	header := []string{"Group", "Hosts"}
 	data := make([][]string, 0, len(m.groups))
-	for _, groupName := range groupNames {
-		hosts := m.groups[groupName]
+	for _, group := range m._groups {
+		hosts := m.groups[group]
 		var hsb strings.Builder
 		for _, host := range hosts {
 			hsb.WriteString(host.Name)
 			hsb.WriteString(", ")
 		}
-		data = append(data, []string{groupName, hsb.String()[:hsb.Len()-2]})
+		data = append(data, []string{group, hsb.String()[:hsb.Len()-2]})
 	}
 	display.Table(header, data)
 }
@@ -130,17 +144,10 @@ func (m *manager) PrintHosts() {
 		fmt.Println("no host file")
 		return
 	}
-	header := []string{"Host", "groups"}
-	// sort host names
+	header := []string{"Host", "Groups"}
 	data := make([][]string, 0, len(m.groups))
-	hostNames := make([]string, 0, len(m.hosts))
-	for hostName := range m.hosts {
-		hostNames = append(hostNames, hostName)
-	}
-	sort.Strings(hostNames)
-	// append display data
-	for _, hostName := range hostNames {
-		data = append(data, []string{hostName, m.hosts[hostName].GroupsAsStr()})
+	for _, host := range m._hosts {
+		data = append(data, []string{host, m.hosts[host].GroupsAsStr()})
 	}
 	display.Table(header, data)
 }
@@ -148,15 +155,32 @@ func (m *manager) PrintHosts() {
 func (m *manager) DeleteGroups(delGroups []string) {
 	deleted := make([]string, 0)
 	for _, delGroup := range delGroups {
-		if hosts, exist := m.groups[delGroup]; exist {
-			// delete hosts which belongs to delGroup
-			for _, host := range hosts {
-				_ = m.fs.Remove(host.FilePath)
-			}
+		if m.DeleteGroup(delGroup) {
 			deleted = append(deleted, delGroup)
 		}
 	}
 	fmt.Printf("deleted group [%s]\n", strings.Join(deleted, ","))
+}
+
+func (m *manager) DeleteGroup(group string) bool {
+	hosts, exist := m.groups[group]
+	if !exist {
+		return false
+	}
+	for _, host := range hosts {
+		// delete host which has no group left
+		if host.RemoveGroup(group) == 0 {
+			_ = m.fs.Remove(host.FilePath)
+		} else {
+			// rename host file to update group info
+			oldFilePath := host.FilePath
+			host.GenAutoFields()
+			if err := m.fs.Rename(oldFilePath, host.FilePath); err != nil {
+				display.ErrExit(err)
+			}
+		}
+	}
+	return true
 }
 
 func (m *manager) DeleteHostGroups(hostName string, delGroups []string) {
@@ -308,6 +332,14 @@ func (m *manager) mustHost(hostName string) *Host {
 		display.ErrExit(fmt.Errorf("host file '%s' is not existed\n", hostName))
 	}
 	return host
+}
+
+func (m *manager) group(groupName string) ([]*Host, bool) {
+	group, ok := m.groups[groupName]
+	if !ok {
+		return nil, false
+	}
+	return group, ok
 }
 
 func (m *manager) printNodes() {

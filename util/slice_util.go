@@ -35,21 +35,45 @@ func SliceUnion(s1 []string, s2 []string) ([]string, []string) {
 func SortUniqueStringSlice(arr []string) []string {
 	last := len(arr)
 	for i := 0; i < last; i++ {
-		m := i
+		min := i
 		for j := i; j < last; j++ {
-			if arr[j] < arr[m] {
-				m = j
+			if arr[j] < arr[min] {
+				min = j
 			}
 		}
-		if i > 0 && arr[m] == arr[i-1] {
+		if i > 0 && arr[min] == arr[i-1] {
 			last--
+			// resort index at i
 			i--
-			arr[m], arr[last] = arr[last], arr[m]
-		} else if m != i {
-			arr[i], arr[m] = arr[m], arr[i]
+			arr[min], arr[last] = arr[last], arr[min]
+		} else if min != i {
+			arr[i], arr[min] = arr[min], arr[i]
 		}
 	}
 	return arr[:last]
+}
+
+func SliceRemove(arr []string, target string) []string {
+	size := len(arr)
+	for i, nq := 0, 0; i < size && nq < len(arr); i++ {
+		if nq <= i {
+			nq = i
+		}
+		if arr[i] == target {
+			// find next not target index
+			for nq < len(arr) && arr[nq] == target {
+				nq++
+			}
+			// find nothing
+			if nq == len(arr) {
+				size = i
+				break
+			}
+			arr[i], arr[nq] = arr[nq], arr[i]
+			size--
+		}
+	}
+	return arr[:size]
 }
 
 func cache(s []string) map[string]struct{} {

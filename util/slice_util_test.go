@@ -56,3 +56,29 @@ func TestSortUniqueStringSlice(t *testing.T) {
 		}
 	}
 }
+
+func TestSliceRemove(t *testing.T) {
+	var tests = []struct {
+		arr    []string
+		target string
+		want   []string
+	}{
+		{[]string{}, "a", []string{}},
+		{[]string{"a"}, "a", []string{}},
+		{[]string{"a", "a", "a"}, "a", []string{}},
+		{[]string{"a", "a", "b"}, "a", []string{"b"}},
+		{[]string{"b", "a", "a"}, "a", []string{"b"}},
+		{[]string{"a", "b", "a"}, "a", []string{"b"}},
+		{[]string{"a", "c", "b", "c", "d"}, "c", []string{"a", "b", "d"}},
+		{[]string{"a", "c", "a", "d", "b", "d", "a", "a"}, "a", []string{"c", "d", "b", "d"}},
+	}
+
+	for _, test := range tests {
+		res := SliceRemove(test.arr, test.target)
+		if diff := cmp.Diff(res, test.want); diff != "" {
+			fmt.Printf("input %v, %s\n", test.arr, test.target)
+			fmt.Printf("diff %s\n", diff)
+			t.Fail()
+		}
+	}
+}

@@ -7,7 +7,6 @@ package host
 import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/ingbyr/gohost/myfs"
 	"testing"
 )
 
@@ -30,12 +29,4 @@ func TestNewHostByFileName(t *testing.T) {
 			t.Fail()
 		}
 	}
-}
-
-func TestManager_CreateRemoveNewHost(t *testing.T) {
-	M.SetFs(myfs.NewMemFs())
-	M.CreateNewHost("dev1", []string{"dev"}, false)
-	M.LoadHosts()
-	M.PrintGroups()
-	M.PrintHosts()
 }
