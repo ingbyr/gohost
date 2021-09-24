@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	// TODO rename group name
 	renameCmd = &cobra.Command{
 		Use:   "mv",
 		Short: "rename host file name",
