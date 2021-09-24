@@ -9,18 +9,42 @@ import (
 	"testing"
 )
 
+type hosts struct {
+	name   string
+	groups []string
+}
+
+type hostTestOp struct {
+	initHosts    []hosts
+	addGroups    []string
+	deleteGroups []string
+	addHosts []hosts
+	deleteHosts []string
+	renameHosts [][2]string
+}
+
 func TestManager_CreateRemoveNewHost(t *testing.T) {
 	M.SetFs(myfs.NewMemFs())
-	M.CreateNewHost("f3", []string{"g1", "g2", "g3", "g4"}, false)
-	M.CreateNewHost("f2", []string{"g1", "g2"}, false)
-	M.CreateNewHost("f1", []string{"g1", "g4"}, false)
-	M.CreateNewHost("f5", []string{"g5"}, false)
-	M.LoadHosts()
-	M.printHosts()
+	var tests = []hostTestOp{
+		{
+			initHosts: []hosts{
+				{"f3", []string{"g1", "g2", "g3", "g4"}},
+				{"f2", []string{"g1", "g2"}},
+				{"f1", []string{"g1", "g4"}},
+				{"f5", []string{"g5"}},
+			},
+			deleteGroups: []string{"g4", "g5", "g0"},
+		},
+	}
+	for _, test := range tests {
+		for _, initHost := range test.initHosts {
+			M.CreateNewHost(initHost.name, initHost.groups, false)
+		}
+		M.LoadHosts()
+		M.DeleteGroups(test.deleteGroups)
+	}
 
-	M.DeleteGroups([]string{"g4", "g5", "g0"})
 	M.LoadHosts()
-
 	M.printHosts()
 	M.printGroups()
 }
