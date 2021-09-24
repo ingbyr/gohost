@@ -74,7 +74,7 @@ func TestSliceRemove(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		res := SliceRemove(test.arr, test.target)
+		res, _ := SliceRemove(test.arr, test.target)
 		if diff := cmp.Diff(res, test.want); diff != "" {
 			fmt.Printf("input %v, %s\n", test.arr, test.target)
 			fmt.Printf("diff %s\n", diff)

@@ -16,9 +16,11 @@ func TestManager_CreateRemoveNewHost(t *testing.T) {
 	M.CreateNewHost("f1", []string{"g1", "g4"}, false)
 	M.CreateNewHost("f5", []string{"g5"}, false)
 	M.LoadHosts()
-	M.PrintGroups()
+	M.DisplayGroups()
 
 	M.DeleteGroups([]string{"g4", "g5", "g0"})
 	M.LoadHosts()
-	M.PrintGroups()
+	M.DisplayGroups()
+	M.DisplayHosts()
+	M.printNodes()
 }

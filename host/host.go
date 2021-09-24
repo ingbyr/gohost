@@ -25,13 +25,18 @@ func (h *Host) GenAutoFields() {
 	h.FilePath = path.Join(conf.BaseDir, h.FileName)
 }
 
-func (h *Host) RemoveGroup(group string) int {
-	h.Groups = util.SliceRemove(h.Groups, group)
-	return len(h.Groups)
+func (h *Host) RemoveGroup(group string) bool {
+	removed := false
+	h.Groups, removed = util.SliceRemove(h.Groups, group)
+	return removed
 }
 
 func (h *Host) GroupsAsStr() string {
 	return strings.Join(h.Groups, ", ")
+}
+
+func (h *Host) hasGroups() bool {
+	return h.Groups != nil && len(h.Groups) > 0
 }
 
 func NewHostByFileName(fileName string) *Host {
@@ -60,4 +65,16 @@ func NewHostByNameGroups(hostName string, groups []string) *Host {
 	}
 	host.GenAutoFields()
 	return host
+}
+
+func HostsToStr(hosts []*Host) string {
+	if len(hosts) == 0 {
+		return ""
+	}
+	var hsb strings.Builder
+	for _, host := range hosts {
+		hsb.WriteString(host.Name)
+		hsb.WriteString(", ")
+	}
+	return hsb.String()[:hsb.Len()-2]
 }

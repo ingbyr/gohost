@@ -53,7 +53,7 @@ func SortUniqueStringSlice(arr []string) []string {
 	return arr[:last]
 }
 
-func SliceRemove(arr []string, target string) []string {
+func SliceRemove(arr []string, target string) ([]string, bool) {
 	size := len(arr)
 	for i, nq := 0, 0; i < size && nq < len(arr); i++ {
 		if nq <= i {
@@ -73,7 +73,7 @@ func SliceRemove(arr []string, target string) []string {
 			size--
 		}
 	}
-	return arr[:size]
+	return arr[:size], size < len(arr)
 }
 
 func cache(s []string) map[string]struct{} {

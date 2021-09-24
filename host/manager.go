@@ -19,12 +19,13 @@ import (
 )
 
 type manager struct {
-	baseHost *Host
-	hosts    map[string]*Host
-	_hosts   []string
-	groups   map[string][]*Host
-	_groups  []string
-	fs       myfs.HostFs
+	baseHost    *Host
+	hosts       map[string]*Host
+	_hosts      []string
+	groups      map[string][]*Host
+	_groups     []string
+	noGroupHost []*Host
+	fs          myfs.HostFs
 }
 
 var M *manager
@@ -71,10 +72,11 @@ func (m *manager) SetFs(newFs myfs.HostFs) {
 
 func (m *manager) LoadHosts() {
 	// reset map
-	m.hosts = map[string]*Host{}
+	m.hosts = make(map[string]*Host)
 	m._hosts = make([]string, 0)
-	m.groups = map[string][]*Host{}
+	m.groups = make(map[string][]*Host)
 	m._groups = make([]string, 0)
+	m.noGroupHost = make([]*Host, 0)
 
 	files, err := m.fs.ReadDir(conf.BaseDir)
 	if err != nil {
@@ -92,8 +94,12 @@ func (m *manager) LoadHosts() {
 		// add host
 		m.hosts[host.Name] = host
 		// add groups
-		for _, group := range host.Groups {
-			m.groups[group] = append(m.groups[group], host)
+		if host.hasGroups() {
+			for _, group := range host.Groups {
+				m.groups[group] = append(m.groups[group], host)
+			}
+		} else {
+			m.noGroupHost = append(m.noGroupHost, host)
 		}
 	}
 
@@ -109,6 +115,13 @@ func (m *manager) LoadHosts() {
 	}
 	sort.Strings(m._hosts)
 	sort.Strings(m._groups)
+	sort.Slice(m.noGroupHost, func(i, j int) bool {
+		return m.noGroupHost[i].Name < m.noGroupHost[j].Name
+	})
+}
+
+func (m *manager) HasNoGroupHost() bool {
+	return len(m.noGroupHost) > 0
 }
 
 func (m *manager) PrintGroup(hostName string) {
@@ -120,7 +133,7 @@ func (m *manager) PrintGroup(hostName string) {
 	display.Table(header, data)
 }
 
-func (m *manager) PrintGroups() {
+func (m *manager) DisplayGroups() {
 	if len(m.groups) == 0 {
 		fmt.Println("no host group")
 		return
@@ -129,17 +142,15 @@ func (m *manager) PrintGroups() {
 	data := make([][]string, 0, len(m.groups))
 	for _, group := range m._groups {
 		hosts := m.groups[group]
-		var hsb strings.Builder
-		for _, host := range hosts {
-			hsb.WriteString(host.Name)
-			hsb.WriteString(", ")
-		}
-		data = append(data, []string{group, hsb.String()[:hsb.Len()-2]})
+		data = append(data, []string{group, HostsToStr(hosts)})
 	}
 	display.Table(header, data)
+	if m.HasNoGroupHost() {
+		fmt.Printf("no group hosts: %v\n", HostsToStr(m.noGroupHost))
+	}
 }
 
-func (m *manager) PrintHosts() {
+func (m *manager) DisplayHosts() {
 	if len(m.hosts) == 0 {
 		fmt.Println("no host file")
 		return
@@ -169,10 +180,7 @@ func (m *manager) DeleteGroup(group string) bool {
 	}
 	for _, host := range hosts {
 		// delete host which has no group left
-		if host.RemoveGroup(group) == 0 {
-			_ = m.fs.Remove(host.FilePath)
-		} else {
-			// rename host file to update group info
+		if host.RemoveGroup(group) {
 			oldFilePath := host.FilePath
 			host.GenAutoFields()
 			if err := m.fs.Rename(oldFilePath, host.FilePath); err != nil {
