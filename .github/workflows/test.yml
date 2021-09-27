@@ -1,4 +1,4 @@
-name: gohost
+name: gohost-test
 
 on:
   push:

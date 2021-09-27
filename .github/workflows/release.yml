@@ -1,11 +1,4 @@
-name: gohost
-
-builds:
-  env:
-    - CGO_ENABLED=0
-  goos:
-    - linux
-    - darwin
+name: gohost-release
 
 on:
   push:
@@ -38,4 +31,3 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
