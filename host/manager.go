@@ -254,12 +254,32 @@ func (m *manager) ChangeHostName(hostName string, newHostName string) {
 	if hostName == m.baseHost.Name || newHostName == m.baseHost.Name {
 		display.ErrExit(fmt.Errorf("can not change base host file name"))
 	}
+	if _, exist := m.host(newHostName); exist {
+		display.ErrExit(fmt.Errorf("host '%s' has been existed\n", newHostName))
+	}
 	h := m.mustHost(hostName)
 	newHost := NewHostByNameGroups(newHostName, h.Groups)
 	if err := m.fs.Rename(h.FilePath, newHost.FilePath); err != nil {
 		display.ErrExit(err)
 	}
 	fmt.Printf("renamed '%s' to '%s'\n", h.Name, newHostName)
+}
+
+func (m *manager) ChangeGroupName(groupName string, newGroupName string) {
+	group := m.mustGroup(groupName)
+	if groupName == newGroupName {
+		return
+	}
+	for _, host := range group {
+		newGroups, _ := util.SliceRemove(host.Groups, groupName)
+		newGroups = append(newGroups, newGroupName)
+		newGroups = util.SortUniqueStringSlice(newGroups)
+		newHost := NewHostByNameGroups(host.Name, newGroups)
+		if err := m.fs.Rename(host.FilePath, newHost.FilePath); err != nil {
+			display.ErrExit(err)
+		}
+	}
+	fmt.Printf("rename group '%s' to '%s'\n", groupName, newGroupName)
 }
 
 func (m *manager) EditHostFile(hostName string) {
@@ -325,18 +345,11 @@ func (m *manager) host(hostName string) (*Host, bool) {
 		return m.baseHost, true
 	}
 	host, exist := m.hosts[hostName]
-	if !exist {
-		display.ErrExit(fmt.Errorf("host file '%s' is not existed\n", hostName))
-		return nil, exist
-	}
 	return host, exist
 }
 
 func (m *manager) mustHost(hostName string) *Host {
-	if hostName == m.baseHost.Name {
-		return m.baseHost
-	}
-	host, exist := m.hosts[hostName]
+	host, exist := m.host(hostName)
 	if !exist {
 		display.ErrExit(fmt.Errorf("host file '%s' is not existed\n", hostName))
 	}
@@ -344,11 +357,16 @@ func (m *manager) mustHost(hostName string) *Host {
 }
 
 func (m *manager) group(groupName string) ([]*Host, bool) {
-	group, ok := m.groups[groupName]
-	if !ok {
-		return nil, false
+	group, exist := m.groups[groupName]
+	return group, exist
+}
+
+func (m *manager) mustGroup(groupName string) []*Host {
+	group, exist := m.group(groupName)
+	if !exist {
+		display.ErrExit(fmt.Errorf("group '%s' is not existed\n", groupName))
 	}
-	return group, ok
+	return group
 }
 
 func (m *manager) printHosts() {

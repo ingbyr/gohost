@@ -54,26 +54,25 @@ func SortUniqueStringSlice(arr []string) []string {
 }
 
 func SliceRemove(arr []string, target string) ([]string, bool) {
-	size := len(arr)
-	for i, nq := 0, 0; i < size && nq < len(arr); i++ {
-		if nq <= i {
-			nq = i
+	i := 0
+	for j :=  0; i < len(arr) && j < len(arr); i++ {
+		if j < i {
+			j = i
 		}
 		if arr[i] == target {
 			// find next not target index
-			for nq < len(arr) && arr[nq] == target {
-				nq++
+			for j < len(arr) && arr[j] == target {
+				j++
 			}
 			// find nothing
-			if nq == len(arr) {
-				size = i
+			if j == len(arr) {
 				break
 			}
-			arr[i], arr[nq] = arr[nq], arr[i]
-			size--
+			arr[i], arr[j] = arr[j], arr[i]
+			j++
 		}
 	}
-	return arr[:size], size < len(arr)
+	return arr[:i], i < len(arr)
 }
 
 func cache(s []string) map[string]struct{} {

@@ -71,6 +71,7 @@ func TestSliceRemove(t *testing.T) {
 		{[]string{"a", "b", "a"}, "a", []string{"b"}},
 		{[]string{"a", "c", "b", "c", "d"}, "c", []string{"a", "b", "d"}},
 		{[]string{"a", "c", "a", "d", "b", "d", "a", "a"}, "a", []string{"c", "d", "b", "d"}},
+		{[]string{"g1", "g2", "g3"}, "g1", []string{"g2", "g3"}},
 	}
 
 	for _, test := range tests {

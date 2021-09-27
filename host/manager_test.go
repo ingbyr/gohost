@@ -46,5 +46,8 @@ func TestManager_CreateRemoveNewHost(t *testing.T) {
 
 	M.LoadHosts()
 	M.printHosts()
-	M.printGroups()
+
+	M.ChangeGroupName("g1", "gg")
+	M.LoadHosts()
+	M.printHosts()
 }

@@ -16,6 +16,7 @@ Gohost is a simple host switcher tool supporting Linux and macOS.
 | Edit host file | `gohost edit HOST_NAME` | `gohost edit file1` |
 | Delete host file | `gohost rm HOST_NAME_1[,HOST_NAME_2,...]` | `gohost rm file1,file2` |    
 | List host file | `gohost ls -a(-all)` | `gohost ls -a` |
+| Rename host file | `gohost mv HOST_NAME NEW_HOST_NAME` | `gohost mv file1 newFile`|
 
 ### Manage Group
 
@@ -24,6 +25,7 @@ Gohost is a simple host switcher tool supporting Linux and macOS.
 | Add group for host | `gohost cg HOST_NAME -a(--add) GROUP_NAME_1[,GROUP_NAME_2,...]` | `gohost cg file1 -a group3,group4` |
 | Remove group for host | `gohost cg HOST_NAME -d(--delete) GROUP_NAME_1[,GROUP_NAME_2,...]` | `gohost cg file1 -d group3,group4` |
 | List group | `gohost ls` | `gohost ls` |
+| Rename group | `gohost mv -g(--group) GROUP_NAME NEW_GROUP_NAME` | `gohost mv -g group1 newGroup`|
 
 ### Apply Group
 

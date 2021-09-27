@@ -10,13 +10,21 @@ import (
 )
 
 var (
-	// TODO rename group name
+	renameGroupFlag bool
 	renameCmd = &cobra.Command{
 		Use:   "mv",
 		Short: "rename host file name",
-		Args:  cobra.MinimumNArgs(1),
+		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			host.M.ChangeHostName(args[0], args[1])
+			if renameGroupFlag {
+				host.M.ChangeGroupName(args[0], args[1])
+			} else {
+				host.M.ChangeHostName(args[0], args[1])
+			}
 		},
 	}
 )
+
+func init() {
+	renameCmd.Flags().BoolVarP(&renameGroupFlag, "group", "g", false, "rename group name")
+}
