@@ -5,10 +5,11 @@
 package host
 
 import (
-	"github.com/ingbyr/gohost/conf"
-	"github.com/ingbyr/gohost/util"
 	"path"
 	"strings"
+
+	"github.com/ingbyr/gohost/conf"
+	"github.com/ingbyr/gohost/util"
 )
 
 type Host struct {
@@ -52,8 +53,9 @@ func NewHostByFileName(fileName string) *Host {
 }
 
 func NewHostByNameGroups(hostName string, groups []string) *Host {
+
 	// use host name as group if no specified groups
-	if len(groups) == 0 {
+	if len(groups) == 0 && hostName != conf.TmpCombinedHost {
 		groups = append(groups, hostName)
 	} else {
 		// sort and unique the groups

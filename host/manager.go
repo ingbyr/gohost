@@ -8,14 +8,16 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"os"
+	"sort"
+	"strings"
+
 	"github.com/ingbyr/gohost/conf"
 	"github.com/ingbyr/gohost/display"
 	"github.com/ingbyr/gohost/editor"
 	"github.com/ingbyr/gohost/myfs"
 	"github.com/ingbyr/gohost/util"
-	"io/ioutil"
-	"sort"
-	"strings"
+	"golang.org/x/text/transform"
 )
 
 type manager struct {
@@ -218,19 +220,19 @@ func (m *manager) AddGroup(hostName string, groups []string) {
 
 func (m *manager) CreateNewHost(name string, groups []string, edit bool) {
 	if name == m.baseHost.Name {
-		display.ErrExit(fmt.Errorf("host file '%s' already exists\n", name))
+		display.ErrExit(fmt.Errorf("host file '%s' already exists", name))
 	}
 	if _, exist := m.hosts[name]; exist {
-		display.ErrExit(fmt.Errorf("host file '%s' already exists\n", name))
+		display.ErrExit(fmt.Errorf("host file '%s' already exists", name))
 	}
 	host := NewHostByNameGroups(name, groups)
 	if edit {
 		if err := editor.OpenByVim(host.FilePath); err != nil {
-			display.ErrExit(fmt.Errorf("failed to create file '%s'\n", host.FilePath))
+			display.ErrExit(fmt.Errorf("failed to create file '%s'\n%v", host.FilePath, err))
 		}
 	} else {
 		if err := m.fs.WriteFile(host.FilePath, []byte(""), myfs.Perm644); err != nil {
-			display.ErrExit(fmt.Errorf("can not create %s file\n", host.FilePath))
+			display.ErrExit(fmt.Errorf("can not create %s file\n%v", host.FilePath, err))
 		}
 	}
 }
@@ -255,7 +257,7 @@ func (m *manager) ChangeHostName(hostName string, newHostName string) {
 		display.ErrExit(fmt.Errorf("can not change base host file name"))
 	}
 	if _, exist := m.host(newHostName); exist {
-		display.ErrExit(fmt.Errorf("host '%s' has been existed\n", newHostName))
+		display.ErrExit(fmt.Errorf("host '%s' has been existed", newHostName))
 	}
 	h := m.mustHost(hostName)
 	newHost := NewHostByNameGroups(newHostName, h.Groups)
@@ -304,13 +306,21 @@ func (m *manager) ApplyGroup(group string, simulate bool) {
 		return
 	}
 
-	// write to tmp file
+	// write to temporary combined host file
 	combinedHost := NewHostByNameGroups(conf.TmpCombinedHost, nil)
-	if err := ioutil.WriteFile(combinedHost.FilePath, combinedHostContent, 0664); err != nil {
+	combinedHostFile, err := os.Create(combinedHost.FilePath)
+	if err != nil {
 		display.ErrExit(err)
 	}
+	combinedHostFileWriter := transform.NewWriter(combinedHostFile, SysHostCharset.NewEncoder())
+	_, err = combinedHostFileWriter.Write(combinedHostContent)
+	if err != nil {
+		display.ErrExit(err)
+	}
+	combinedHostFile.Close()
+	combinedHostFileWriter.Close()
 
-	// replace system host
+	// replace system host with temporary combined host file
 	if err := m.fs.Rename(combinedHost.FilePath, SysHost); err != nil {
 		display.ErrExit(err)
 	}
@@ -351,7 +361,7 @@ func (m *manager) host(hostName string) (*Host, bool) {
 func (m *manager) mustHost(hostName string) *Host {
 	host, exist := m.host(hostName)
 	if !exist {
-		display.ErrExit(fmt.Errorf("host file '%s' is not existed\n", hostName))
+		display.ErrExit(fmt.Errorf("host file '%s' is not existed", hostName))
 	}
 	return host
 }
@@ -364,7 +374,7 @@ func (m *manager) group(groupName string) ([]*Host, bool) {
 func (m *manager) mustGroup(groupName string) []*Host {
 	group, exist := m.group(groupName)
 	if !exist {
-		display.ErrExit(fmt.Errorf("group '%s' is not existed\n", groupName))
+		display.ErrExit(fmt.Errorf("group '%s' is not existed", groupName))
 	}
 	return group
 }
