@@ -298,7 +298,7 @@ func (m *manager) ApplyGroup(group string, simulate bool) {
 		return
 	}
 	hosts = append(hosts, m.baseHost)
-	combinedHostContent := m.combineHosts(hosts, "# Auto generated from group "+group)
+	combinedHostContent := m.combineHosts(hosts, "# Auto generated from "+group)
 
 	// just print
 	if simulate {
@@ -389,19 +389,6 @@ func (m *manager) printHosts() {
 	}
 }
 
-func (m *manager) printGroups() {
-	if len(m._groups) != len(m.groups) {
-		panic("the size of _groups and groups is not equal")
-	}
-	fmt.Printf("All Groups\n")
-	for _, group := range m._groups {
-		fmt.Println("\t[group]", group)
-		for _, host := range m.groups[group] {
-			fmt.Printf("\t\t[host] %+v\n", host)
-		}
-	}
-}
-
 func (m *manager) combineHosts(hosts []*Host, head string) []byte {
 	var b bytes.Buffer
 	b.WriteString(head)
@@ -412,7 +399,7 @@ func (m *manager) combineHosts(hosts []*Host, head string) []byte {
 			display.Panic("can not combine host", err)
 		}
 		scanner := bufio.NewScanner(file)
-		b.WriteString("# Host section from " + host.Name + NewLine)
+		b.WriteString("# " + host.Name + NewLine)
 		for scanner.Scan() {
 			b.Write(scanner.Bytes())
 			b.WriteString(NewLine)

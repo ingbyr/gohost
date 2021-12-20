@@ -3,9 +3,27 @@
 ![test](https://github.com/ingbyr/gohost/actions/workflows/test.yml/badge.svg)
 ![release](https://github.com/ingbyr/gohost/actions/workflows/release.yml/badge.svg)
 
-Gohost is a simple host switcher tool supporting Linux and macOS.
+Gohost is a simple host switcher tool supporting Windows, Linux and macOS.
 
-**To modify the system host file gohost need running in root mode, such as `sudo gohost`.**
+**To modify the system host file gohost need running in root mode**
+
+- For Windows user: open console in admin mode.
+- For Linux and macOS user: use `sudo gohost` or login as root
+
+
+## For Windows User
+
+If new hosts not working, you probably need disable `DNS Client Service` by excuting below command in powershell (admin mode) and reboot your compouter.
+```powershell
+REG add "HKLM\SYSTEM\CurrentControlSet\services\dnscache" /v Start /t REG_DWORD /d 4 /f
+``` 
+
+Also you can enbale `DNS Client Service` again by excuting in powershell (admin mode).
+
+```powershell
+REG add "HKLM\SYSTEM\CurrentControlSet\services\dnscache" /v Start /t REG_DWORD /d 2 /f
+```
+
 
 ## Usage
 
