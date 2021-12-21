@@ -15,17 +15,17 @@ func Warn(warn string) {
 	}
 }
 
-func Err(err error) {
-	if err != nil {
+func Err(errors ...error) {
+	for _, err := range errors {
 		fmt.Printf("[error] %s\n", err.Error())
 	}
 }
 
-func ErrExit(err error) {
-	if err != nil {
+func ErrExit(errors ...error) {
+	for _, err := range errors {
 		fmt.Printf("[error] %s\n", err.Error())
-		os.Exit(1)
 	}
+	os.Exit(1)
 }
 
 func Panic(msg string, err error) {

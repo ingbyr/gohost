@@ -48,8 +48,7 @@ func init() {
 	M.SetFs(myfs.NewOsFs())
 
 	// setup editor
-	// M.editor = editor.NewVim()
-	M.editor = editor.NewNotepad()
+	M.editor = editor.New(conf.Conf.Editor)
 }
 
 func (m *manager) SetFs(newFs myfs.HostFs) {
@@ -229,14 +228,12 @@ func (m *manager) CreateNewHost(name string, groups []string, edit bool) {
 	}
 	host := NewHostByNameGroups(name, groups)
 	// create the file before editing
-	m.fs.WriteFile(host.FilePath, nil, 0644)
+	if err := m.fs.WriteFile(host.FilePath, []byte(""), myfs.Perm644); err != nil {
+		display.ErrExit(fmt.Errorf("failed to create file %s", host.FilePath), err)
+	}
 	if edit {
 		if err := m.editor.Open(host.FilePath); err != nil {
-			display.ErrExit(fmt.Errorf("failed to edit file '%s'\n%v", host.FilePath, err))
-		}
-	} else {
-		if err := m.fs.WriteFile(host.FilePath, []byte(""), myfs.Perm644); err != nil {
-			display.ErrExit(fmt.Errorf("can not edit %s file\n%v", host.FilePath, err))
+			display.ErrExit(fmt.Errorf("failed to edit file '%s'", host.FilePath), err)
 		}
 	}
 }
