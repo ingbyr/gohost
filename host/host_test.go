@@ -11,20 +11,21 @@ import (
 )
 
 func TestNewHostByFileName(t *testing.T) {
+	M.SetMockMode()
 	var tests = []struct {
-		fileName string
-		want     *Host
+		name string
+		want *Host
 	}{
-		{"", &Host{Name: "", FileName: "", Groups: []string{}}},
-		{"dev", &Host{Name: "dev", FileName: "dev", Groups: []string{}}},
-		{"dev_dev", &Host{Name: "dev", FileName: "dev_dev", Groups: []string{"dev"}}},
-		{"dev_test_prod_host1", &Host{Name: "host1", FileName: "dev_test_prod_host1", Groups: []string{"dev", "test", "prod"}}},
-		{"dev_test_prod_test_host1", &Host{Name: "host1", FileName: "dev_test_prod_test_host1", Groups: []string{"dev", "test", "prod", "test"}}},
+		{".txt", &Host{Name: "", FileName: ".txt", Groups: []string{}}},
+		{"dev.txt", &Host{Name: "dev", FileName: "dev.txt", Groups: []string{}}},
+		{"dev_dev.txt", &Host{Name: "dev", FileName: "dev_dev.txt", Groups: []string{"dev"}}},
+		{"dev_test_prod_host1.txt", &Host{Name: "host1", FileName: "dev_test_prod_host1.txt", Groups: []string{"dev", "test", "prod"}}},
+		{"dev_test_prod_test_host1.txt", &Host{Name: "host1", FileName: "dev_test_prod_test_host1.txt", Groups: []string{"dev", "test", "prod", "test"}}},
 	}
 	for _, test := range tests {
-		host := NewHostByFileName(test.fileName)
+		host := NewHostByFileName(test.name)
 		if diff := cmp.Diff(test.want, host, cmpopts.IgnoreFields(Host{}, "FilePath")); diff != "" {
-			t.Logf("input %v\n", test.fileName)
+			t.Logf("input %v\n", test.name)
 			t.Logf("diff \n%s\n", diff)
 			t.Fail()
 		}

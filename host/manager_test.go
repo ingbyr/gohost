@@ -5,7 +5,6 @@
 package host
 
 import (
-	"github.com/ingbyr/gohost/myfs"
 	"testing"
 )
 
@@ -18,13 +17,13 @@ type hostTestOp struct {
 	initHosts    []hosts
 	addGroups    []string
 	deleteGroups []string
-	addHosts []hosts
-	deleteHosts []string
-	renameHosts [][2]string
+	addHosts     []hosts
+	deleteHosts  []string
+	renameHosts  [][2]string
 }
 
 func TestManager_CreateRemoveNewHost(t *testing.T) {
-	M.SetFs(myfs.NewMemFs())
+	M.SetMockMode()
 	var tests = []hostTestOp{
 		{
 			initHosts: []hosts{

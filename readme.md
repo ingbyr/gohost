@@ -45,7 +45,7 @@ REG add "HKLM\SYSTEM\CurrentControlSet\services\dnscache" /v Start /t REG_DWORD 
 | Remove group for host | `gohost cg HOST_NAME -d(--delete) GROUP_NAME_1[,GROUP_NAME_2,...]` | `gohost cg file1 -d group3,group4` |
 | List group | `gohost ls` | `gohost ls` |
 | Rename group | `gohost mv -g(--group) GROUP_NAME NEW_GROUP_NAME` | `gohost mv -g group1 newGroup`|
-
+ | Delete group | `gohost rm -g GROUP_NAME` | `gohost rm -g group3` |
 ### Apply Group
 
 | Description      | Command                                            | Example             |

@@ -43,12 +43,15 @@ func init() {
 			Groups:   nil,
 		},
 	}
+}
 
-	// setup default fs
-	M.SetFs(myfs.NewOsFs())
+func (m *manager) SetCmdMode() {
+	m.SetFs(myfs.NewOsFs())
+	m.editor = editor.New(conf.Conf.Editor)
+}
 
-	// setup editor
-	M.editor = editor.New(conf.Conf.Editor)
+func (m *manager) SetMockMode() {
+	m.SetFs(myfs.NewMemFs())
 }
 
 func (m *manager) SetFs(newFs myfs.HostFs) {
