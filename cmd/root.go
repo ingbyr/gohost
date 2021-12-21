@@ -5,6 +5,7 @@
 package cmd
 
 import (
+	"github.com/ingbyr/gohost/conf"
 	"github.com/ingbyr/gohost/display"
 	"github.com/ingbyr/gohost/host"
 	"github.com/spf13/cobra"
@@ -16,7 +17,7 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
-	host.M.SetCmdMode()
+	host.M.Init(conf.C.Mode)
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(editCmd)
 	rootCmd.AddCommand(useCmd)

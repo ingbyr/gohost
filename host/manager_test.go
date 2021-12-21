@@ -5,6 +5,7 @@
 package host
 
 import (
+	"github.com/ingbyr/gohost/conf"
 	"testing"
 )
 
@@ -23,7 +24,7 @@ type hostTestOp struct {
 }
 
 func TestManager_CreateRemoveNewHost(t *testing.T) {
-	M.SetMockMode()
+	M.Init(conf.ModeMemory)
 	var tests = []hostTestOp{
 		{
 			initHosts: []hosts{

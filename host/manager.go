@@ -42,16 +42,17 @@ func init() {
 			FilePath: conf.BaseHostFile,
 			Groups:   nil,
 		},
+		editor: editor.New(conf.C.Editor),
 	}
 }
 
-func (m *manager) SetCmdMode() {
-	m.SetFs(myfs.NewOsFs())
-	m.editor = editor.New(conf.Conf.Editor)
-}
-
-func (m *manager) SetMockMode() {
-	m.SetFs(myfs.NewMemFs())
+func (m *manager) Init(mode string) {
+	switch mode {
+	case conf.ModeStorage:
+		M.SetFs(myfs.NewOsFs())
+	case conf.ModeMemory:
+		M.SetFs(myfs.NewMemFs())
+	}
 }
 
 func (m *manager) SetFs(newFs myfs.HostFs) {
