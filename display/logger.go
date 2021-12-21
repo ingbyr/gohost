@@ -10,9 +10,7 @@ import (
 )
 
 func Warn(warn string) {
-	if warn != "" {
-		fmt.Printf("[warn] %s\n", warn)
-	}
+	fmt.Printf("[warn] %s\n", warn)
 }
 
 func Err(errors ...error) {

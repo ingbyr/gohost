@@ -51,6 +51,7 @@ func (m *manager) Init(mode string) {
 	case conf.ModeStorage:
 		M.SetFs(myfs.NewOsFs())
 	case conf.ModeMemory:
+		display.Warn("memory mode")
 		M.SetFs(myfs.NewMemFs())
 	}
 }

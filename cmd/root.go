@@ -26,6 +26,7 @@ func Execute() {
 	rootCmd.AddCommand(sysCmd)
 	rootCmd.AddCommand(groupCommand)
 	rootCmd.AddCommand(removeCmd)
+	rootCmd.AddCommand(confCmd)
 	if err := rootCmd.Execute(); err != nil {
 		display.ErrExit(err)
 		return
