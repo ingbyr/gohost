@@ -2,7 +2,7 @@ package conf
 
 import (
 	"os/user"
-	"path/filepath"
+	"path"
 )
 
 const (
@@ -10,11 +10,13 @@ const (
 	SepInCmd         = ","
 	TmpCombinedHost  = ".tmp_combined"
 	BaseHostFileName = "base"
+	HostFileExt      = ".txt"
 )
 
 var (
 	BaseDir      string
 	BaseHostFile string
+	ConfigFile   string
 )
 
 func init() {
@@ -23,6 +25,7 @@ func init() {
 		panic(err)
 	}
 
-	BaseDir = filepath.Join(curr.HomeDir, ".gohost")
-	BaseHostFile = filepath.Join(BaseDir, "."+BaseHostFileName)
+	BaseDir = path.Join(curr.HomeDir, ".gohost")
+	BaseHostFile = path.Join(BaseDir, "."+BaseHostFileName)
+	ConfigFile = path.Join(BaseDir, "config.ini")
 }

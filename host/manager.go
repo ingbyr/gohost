@@ -28,6 +28,7 @@ type manager struct {
 	_groups     []string
 	noGroupHost []*Host
 	fs          myfs.HostFs
+	editor      editor.Editor
 }
 
 var M *manager
@@ -45,6 +46,10 @@ func init() {
 
 	// setup default fs
 	M.SetFs(myfs.NewOsFs())
+
+	// setup editor
+	// M.editor = editor.NewVim()
+	M.editor = editor.NewNotepad()
 }
 
 func (m *manager) SetFs(newFs myfs.HostFs) {
@@ -61,9 +66,9 @@ func (m *manager) SetFs(newFs myfs.HostFs) {
 	if _, err := m.fs.Stat(m.baseHost.FilePath); m.fs.IsNotExist(err) {
 		var content bytes.Buffer
 		content.WriteString("127.0.0.1 localhost")
-		content.WriteString(NewLine)
+		content.WriteString(conf.NewLine)
 		content.WriteString("::1 localhost")
-		content.WriteString(NewLine)
+		content.WriteString(conf.NewLine)
 		if err := m.fs.WriteFile(m.baseHost.FilePath, content.Bytes(), 0644); err != nil {
 			display.Panic("can not create base host file", err)
 		}
@@ -88,7 +93,7 @@ func (m *manager) LoadHosts() {
 	// load host files
 	for _, file := range files {
 		// skip dir and files started with '.'
-		if file.IsDir() || strings.HasPrefix(file.Name(), ".") {
+		if file.IsDir() || !strings.HasSuffix(file.Name(), conf.HostFileExt) {
 			continue
 		}
 		// create host
@@ -219,20 +224,19 @@ func (m *manager) AddGroup(hostName string, groups []string) {
 }
 
 func (m *manager) CreateNewHost(name string, groups []string, edit bool) {
-	if name == m.baseHost.Name {
-		display.ErrExit(fmt.Errorf("host file '%s' already exists", name))
-	}
 	if _, exist := m.hosts[name]; exist {
 		display.ErrExit(fmt.Errorf("host file '%s' already exists", name))
 	}
 	host := NewHostByNameGroups(name, groups)
+	// create the file before editing
+	m.fs.WriteFile(host.FilePath, nil, 0644)
 	if edit {
-		if err := editor.OpenByVim(host.FilePath); err != nil {
-			display.ErrExit(fmt.Errorf("failed to create file '%s'\n%v", host.FilePath, err))
+		if err := m.editor.Open(host.FilePath); err != nil {
+			display.ErrExit(fmt.Errorf("failed to edit file '%s'\n%v", host.FilePath, err))
 		}
 	} else {
 		if err := m.fs.WriteFile(host.FilePath, []byte(""), myfs.Perm644); err != nil {
-			display.ErrExit(fmt.Errorf("can not create %s file\n%v", host.FilePath, err))
+			display.ErrExit(fmt.Errorf("can not edit %s file\n%v", host.FilePath, err))
 		}
 	}
 }
@@ -286,7 +290,7 @@ func (m *manager) ChangeGroupName(groupName string, newGroupName string) {
 
 func (m *manager) EditHostFile(hostName string) {
 	host := m.mustHost(hostName)
-	if err := editor.OpenByVim(host.FilePath); err != nil {
+	if err := m.editor.Open(host.FilePath); err != nil {
 		display.ErrExit(err)
 	}
 }
@@ -312,7 +316,7 @@ func (m *manager) ApplyGroup(group string, simulate bool) {
 	if err != nil {
 		display.ErrExit(err)
 	}
-	combinedHostFileWriter := transform.NewWriter(combinedHostFile, SysHostCharset.NewEncoder())
+	combinedHostFileWriter := transform.NewWriter(combinedHostFile, conf.SysHostCharset.NewEncoder())
 	_, err = combinedHostFileWriter.Write(combinedHostContent)
 	if err != nil {
 		display.ErrExit(err)
@@ -321,7 +325,7 @@ func (m *manager) ApplyGroup(group string, simulate bool) {
 	combinedHostFileWriter.Close()
 
 	// replace system host with temporary combined host file
-	if err := m.fs.Rename(combinedHost.FilePath, SysHost); err != nil {
+	if err := m.fs.Rename(combinedHost.FilePath, conf.SysHost); err != nil {
 		display.ErrExit(err)
 	}
 	fmt.Printf("applied group '%s' to system host:\n", group)
@@ -331,7 +335,7 @@ func (m *manager) ApplyGroup(group string, simulate bool) {
 }
 
 func (m *manager) PrintSysHost(max int) {
-	host, err := m.fs.Open(SysHost)
+	host, err := m.fs.Open(conf.SysHost)
 	if err != nil {
 		display.Panic("can not read system host file", err)
 	}
@@ -392,19 +396,19 @@ func (m *manager) printHosts() {
 func (m *manager) combineHosts(hosts []*Host, head string) []byte {
 	var b bytes.Buffer
 	b.WriteString(head)
-	b.WriteString(NewLine + NewLine)
+	b.WriteString(conf.NewLine + conf.NewLine)
 	for _, host := range hosts {
 		file, err := m.fs.Open(host.FilePath)
 		if err != nil {
 			display.Panic("can not combine host", err)
 		}
 		scanner := bufio.NewScanner(file)
-		b.WriteString("# " + host.Name + NewLine)
+		b.WriteString("# " + host.Name + conf.NewLine)
 		for scanner.Scan() {
 			b.Write(scanner.Bytes())
-			b.WriteString(NewLine)
+			b.WriteString(conf.NewLine)
 		}
-		b.WriteString(NewLine)
+		b.WriteString(conf.NewLine)
 		_ = file.Close()
 	}
 	return b.Bytes()

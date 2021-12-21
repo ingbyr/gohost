@@ -23,7 +23,7 @@ type Host struct {
 
 func (h *Host) GenAutoFields() {
 	h.FileName = strings.Join(append(h.Groups, h.Name), conf.SepGroupInFile)
-	h.FilePath = path.Join(conf.BaseDir, h.FileName)
+	h.FilePath = path.Join(conf.BaseDir, h.FileName+conf.HostFileExt)
 }
 
 func (h *Host) RemoveGroup(group string) bool {
@@ -45,7 +45,7 @@ func NewHostByFileName(fileName string) *Host {
 	name := groups[len(groups)-1]
 	groups = groups[:len(groups)-1]
 	return &Host{
-		Name:     name,
+		Name:     name[:len(name)-len(conf.HostFileExt)],
 		FileName: fileName,
 		FilePath: path.Join(conf.BaseDir, fileName),
 		Groups:   groups,
@@ -53,7 +53,6 @@ func NewHostByFileName(fileName string) *Host {
 }
 
 func NewHostByNameGroups(hostName string, groups []string) *Host {
-
 	// use host name as group if no specified groups
 	if len(groups) == 0 && hostName != conf.TmpCombinedHost {
 		groups = append(groups, hostName)

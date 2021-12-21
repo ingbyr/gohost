@@ -6,13 +6,19 @@ import (
 	"os/exec"
 )
 
-func OpenByVim(filePath string) error {
-	const vim = "vim"
+type vim struct{}
+
+func NewVim() vim {
+	return vim{}
+}
+
+func (vim) Open(filePath string) error {
+	const vimCmd = "vim"
 	const noSwap = "-n"
-	if _, err := exec.LookPath(vim); err != nil {
-		return fmt.Errorf("please install vim before editing file\n %v", err)
+	if _, err := exec.LookPath(vimCmd); err != nil {
+		return fmt.Errorf("can not find vim")
 	}
-	cmd := exec.Command(vim, noSwap, filePath)
+	cmd := exec.Command(vimCmd, noSwap, filePath)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	return cmd.Run()

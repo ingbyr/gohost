@@ -8,4 +8,5 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/spf13/cobra v1.2.1
 	golang.org/x/text v0.3.7
+	gopkg.in/ini.v1 v1.66.2 // indirect
 )
