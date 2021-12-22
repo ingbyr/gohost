@@ -11,6 +11,5 @@ const (
 )
 
 var (
-	// see https://stackoverflow.com/questions/701882/what-is-ansi-format/702023#702023
 	SysHostCharset = charmap.ISO8859_1
 )

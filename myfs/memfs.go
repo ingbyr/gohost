@@ -44,7 +44,7 @@ func (m *MemFs) Open(path string) (fs.File, error) {
 	}
 
 	cur := m.rootDir
-	parts := strings.Split(path, "/")
+	parts := strings.Split(path, string(filepath.Separator))
 	for i, part := range parts {
 		child := cur.children[part]
 		if child == nil {
@@ -153,7 +153,7 @@ func (m *MemFs) MkdirAll(path string, perm os.FileMode) error {
 		}
 	}
 	cur := m.rootDir
-	parts := strings.Split(path, "/")
+	parts := strings.Split(path, string(filepath.Separator))
 	for _, part := range parts {
 		child, ok := cur.children[part]
 		if !ok {
@@ -343,7 +343,7 @@ func (m *MemFs) getEntry(path string) (fs.DirEntry, error) {
 	if path == "." {
 		return m.rootDir, nil
 	}
-	parts := strings.Split(path, "/")
+	parts := strings.Split(path, string(filepath.Separator))
 	dir := m.rootDir
 	var targetEntry fs.DirEntry
 	parentDirLen := len(parts) - 1

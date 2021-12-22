@@ -42,6 +42,7 @@ var (
 
 func init() {
 	// init config file
+	// todo reader interface
 	_ = ini.MapTo(C, ConfigFile)
 	checkMode()
 }
@@ -77,6 +78,8 @@ func Sync() {
 		if err := ini.ReflectFrom(cfg, C); err != nil {
 			display.ErrExit(err)
 		}
+
+		// todo writer interface
 		if err := cfg.SaveTo(ConfigFile); err != nil {
 			display.ErrExit(err)
 		}
