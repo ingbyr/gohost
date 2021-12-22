@@ -2,7 +2,7 @@
  @Author: ingbyr
 */
 
-package myfs
+package hfs
 
 import (
 	"errors"
@@ -20,7 +20,7 @@ var (
 	ErrClosedFile  = errors.New("file closed")
 )
 
-type HostFs interface {
+type Hfs interface {
 	fs.FS
 	fs.ReadDirFS
 	fs.ReadFileFS
@@ -32,7 +32,7 @@ type HostFs interface {
 	Rename(oldPath, newPath string) error
 }
 
-func printEntryTree(hfs HostFs) {
+func printEntryTree(hfs Hfs) {
 	err := fs.WalkDir(hfs, "/", func(path string, entry fs.DirEntry, err error) error {
 		fmt.Printf("path %s, name %s, dir %t\n", path, entry.Name(), entry.IsDir())
 		return err

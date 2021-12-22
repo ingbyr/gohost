@@ -7,12 +7,10 @@ package host
 import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/ingbyr/gohost/conf"
 	"testing"
 )
 
 func TestNewHostByFileName(t *testing.T) {
-	M.Init(conf.ModeMemory)
 	var tests = []struct {
 		name string
 		want *Host

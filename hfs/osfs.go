@@ -1,17 +1,18 @@
+//go:build osfs
+// +build osfs
+
 /*
  @Author: ingbyr
 */
 
-package myfs
+package hfs
 
 import (
 	"io/fs"
 	"os"
 )
 
-var (
-	_ HostFs = NewOsFs()
-)
+var H Hfs = NewOsFs()
 
 type OsFs struct {
 }

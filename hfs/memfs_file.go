@@ -2,7 +2,7 @@
  @Author: ingbyr
 */
 
-package myfs
+package hfs
 
 import (
 	"bytes"

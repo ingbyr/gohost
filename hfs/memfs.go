@@ -1,8 +1,11 @@
+//go:build memfs
+// +build memfs
+
 /*
  @Author: ingbyr
 */
 
-package myfs
+package hfs
 
 import (
 	"bytes"
@@ -13,9 +16,7 @@ import (
 	"time"
 )
 
-var (
-	_ HostFs = NewMemFs()
-)
+var H Hfs = NewMemFs()
 
 const (
 	rootDirName = "mem"

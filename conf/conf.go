@@ -20,12 +20,10 @@ const (
 	ModeStorage = "storage"
 	ModeMemory  = "memory"
 
-	OpMode   = "mode"
 	OpEditor = "editor"
 )
 
-type conf struct {
-	Mode   string `ini:"mode"`
+type CustomConfig struct {
 	Editor string `init:"editor"`
 }
 
@@ -34,8 +32,7 @@ var (
 	BaseDir      = path.Join(currUser.HomeDir, ".gohost")
 	BaseHostFile = path.Join(BaseDir, "."+BaseHostFileName)
 	ConfigFile   = path.Join(BaseDir, "config.ini")
-	C            = &conf{
-		Mode:   ModeStorage,
+	Custom       = &CustomConfig{
 		Editor: editor.Default,
 	}
 )
@@ -43,16 +40,8 @@ var (
 func init() {
 	// init config file
 	// todo reader interface
-	_ = ini.MapTo(C, ConfigFile)
-	checkMode()
-}
 
-func checkMode() {
-	switch C.Mode {
-	case ModeStorage, ModeMemory:
-	default:
-		display.ErrExit(fmt.Errorf("not valid mode %s", C.Mode))
-	}
+	_ = ini.MapTo(Custom, ConfigFile)
 }
 
 func Change(op string, value string) {
@@ -60,11 +49,8 @@ func Change(op string, value string) {
 		display.Err(fmt.Errorf("not valid config (op=%s, value=%s)", op, value))
 	}
 	switch op {
-	case OpMode:
-		C.Mode = value
-		checkMode()
 	case OpEditor:
-		C.Editor = value
+		Custom.Editor = value
 	default:
 		display.ErrExit(fmt.Errorf("not valid config (op=%s, value=%s)", op, value))
 	}
@@ -72,17 +58,13 @@ func Change(op string, value string) {
 }
 
 func Sync() {
-	switch C.Mode {
-	case ModeStorage:
-		cfg := ini.Empty()
-		if err := ini.ReflectFrom(cfg, C); err != nil {
-			display.ErrExit(err)
-		}
+	cfg := ini.Empty()
+	if err := ini.ReflectFrom(cfg, Custom); err != nil {
+		display.ErrExit(err)
+	}
 
-		// todo writer interface
-		if err := cfg.SaveTo(ConfigFile); err != nil {
-			display.ErrExit(err)
-		}
-	case ModeMemory:
+	// todo writer interface
+	if err := cfg.SaveTo(ConfigFile); err != nil {
+		display.ErrExit(err)
 	}
 }

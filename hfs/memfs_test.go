@@ -2,7 +2,7 @@
  @Author: ingbyr
 */
 
-package myfs
+package hfs
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ import (
 )
 
 func TestMemFs_Stat(t *testing.T) {
-	var memFs HostFs = NewMemFs()
+	var memFs Hfs = NewMemFs()
 	var tests = []struct {
 		dir  string
 		want string
@@ -42,7 +42,7 @@ func TestMemFs_Stat(t *testing.T) {
 }
 
 func TestMemFs_CreateDir(t *testing.T) {
-	var memFs HostFs = NewMemFs()
+	var memFs Hfs = NewMemFs()
 	dirs := []string{
 		"/d1/d11",
 		"/d1/d12/d111",
@@ -114,7 +114,7 @@ func TestMemFs_WriteRead(t *testing.T) {
 		{"/a/c", "f3", []byte("f3")},
 	}
 
-	var memFs HostFs = NewMemFs()
+	var memFs Hfs = NewMemFs()
 	for _, test := range tests {
 		// create dirs
 		if err := memFs.MkdirAll(test.dir, Perm644); err != nil {
