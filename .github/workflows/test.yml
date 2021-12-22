@@ -19,5 +19,7 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.17
-      - name: Test
-        run: go test -v ./...
+      - name: Test in memory mode
+        run: go test -tags=memfs -v ./...
+      - name: Test in os mode
+        run: go test -tags=osfs -v ./...
