@@ -14,8 +14,9 @@ import (
 	"testing"
 )
 
+var memFs = H
+
 func TestMemFs_Stat(t *testing.T) {
-	var memFs Hfs = NewMemFs()
 	var tests = []struct {
 		dir  string
 		want string
@@ -42,7 +43,6 @@ func TestMemFs_Stat(t *testing.T) {
 }
 
 func TestMemFs_CreateDir(t *testing.T) {
-	var memFs Hfs = NewMemFs()
 	dirs := []string{
 		"/d1/d11",
 		"/d1/d12/d111",
@@ -114,7 +114,6 @@ func TestMemFs_WriteRead(t *testing.T) {
 		{"/a/c", "f3", []byte("f3")},
 	}
 
-	var memFs Hfs = NewMemFs()
 	for _, test := range tests {
 		// create dirs
 		if err := memFs.MkdirAll(test.dir, Perm644); err != nil {
@@ -150,7 +149,6 @@ func TestMemFs_WriteRead(t *testing.T) {
 }
 
 func TestMemFs_Remove(t *testing.T) {
-	memFs := NewMemFs()
 	dir := "/a/b"
 	if err := memFs.MkdirAll(dir, Perm644); err != nil {
 		t.Fatal(err)
@@ -185,7 +183,6 @@ func TestMemFs_Remove(t *testing.T) {
 }
 
 func TestMemFs_Rename(t *testing.T) {
-	memFs := NewMemFs()
 	dir := "/a/b"
 	if err := memFs.MkdirAll(dir, Perm644); err != nil {
 		t.Fatal(err)
@@ -228,5 +225,25 @@ func TestMemFs_Rename(t *testing.T) {
 
 	if err := memFs.Rename("/a/b/c2", "/c/new"); err.(*fs.PathError).Err != fs.ErrNotExist {
 		t.Fatal(err)
+	}
+}
+
+func TestMemFs_Create(t *testing.T) {
+	err := memFs.MkdirAll("/a/b", Perm644)
+	if err != nil {
+		t.Fatal(err)
+	}
+	file, err := memFs.Create("/a/b/c")
+	content := []byte("test content")
+	_, err = file.Write(content)
+	if err != nil {
+		t.Fatal(err)
+	}
+	read, err := memFs.ReadFile("/a/b/c")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff := cmp.Diff(read, content); diff != "" {
+		t.Fatalf("write %v, but get %v", content, read)
 	}
 }

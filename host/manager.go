@@ -33,7 +33,7 @@ type manager struct {
 var M *manager
 
 func init() {
-	// Init manager
+	// create manager
 	M = &manager{
 		baseHost: &Host{
 			Name:     conf.BaseHostFileName,
@@ -47,12 +47,6 @@ func init() {
 }
 
 func (m *manager) Init() {
-	// create base dir
-	if _, err := hfs.H.Stat(conf.BaseDir); hfs.H.IsNotExist(err) {
-		if err := hfs.H.MkdirAll(conf.BaseDir, hfs.Perm644); err != nil {
-			display.Panic("can not create dir "+conf.BaseDir, err)
-		}
-	}
 
 	// create base host file
 	if _, err := hfs.H.Stat(m.baseHost.FilePath); hfs.H.IsNotExist(err) {

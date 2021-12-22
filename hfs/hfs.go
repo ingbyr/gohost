@@ -7,6 +7,7 @@ package hfs
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 )
@@ -30,6 +31,7 @@ type Hfs interface {
 	IsNotExist(err error) bool
 	Remove(path string) error
 	Rename(oldPath, newPath string) error
+	Create(path string) (io.WriteCloser, error)
 }
 
 func printEntryTree(hfs Hfs) {

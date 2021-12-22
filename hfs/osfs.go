@@ -8,6 +8,7 @@
 package hfs
 
 import (
+	"io"
 	"io/fs"
 	"os"
 )
@@ -55,4 +56,8 @@ func (o *OsFs) Remove(name string) error {
 
 func (o *OsFs) Rename(oldPath, newPath string) error {
 	return os.Rename(oldPath, newPath)
+}
+
+func (o *OsFs) Create(path string) (io.WriteCloser, error) {
+	return os.Create(path)
 }

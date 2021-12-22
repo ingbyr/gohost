@@ -9,6 +9,8 @@ package hfs
 
 import (
 	"bytes"
+	"github.com/ingbyr/gohost/display"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -27,6 +29,7 @@ type MemFs struct {
 }
 
 func NewMemFs() *MemFs {
+	display.Warn("memory mode")
 	return &MemFs{
 		rootDir: &MemDir{
 			children: make(map[string]fs.DirEntry),
@@ -305,6 +308,33 @@ func (m *MemFs) Rename(oldPath, newPath string) error {
 	newParent.children[newFileName] = oldFile
 	delete(oldParentDir.children, oldFileName)
 	return nil
+}
+
+func (m *MemFs) Create(path string) (io.WriteCloser, error) {
+	path, ok := m.validPath(path)
+	if !ok {
+		return nil, &fs.PathError{
+			Op:   "Create",
+			Path: path,
+			Err:  fs.ErrInvalid,
+		}
+	}
+
+	dirPath := filepath.Dir(path)
+	dir, err := m.getDir(dirPath)
+	if err != nil {
+		return nil, err
+	}
+	fileName := filepath.Base(path)
+	file := &MemFile{
+		name:    fileName,
+		content: bytes.NewBuffer([]byte("")),
+		modTime: time.Now(),
+		mode:    Perm644,
+		closed:  false,
+	}
+	dir.children[fileName] = file
+	return file, nil
 }
 
 // getFile path must be valid by caller

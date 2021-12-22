@@ -19,6 +19,10 @@ type MemFile struct {
 	closed  bool
 }
 
+func (m *MemFile) Write(p []byte) (n int, err error) {
+	return m.content.Write(p)
+}
+
 func (m *MemFile) Stat() (fs.FileInfo, error) {
 	return m, nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/ingbyr/gohost/display"
 	"github.com/ingbyr/gohost/editor"
+	"github.com/ingbyr/gohost/hfs"
 	"gopkg.in/ini.v1"
 	"os/user"
 	"path"
@@ -16,11 +17,7 @@ const (
 	TmpCombinedHost  = ".tmp_combined"
 	BaseHostFileName = "base"
 	HostFileExt      = ".txt"
-
-	ModeStorage = "storage"
-	ModeMemory  = "memory"
-
-	OpEditor = "editor"
+	OpEditor         = "editor"
 )
 
 type CustomConfig struct {
@@ -35,13 +32,45 @@ var (
 	Custom       = &CustomConfig{
 		Editor: editor.Default,
 	}
+
+	fs = hfs.H
 )
 
 func init() {
+	// create base dir
+	if _, err := fs.Stat(BaseDir); fs.IsNotExist(err) {
+		if err := fs.MkdirAll(BaseDir, hfs.Perm644); err != nil {
+			display.Panic("can not create dir "+BaseDir, err)
+		}
+	}
 	// init config file
-	// todo reader interface
-
-	_ = ini.MapTo(Custom, ConfigFile)
+	if _, err := fs.Stat(ConfigFile); fs.IsNotExist(err) {
+		newConfigFile, err := fs.Create(ConfigFile)
+		if err != nil {
+			display.ErrExit(err)
+		}
+		cfg := ini.Empty()
+		if err := ini.ReflectFrom(cfg, Custom); err != nil {
+			display.ErrExit(err)
+		}
+		if _, err := cfg.WriteTo(newConfigFile); err != nil {
+			display.ErrExit(err)
+		}
+		if err := newConfigFile.Close(); err != nil {
+			display.ErrExit(err)
+		}
+	}
+	file, err := hfs.H.Open(ConfigFile)
+	if err != nil {
+		display.ErrExit(err)
+	}
+	cfg, err := ini.Load(file)
+	if err != nil {
+		display.ErrExit(err)
+	}
+	if err := cfg.MapTo(Custom); err != nil {
+		display.ErrExit(err)
+	}
 }
 
 func Change(op string, value string) {
