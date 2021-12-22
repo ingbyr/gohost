@@ -14,9 +14,8 @@ import (
 	"testing"
 )
 
-var memFs = H
-
 func TestMemFs_Stat(t *testing.T) {
+	var memFs = H.NewFs()
 	var tests = []struct {
 		dir  string
 		want string
@@ -39,10 +38,10 @@ func TestMemFs_Stat(t *testing.T) {
 			t.Fatal("diff", diff)
 		}
 	}
-
 }
 
 func TestMemFs_CreateDir(t *testing.T) {
+	var memFs = H.NewFs()
 	dirs := []string{
 		"/d1/d11",
 		"/d1/d12/d111",
@@ -104,6 +103,7 @@ func TestMemFs_CreateDir(t *testing.T) {
 }
 
 func TestMemFs_WriteRead(t *testing.T) {
+	var memFs = H.NewFs()
 	var tests = []struct {
 		dir     string
 		file    string
@@ -149,6 +149,7 @@ func TestMemFs_WriteRead(t *testing.T) {
 }
 
 func TestMemFs_Remove(t *testing.T) {
+	var memFs = H.NewFs()
 	dir := "/a/b"
 	if err := memFs.MkdirAll(dir, Perm644); err != nil {
 		t.Fatal(err)
@@ -183,6 +184,7 @@ func TestMemFs_Remove(t *testing.T) {
 }
 
 func TestMemFs_Rename(t *testing.T) {
+	var memFs = H.NewFs()
 	dir := "/a/b"
 	if err := memFs.MkdirAll(dir, Perm644); err != nil {
 		t.Fatal(err)
@@ -229,6 +231,7 @@ func TestMemFs_Rename(t *testing.T) {
 }
 
 func TestMemFs_Create(t *testing.T) {
+	var memFs = H.NewFs()
 	err := memFs.MkdirAll("/a/b", Perm644)
 	if err != nil {
 		t.Fatal(err)

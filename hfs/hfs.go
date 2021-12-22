@@ -32,6 +32,7 @@ type Hfs interface {
 	Remove(path string) error
 	Rename(oldPath, newPath string) error
 	Create(path string) (io.WriteCloser, error)
+	NewFs() Hfs
 }
 
 func printEntryTree(hfs Hfs) {

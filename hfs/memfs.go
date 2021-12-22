@@ -28,6 +28,17 @@ type MemFs struct {
 	rootDir *MemDir
 }
 
+func (m *MemFs) NewFs() Hfs {
+	return &MemFs{
+		rootDir: &MemDir{
+			children: make(map[string]fs.DirEntry),
+		},
+	}
+}
+
+func (m *MemFs) Reset() {
+}
+
 func NewMemFs() *MemFs {
 	display.Warn("memory mode")
 	return &MemFs{
