@@ -18,6 +18,10 @@ var H Hfs = NewOsFs()
 type OsFs struct {
 }
 
+func (o *OsFs) NewFs() Hfs {
+	panic("os fs do not support NewFs() method")
+}
+
 func (o *OsFs) Stat(name string) (fs.FileInfo, error) {
 	return os.Stat(name)
 }
@@ -60,8 +64,4 @@ func (o *OsFs) Rename(oldPath, newPath string) error {
 
 func (o *OsFs) Create(path string) (io.WriteCloser, error) {
 	return os.Create(path)
-}
-
-func (o *Osfs) NewFs() Hfs {
-	panic("os fs do not support NewFs() method")
 }
