@@ -46,6 +46,7 @@ Gohost is a simple host switcher tool supporting Windows, Linux and macOS.
 
 ### Config
 
-| Description | Command | Example |
-|-------------|---------|---------|
-|             |         |         |
+| Description   | Command                                     | Example                      |
+|---------------|---------------------------------------------|------------------------------|
+| Show version  | `gohost version`                            | `gohost version`             |
+| Change editor | `gohost cfg editor '[EDITOR ARG0 ARG1...]'` | `gohost cfg editor 'vim -n'` |
