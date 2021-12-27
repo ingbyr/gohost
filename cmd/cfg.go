@@ -7,7 +7,7 @@ import (
 
 var (
 	confCmd = &cobra.Command{
-		Use:   "conf",
+		Use:   "cfg",
 		Short: "change config",
 		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {

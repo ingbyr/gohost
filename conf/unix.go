@@ -3,15 +3,8 @@
 
 package conf
 
-import (
-	"golang.org/x/text/encoding/unicode"
-)
-
 const (
-	SysHost = "/etc/hosts"
-	NewLine = "\n"
-)
-
-var (
-	SysHostCharset = unicode.UTF8
+	SysHost       = "/etc/hosts"
+	NewLine       = "\n"
+	DefaultEditor = "vim"
 )

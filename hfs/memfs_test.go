@@ -1,3 +1,6 @@
+//go:build memfs
+// +build memfs
+
 /*
  @Author: ingbyr
 */

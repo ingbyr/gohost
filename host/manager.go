@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"os"
 	"sort"
 	"strings"
 
@@ -296,11 +295,11 @@ func (m *manager) ApplyGroup(group string, simulate bool) {
 	}
 
 	// open system host file
-	sysHost, err := fs.OpenFile(conf.SysHost, os.O_RDONLY|os.O_WRONLY|os.O_TRUNC, hfs.Perm644)
-	defer sysHost.Close()
+	sysHost, err := fs.Create(conf.SysHost)
 	if err != nil {
 		display.ErrExit(err)
 	}
+	defer sysHost.Close()
 
 	// write hosts to system host file
 	if _, err = sysHost.Write(combinedHostContent); err != nil {

@@ -18,10 +18,6 @@ var H Hfs = NewOsFs()
 type OsFs struct {
 }
 
-func (o *OsFs) OpenFile(name string, flag int, perm os.FileMode) (*os.File, error) {
-	return os.OpenFile(name, flag, perm)
-}
-
 func (o *OsFs) NewFs() Hfs {
 	panic("os fs do not support NewFs() method")
 }

@@ -11,10 +11,9 @@ import (
 )
 
 const (
-	Version        = "0.1.1"
-	SepGroupInFile = "_"
-	SepInCmd       = ","
-
+	Version          = "0.1.1"
+	SepGroupInFile   = "_"
+	SepInCmd         = ","
 	BaseHostFileName = "base"
 	HostFileExt      = ".txt"
 	OpEditor         = "editor"
@@ -93,7 +92,11 @@ func Sync() {
 	}
 
 	// todo writer interface
-	if err := cfg.SaveTo(ConfigFile); err != nil {
+	cfgFile, err := hfs.H.Create(ConfigFile)
+	if err != nil {
+		display.ErrExit(err)
+	}
+	if _, err = cfg.WriteTo(cfgFile); err != nil {
 		display.ErrExit(err)
 	}
 }
