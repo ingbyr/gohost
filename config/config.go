@@ -6,6 +6,7 @@ import (
 	"gopkg.in/ini.v1"
 	"os/user"
 	"path/filepath"
+	"reflect"
 )
 
 const (
@@ -14,7 +15,6 @@ const (
 	SepInCmd         = ","
 	BaseHostFileName = "base"
 	HostFileExt      = ".txt"
-	OpEditor         = "editor"
 )
 
 var (
@@ -26,8 +26,7 @@ var (
 )
 
 type Config struct {
-	Editor     string `ini:"editor"`
-	EditorArgs string `ini:"editor_args"`
+	Editor string `ini:"editor"`
 }
 
 func (c *Config) Init() error {
@@ -68,17 +67,25 @@ func (c *Config) Init() error {
 	return nil
 }
 
-func (c *Config) Change(option string, value string) error {
-	if option == "" || value == "" {
-		return fmt.Errorf("not valid config (option=%s, value=%s)", option, value)
+func (c *Config) Change(option string, value string) (error, []string) {
+	var validOptions []string
+	modified := false
+	cfg := reflect.ValueOf(c).Elem()
+	for i := 0; i < cfg.NumField(); i++ {
+		field := cfg.Type().Field(i)
+		op, ok := field.Tag.Lookup("ini")
+		if ok {
+			if op == option {
+				cfg.Field(i).Set(reflect.ValueOf(value))
+				modified = true
+			}
+			validOptions = append(validOptions, op)
+		}
 	}
-	switch option {
-	case OpEditor:
-		c.Editor = value
-	default:
-		return fmt.Errorf("not valid config (option=%s, value=%s)", option, value)
+	if !modified {
+		return fmt.Errorf("not valid config (option=%s, value=%s)", option, value), validOptions
 	}
-	return c.Sync()
+	return c.Sync(), validOptions
 }
 
 func (c *Config) Sync() error {

@@ -37,15 +37,14 @@ var (
 func init() {
 	// init config
 	_config := config.Config{
-		Editor:     editor.Default,
-		EditorArgs: editor.DefaultArgs,
+		Editor: editor.Default,
 	}
 	if err := _config.Init(); err != nil {
 		display.ErrStrExit("failed to init config file", err)
 	}
 
-	// init editor
-	_editor := editor.New(_config.Editor, editor.ExtractArgs(_config.EditorArgs))
+	// todo init editor
+	_editor := editor.New(_config.Editor, []string{})
 
 	// create manager
 	M = &manager{
@@ -345,8 +344,8 @@ func (m *manager) PrintSysHost(max int) {
 }
 
 func (m *manager) ChangeConfig(option string, value string) {
-	if err := m.config.Change(option, value); err != nil {
-		display.ErrStrExit("failed to modify the config file", err)
+	if err, validOptions := m.config.Change(option, value); err != nil {
+		display.ErrStrExit("failed to modify the config file", err, fmt.Errorf("valid options %v", validOptions))
 	}
 }
 
