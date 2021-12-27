@@ -15,6 +15,7 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
+	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(editCmd)
 	rootCmd.AddCommand(useCmd)
