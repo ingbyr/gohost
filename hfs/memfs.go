@@ -28,6 +28,11 @@ type MemFs struct {
 	rootDir *MemDir
 }
 
+func (m *MemFs) OpenFile(name string, flag int, perm os.FileMode) (*os.File, error) {
+	//TODO implement me
+	panic("mem fs not support OpenFile method")
+}
+
 func (m *MemFs) NewFs() Hfs {
 	return &MemFs{
 		rootDir: &MemDir{

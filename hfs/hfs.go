@@ -25,6 +25,7 @@ type Hfs interface {
 	fs.FS
 	fs.ReadDirFS
 	fs.ReadFileFS
+	OpenFile(name string, flag int, perm os.FileMode) (*os.File, error)
 	WriteFile(path string, data []byte, perm os.FileMode) error
 	MkdirAll(path string, perm os.FileMode) error
 	Stat(path string) (fs.FileInfo, error)

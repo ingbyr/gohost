@@ -54,7 +54,7 @@ func NewHostByFileName(fileName string) *Host {
 
 func NewHostByNameGroups(hostName string, groups []string) *Host {
 	// use host name as group if no specified groups
-	if len(groups) == 0 && hostName != conf.TmpCombinedHost {
+	if len(groups) == 0 {
 		groups = append(groups, hostName)
 	} else {
 		// sort and unique the groups

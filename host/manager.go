@@ -17,7 +17,6 @@ import (
 	"github.com/ingbyr/gohost/editor"
 	"github.com/ingbyr/gohost/hfs"
 	"github.com/ingbyr/gohost/util"
-	"golang.org/x/text/transform"
 )
 
 type manager struct {
@@ -30,7 +29,10 @@ type manager struct {
 	editor      editor.Editor
 }
 
-var M *manager
+var (
+	M  *manager
+	fs = hfs.H
+)
 
 func init() {
 	// create manager
@@ -47,19 +49,18 @@ func init() {
 }
 
 func (m *manager) Init() {
-
 	// create base host file
-	if _, err := hfs.H.Stat(m.baseHost.FilePath); hfs.H.IsNotExist(err) {
+	if _, err := fs.Stat(m.baseHost.FilePath); fs.IsNotExist(err) {
 		var content bytes.Buffer
 		content.WriteString("127.0.0.1 localhost")
 		content.WriteString(conf.NewLine)
 		content.WriteString("::1 localhost")
 		content.WriteString(conf.NewLine)
-		if err := hfs.H.WriteFile(m.baseHost.FilePath, content.Bytes(), 0644); err != nil {
+		if err := fs.WriteFile(m.baseHost.FilePath, content.Bytes(), 0644); err != nil {
 			display.Panic("can not create base host file", err)
 		}
 	}
-
+	// load hosts
 	m.LoadHosts()
 }
 
@@ -71,12 +72,12 @@ func (m *manager) LoadHosts() {
 	m._groups = make([]string, 0)
 	m.noGroupHost = make([]*Host, 0)
 
-	files, err := hfs.H.ReadDir(conf.BaseDir)
+	files, err := fs.ReadDir(conf.BaseDir)
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to Init gohost dir"))
 	}
 
-	// Init host files
+	// init host files
 	for _, file := range files {
 		// skip dir and files started with '.'
 		if file.IsDir() || !strings.HasSuffix(file.Name(), conf.HostFileExt) {
@@ -177,7 +178,7 @@ func (m *manager) DeleteGroup(group string) bool {
 		if host.RemoveGroup(group) {
 			oldFilePath := host.FilePath
 			host.GenAutoFields()
-			if err := hfs.H.Rename(oldFilePath, host.FilePath); err != nil {
+			if err := fs.Rename(oldFilePath, host.FilePath); err != nil {
 				display.ErrExit(err)
 			}
 		}
@@ -189,7 +190,7 @@ func (m *manager) DeleteHostGroups(hostName string, delGroups []string) {
 	host := m.mustHost(hostName)
 	newGroups, removedGroups := util.SliceSub(host.Groups, delGroups)
 	newHost := NewHostByNameGroups(hostName, newGroups)
-	err := hfs.H.Rename(host.FilePath, newHost.FilePath)
+	err := fs.Rename(host.FilePath, newHost.FilePath)
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to delete groups"))
 	}
@@ -201,7 +202,7 @@ func (m *manager) AddGroup(hostName string, groups []string) {
 	host := m.mustHost(hostName)
 	newGroups, addGroups := util.SliceUnion(host.Groups, groups)
 	newHost := NewHostByNameGroups(hostName, newGroups)
-	err := hfs.H.Rename(host.FilePath, newHost.FilePath)
+	err := fs.Rename(host.FilePath, newHost.FilePath)
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to delete groups"))
 	}
@@ -215,7 +216,7 @@ func (m *manager) CreateNewHost(name string, groups []string, edit bool) {
 	}
 	host := NewHostByNameGroups(name, groups)
 	// create the file before editing
-	if err := hfs.H.WriteFile(host.FilePath, []byte(""), hfs.Perm644); err != nil {
+	if err := fs.WriteFile(host.FilePath, []byte(""), hfs.Perm644); err != nil {
 		display.ErrExit(fmt.Errorf("failed to create file %s", host.FilePath), err)
 	}
 	if edit {
@@ -229,7 +230,7 @@ func (m *manager) DeleteHosts(hostNames []string) {
 	deleted := make([]string, 0)
 	for _, hostName := range hostNames {
 		if host, exist := m.hosts[hostName]; exist {
-			err := hfs.H.Remove(host.FilePath)
+			err := fs.Remove(host.FilePath)
 			if err != nil {
 				display.ErrExit(err)
 				continue
@@ -249,7 +250,7 @@ func (m *manager) ChangeHostName(hostName string, newHostName string) {
 	}
 	h := m.mustHost(hostName)
 	newHost := NewHostByNameGroups(newHostName, h.Groups)
-	if err := hfs.H.Rename(h.FilePath, newHost.FilePath); err != nil {
+	if err := fs.Rename(h.FilePath, newHost.FilePath); err != nil {
 		display.ErrExit(err)
 	}
 	fmt.Printf("renamed '%s' to '%s'\n", h.Name, newHostName)
@@ -265,7 +266,7 @@ func (m *manager) ChangeGroupName(groupName string, newGroupName string) {
 		newGroups = append(newGroups, newGroupName)
 		newGroups = util.SortUniqueStringSlice(newGroups)
 		newHost := NewHostByNameGroups(host.Name, newGroups)
-		if err := hfs.H.Rename(host.FilePath, newHost.FilePath); err != nil {
+		if err := fs.Rename(host.FilePath, newHost.FilePath); err != nil {
 			display.ErrExit(err)
 		}
 	}
@@ -294,32 +295,24 @@ func (m *manager) ApplyGroup(group string, simulate bool) {
 		return
 	}
 
-	// write to temporary combined host file
-	combinedHost := NewHostByNameGroups(conf.TmpCombinedHost, nil)
-	combinedHostFile, err := os.Create(combinedHost.FilePath)
+	// open system host file
+	sysHost, err := fs.OpenFile(conf.SysHost, os.O_RDONLY|os.O_WRONLY|os.O_TRUNC, hfs.Perm644)
+	defer sysHost.Close()
 	if err != nil {
 		display.ErrExit(err)
 	}
-	combinedHostFileWriter := transform.NewWriter(combinedHostFile, conf.SysHostCharset.NewEncoder())
-	_, err = combinedHostFileWriter.Write(combinedHostContent)
-	if err != nil {
-		display.ErrExit(err)
-	}
-	combinedHostFile.Close()
-	combinedHostFileWriter.Close()
 
-	// replace system host with temporary combined host file
-	if err := hfs.H.Rename(combinedHost.FilePath, conf.SysHost); err != nil {
+	// write hosts to system host file
+	if _, err = sysHost.Write(combinedHostContent); err != nil {
 		display.ErrExit(err)
 	}
-	fmt.Printf("applied group '%s' to system host:\n", group)
 
 	// display system host
 	m.PrintSysHost(10)
 }
 
 func (m *manager) PrintSysHost(max int) {
-	host, err := hfs.H.Open(conf.SysHost)
+	host, err := fs.Open(conf.SysHost)
 	if err != nil {
 		display.Panic("can not read system host file", err)
 	}
@@ -382,7 +375,7 @@ func (m *manager) combineHosts(hosts []*Host, head string) []byte {
 	b.WriteString(head)
 	b.WriteString(conf.NewLine + conf.NewLine)
 	for _, host := range hosts {
-		file, err := hfs.H.Open(host.FilePath)
+		file, err := fs.Open(host.FilePath)
 		if err != nil {
 			display.Panic("can not combine host", err)
 		}

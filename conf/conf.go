@@ -14,7 +14,6 @@ const (
 	SepGroupInFile = "_"
 	SepInCmd       = ","
 
-	TmpCombinedHost  = ".tmp_combined"
 	BaseHostFileName = "base"
 	HostFileExt      = ".txt"
 	OpEditor         = "editor"
