@@ -5,8 +5,7 @@
 package cmd
 
 import (
-	"github.com/ingbyr/gohost/conf"
-	"github.com/ingbyr/gohost/host"
+	"github.com/ingbyr/gohost/config"
 	"github.com/spf13/cobra"
 	"strings"
 )
@@ -19,9 +18,9 @@ var (
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if removeGroup {
-				host.M.DeleteGroups(strings.Split(args[0], conf.SepInCmd))
+				app.DeleteGroups(strings.Split(args[0], config.SepInCmd))
 			} else {
-				host.M.DeleteHosts(strings.Split(args[0], conf.SepInCmd))
+				app.DeleteHosts(strings.Split(args[0], config.SepInCmd))
 			}
 		},
 	}

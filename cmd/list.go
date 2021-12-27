@@ -5,7 +5,6 @@
 package cmd
 
 import (
-	"github.com/ingbyr/gohost/host"
 	"github.com/spf13/cobra"
 )
 
@@ -16,9 +15,9 @@ var (
 		Short: "list all group",
 		Run: func(cmd *cobra.Command, args []string) {
 			if listAll {
-				host.M.DisplayHosts()
+				app.DisplayHosts()
 			} else {
-				host.M.DisplayGroups()
+				app.DisplayGroups()
 			}
 		},
 	}

@@ -5,10 +5,10 @@
 package host
 
 import (
-	"path"
+	"path/filepath"
 	"strings"
 
-	"github.com/ingbyr/gohost/conf"
+	"github.com/ingbyr/gohost/config"
 	"github.com/ingbyr/gohost/util"
 )
 
@@ -17,13 +17,13 @@ type Host struct {
 	Groups []string
 	// FileName based on Name ang Groups
 	FileName string
-	// FilePath based on FileName and conf.BaseDir
+	// FilePath based on FileName and config.BaseDir
 	FilePath string
 }
 
 func (h *Host) GenAutoFields() {
-	h.FileName = strings.Join(append(h.Groups, h.Name), conf.SepGroupInFile)
-	h.FilePath = path.Join(conf.BaseDir, h.FileName+conf.HostFileExt)
+	h.FileName = strings.Join(append(h.Groups, h.Name), config.SepGroupInFile)
+	h.FilePath = filepath.Join(config.BaseDir, h.FileName+config.HostFileExt)
 }
 
 func (h *Host) RemoveGroup(group string) bool {
@@ -41,13 +41,13 @@ func (h *Host) hasGroups() bool {
 }
 
 func NewHostByFileName(fileName string) *Host {
-	groups := strings.Split(fileName, conf.SepGroupInFile)
+	groups := strings.Split(fileName, config.SepGroupInFile)
 	name := groups[len(groups)-1]
 	groups = groups[:len(groups)-1]
 	return &Host{
-		Name:     name[:len(name)-len(conf.HostFileExt)],
+		Name:     name[:len(name)-len(config.HostFileExt)],
 		FileName: fileName,
-		FilePath: path.Join(conf.BaseDir, fileName),
+		FilePath: filepath.Join(config.BaseDir, fileName),
 		Groups:   groups,
 	}
 }

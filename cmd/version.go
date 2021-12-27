@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/ingbyr/gohost/conf"
+	"github.com/ingbyr/gohost/config"
 	"github.com/spf13/cobra"
 )
 
@@ -11,7 +11,7 @@ var (
 		Use:   "version",
 		Short: "display version",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("Version %s\n", conf.Version)
+			fmt.Printf("Version %s\n", config.Version)
 		},
 	}
 )

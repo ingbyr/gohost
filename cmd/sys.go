@@ -5,7 +5,6 @@
 package cmd
 
 import (
-	"github.com/ingbyr/gohost/host"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +14,7 @@ var (
 		Use:   "sys",
 		Short: "display current system host",
 		Run: func(cmd *cobra.Command, args []string) {
-			host.M.PrintSysHost(maxLine)
+			app.PrintSysHost(maxLine)
 		},
 	}
 )

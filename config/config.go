@@ -1,13 +1,12 @@
-package conf
+package config
 
 import (
 	"fmt"
 	"github.com/ingbyr/gohost/display"
-	"github.com/ingbyr/gohost/editor"
 	"github.com/ingbyr/gohost/hfs"
 	"gopkg.in/ini.v1"
 	"os/user"
-	"path"
+	"path/filepath"
 )
 
 const (
@@ -19,37 +18,34 @@ const (
 	OpEditor         = "editor"
 )
 
-type CustomConfig struct {
-	Editor string `init:"editor"`
-}
-
 var (
 	currUser, _  = user.Current()
-	BaseDir      = path.Join(currUser.HomeDir, ".gohost")
-	BaseHostFile = path.Join(BaseDir, "."+BaseHostFileName)
-	ConfigFile   = path.Join(BaseDir, "config.ini")
-	Custom       = &CustomConfig{
-		Editor: editor.Default,
-	}
-
-	fs = hfs.H
+	BaseDir      = filepath.Join(currUser.HomeDir, ".gohost")
+	BaseHostFile = filepath.Join(BaseDir, "."+BaseHostFileName)
+	File         = filepath.Join(BaseDir, "config.ini")
+	fs           = hfs.H
 )
 
-func init() {
+type Config struct {
+	Editor     string `ini:"editor"`
+	EditorArgs string `ini:"editor_args"`
+}
+
+func (c *Config) Init() {
 	// create base dir
 	if _, err := fs.Stat(BaseDir); fs.IsNotExist(err) {
 		if err := fs.MkdirAll(BaseDir, hfs.Perm644); err != nil {
 			display.Panic("can not create dir "+BaseDir, err)
 		}
 	}
-	// init config file
-	if _, err := fs.Stat(ConfigFile); fs.IsNotExist(err) {
-		newConfigFile, err := fs.Create(ConfigFile)
+	// init config file or load config from file
+	if _, err := fs.Stat(File); fs.IsNotExist(err) {
+		newConfigFile, err := fs.Create(File)
 		if err != nil {
 			display.ErrExit(err)
 		}
 		cfg := ini.Empty()
-		if err := ini.ReflectFrom(cfg, Custom); err != nil {
+		if err := ini.ReflectFrom(cfg, c); err != nil {
 			display.ErrExit(err)
 		}
 		if _, err := cfg.WriteTo(newConfigFile); err != nil {
@@ -59,7 +55,7 @@ func init() {
 			display.ErrExit(err)
 		}
 	}
-	file, err := hfs.H.Open(ConfigFile)
+	file, err := hfs.H.Open(File)
 	if err != nil {
 		display.ErrExit(err)
 	}
@@ -67,32 +63,30 @@ func init() {
 	if err != nil {
 		display.ErrExit(err)
 	}
-	if err := cfg.MapTo(Custom); err != nil {
+	if err := cfg.MapTo(c); err != nil {
 		display.ErrExit(err)
 	}
 }
 
-func Change(op string, value string) {
+func (c *Config) Change(op string, value string) {
 	if op == "" || value == "" {
 		display.Err(fmt.Errorf("not valid config (op=%s, value=%s)", op, value))
 	}
 	switch op {
 	case OpEditor:
-		Custom.Editor = value
+		c.Editor = value
 	default:
 		display.ErrExit(fmt.Errorf("not valid config (op=%s, value=%s)", op, value))
 	}
-	Sync()
+	c.Sync()
 }
 
-func Sync() {
+func (c *Config) Sync() {
 	cfg := ini.Empty()
-	if err := ini.ReflectFrom(cfg, Custom); err != nil {
+	if err := ini.ReflectFrom(cfg, c); err != nil {
 		display.ErrExit(err)
 	}
-
-	// todo writer interface
-	cfgFile, err := hfs.H.Create(ConfigFile)
+	cfgFile, err := hfs.H.Create(File)
 	if err != nil {
 		display.ErrExit(err)
 	}

@@ -5,21 +5,20 @@
 package cmd
 
 import (
-	"github.com/ingbyr/gohost/host"
 	"github.com/spf13/cobra"
 )
 
 var (
 	renameGroupFlag bool
-	renameCmd = &cobra.Command{
+	renameCmd       = &cobra.Command{
 		Use:   "mv",
 		Short: "rename host file name",
 		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			if renameGroupFlag {
-				host.M.ChangeGroupName(args[0], args[1])
+				app.ChangeGroupName(args[0], args[1])
 			} else {
-				host.M.ChangeHostName(args[0], args[1])
+				app.ChangeHostName(args[0], args[1])
 			}
 		},
 	}

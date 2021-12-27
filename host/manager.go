@@ -11,7 +11,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ingbyr/gohost/conf"
+	"github.com/ingbyr/gohost/config"
 	"github.com/ingbyr/gohost/display"
 	"github.com/ingbyr/gohost/editor"
 	"github.com/ingbyr/gohost/hfs"
@@ -26,6 +26,7 @@ type manager struct {
 	_groups     []string
 	noGroupHost []*Host
 	editor      editor.Editor
+	config      config.Config
 }
 
 var (
@@ -34,15 +35,26 @@ var (
 )
 
 func init() {
+	// init config
+	_config := config.Config{
+		Editor:     editor.Default,
+		EditorArgs: editor.DefaultArgs,
+	}
+	_config.Init()
+
+	// init editor
+	_editor := editor.New(_config.Editor, editor.ExtractArgs(_config.EditorArgs))
+
 	// create manager
 	M = &manager{
 		baseHost: &Host{
-			Name:     conf.BaseHostFileName,
-			FileName: conf.BaseHostFileName,
-			FilePath: conf.BaseHostFile,
+			Name:     config.BaseHostFileName,
+			FileName: config.BaseHostFileName,
+			FilePath: config.BaseHostFile,
 			Groups:   nil,
 		},
-		editor: editor.New(conf.Custom.Editor),
+		editor: _editor,
+		config: _config,
 	}
 	M.Init()
 }
@@ -52,9 +64,9 @@ func (m *manager) Init() {
 	if _, err := fs.Stat(m.baseHost.FilePath); fs.IsNotExist(err) {
 		var content bytes.Buffer
 		content.WriteString("127.0.0.1 localhost")
-		content.WriteString(conf.NewLine)
+		content.WriteString(config.NewLine)
 		content.WriteString("::1 localhost")
-		content.WriteString(conf.NewLine)
+		content.WriteString(config.NewLine)
 		if err := fs.WriteFile(m.baseHost.FilePath, content.Bytes(), 0644); err != nil {
 			display.Panic("can not create base host file", err)
 		}
@@ -71,15 +83,15 @@ func (m *manager) LoadHosts() {
 	m._groups = make([]string, 0)
 	m.noGroupHost = make([]*Host, 0)
 
-	files, err := fs.ReadDir(conf.BaseDir)
+	files, err := fs.ReadDir(config.BaseDir)
 	if err != nil {
 		display.ErrExit(fmt.Errorf("failed to Init gohost dir"))
 	}
 
-	// init host files
+	// load host files
 	for _, file := range files {
 		// skip dir and files started with '.'
-		if file.IsDir() || !strings.HasSuffix(file.Name(), conf.HostFileExt) {
+		if file.IsDir() || !strings.HasSuffix(file.Name(), config.HostFileExt) {
 			continue
 		}
 		// create host
@@ -295,7 +307,7 @@ func (m *manager) ApplyGroup(group string, simulate bool) {
 	}
 
 	// open system host file
-	sysHost, err := fs.Create(conf.SysHost)
+	sysHost, err := fs.Create(config.SysHost)
 	if err != nil {
 		display.ErrExit(err)
 	}
@@ -311,7 +323,7 @@ func (m *manager) ApplyGroup(group string, simulate bool) {
 }
 
 func (m *manager) PrintSysHost(max int) {
-	host, err := fs.Open(conf.SysHost)
+	host, err := fs.Open(config.SysHost)
 	if err != nil {
 		display.Panic("can not read system host file", err)
 	}
@@ -372,20 +384,24 @@ func (m *manager) printHosts() {
 func (m *manager) combineHosts(hosts []*Host, head string) []byte {
 	var b bytes.Buffer
 	b.WriteString(head)
-	b.WriteString(conf.NewLine + conf.NewLine)
+	b.WriteString(config.NewLine + config.NewLine)
 	for _, host := range hosts {
 		file, err := fs.Open(host.FilePath)
 		if err != nil {
 			display.Panic("can not combine host", err)
 		}
 		scanner := bufio.NewScanner(file)
-		b.WriteString("# " + host.Name + conf.NewLine)
+		b.WriteString("# " + host.Name + config.NewLine)
 		for scanner.Scan() {
 			b.Write(scanner.Bytes())
-			b.WriteString(conf.NewLine)
+			b.WriteString(config.NewLine)
 		}
-		b.WriteString(conf.NewLine)
+		b.WriteString(config.NewLine)
 		_ = file.Close()
 	}
 	return b.Bytes()
+}
+
+func (m *manager) ChangeConfig(option string, value string) {
+	// TODO change config
 }
