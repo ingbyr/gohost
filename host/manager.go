@@ -7,6 +7,7 @@ package host
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -40,7 +41,9 @@ func init() {
 		Editor:     editor.Default,
 		EditorArgs: editor.DefaultArgs,
 	}
-	_config.Init()
+	if err := _config.Init(); err != nil {
+		display.ErrExit(errors.New("failed to init config file"), err)
+	}
 
 	// init editor
 	_editor := editor.New(_config.Editor, editor.ExtractArgs(_config.EditorArgs))
@@ -342,6 +345,12 @@ func (m *manager) PrintSysHost(max int) {
 	}
 }
 
+func (m *manager) ChangeConfig(option string, value string) {
+	if err := m.config.Change(option, value); err != nil {
+		display.ErrExit(errors.New("failed to modify the config file"), err)
+	}
+}
+
 func (m *manager) host(hostName string) (*Host, bool) {
 	if hostName == m.baseHost.Name {
 		return m.baseHost, true
@@ -400,8 +409,4 @@ func (m *manager) combineHosts(hosts []*Host, head string) []byte {
 		_ = file.Close()
 	}
 	return b.Bytes()
-}
-
-func (m *manager) ChangeConfig(option string, value string) {
-	// TODO change config
 }

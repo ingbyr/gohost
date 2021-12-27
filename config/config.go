@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"github.com/ingbyr/gohost/display"
 	"github.com/ingbyr/gohost/hfs"
 	"gopkg.in/ini.v1"
 	"os/user"
@@ -31,66 +30,68 @@ type Config struct {
 	EditorArgs string `ini:"editor_args"`
 }
 
-func (c *Config) Init() {
+func (c *Config) Init() error {
 	// create base dir
 	if _, err := fs.Stat(BaseDir); fs.IsNotExist(err) {
 		if err := fs.MkdirAll(BaseDir, hfs.Perm644); err != nil {
-			display.Panic("can not create dir "+BaseDir, err)
+			return err
 		}
 	}
 	// init config file or load config from file
 	if _, err := fs.Stat(File); fs.IsNotExist(err) {
 		newConfigFile, err := fs.Create(File)
 		if err != nil {
-			display.ErrExit(err)
+			return err
 		}
 		cfg := ini.Empty()
 		if err := ini.ReflectFrom(cfg, c); err != nil {
-			display.ErrExit(err)
+			return err
 		}
 		if _, err := cfg.WriteTo(newConfigFile); err != nil {
-			display.ErrExit(err)
+			return err
 		}
 		if err := newConfigFile.Close(); err != nil {
-			display.ErrExit(err)
+			return err
 		}
 	}
 	file, err := hfs.H.Open(File)
 	if err != nil {
-		display.ErrExit(err)
+		return err
 	}
 	cfg, err := ini.Load(file)
 	if err != nil {
-		display.ErrExit(err)
+		return err
 	}
 	if err := cfg.MapTo(c); err != nil {
-		display.ErrExit(err)
+		return err
 	}
+	return nil
 }
 
-func (c *Config) Change(op string, value string) {
-	if op == "" || value == "" {
-		display.Err(fmt.Errorf("not valid config (op=%s, value=%s)", op, value))
+func (c *Config) Change(option string, value string) error {
+	if option == "" || value == "" {
+		return fmt.Errorf("not valid config (option=%s, value=%s)", option, value)
 	}
-	switch op {
+	switch option {
 	case OpEditor:
 		c.Editor = value
 	default:
-		display.ErrExit(fmt.Errorf("not valid config (op=%s, value=%s)", op, value))
+		return fmt.Errorf("not valid config (option=%s, value=%s)", option, value)
 	}
-	c.Sync()
+	return c.Sync()
 }
 
-func (c *Config) Sync() {
+func (c *Config) Sync() error {
 	cfg := ini.Empty()
 	if err := ini.ReflectFrom(cfg, c); err != nil {
-		display.ErrExit(err)
+		return err
 	}
 	cfgFile, err := hfs.H.Create(File)
 	if err != nil {
-		display.ErrExit(err)
+		return err
 	}
 	if _, err = cfg.WriteTo(cfgFile); err != nil {
-		display.ErrExit(err)
+		return err
 	}
+	return nil
 }
