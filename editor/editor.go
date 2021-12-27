@@ -17,11 +17,14 @@ type editor struct {
 	Args    []string
 }
 
-func New(command string, args []string) Editor {
-	return &editor{
-		Command: command,
-		Args:    args,
+func New(commands string) Editor {
+	fields := strings.Fields(commands)
+	e := &editor{}
+	e.Command = fields[0]
+	if len(fields) > 1 {
+		e.Args = fields[1:]
 	}
+	return e
 }
 
 func (e *editor) Open(filePath string) error {

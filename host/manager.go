@@ -43,8 +43,8 @@ func init() {
 		display.ErrStrExit("failed to init config file", err)
 	}
 
-	// todo init editor
-	_editor := editor.New(_config.Editor, []string{})
+	// init editor
+	_editor := editor.New(_config.Editor)
 
 	// create manager
 	M = &manager{
