@@ -7,7 +7,6 @@ package host
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -42,7 +41,7 @@ func init() {
 		EditorArgs: editor.DefaultArgs,
 	}
 	if err := _config.Init(); err != nil {
-		display.ErrExit(errors.New("failed to init config file"), err)
+		display.ErrStrExit("failed to init config file", err)
 	}
 
 	// init editor
@@ -71,7 +70,7 @@ func (m *manager) Init() {
 		content.WriteString("::1 localhost")
 		content.WriteString(config.NewLine)
 		if err := fs.WriteFile(m.baseHost.FilePath, content.Bytes(), 0644); err != nil {
-			display.Panic("can not create base host file", err)
+			display.ErrStrExit("can not create base host file", err)
 		}
 	}
 	// load hosts
@@ -88,7 +87,7 @@ func (m *manager) LoadHosts() {
 
 	files, err := fs.ReadDir(config.BaseDir)
 	if err != nil {
-		display.ErrExit(fmt.Errorf("failed to Init gohost dir"))
+		display.ErrStrExit("failed to Init gohost dir")
 	}
 
 	// load host files
@@ -206,7 +205,7 @@ func (m *manager) DeleteHostGroups(hostName string, delGroups []string) {
 	newHost := NewHostByNameGroups(hostName, newGroups)
 	err := fs.Rename(host.FilePath, newHost.FilePath)
 	if err != nil {
-		display.ErrExit(fmt.Errorf("failed to delete groups"))
+		display.ErrStrExit("failed to delete groups")
 	}
 	m.hosts[newHost.Name] = newHost
 	fmt.Printf("removed groups [%s]\n", strings.Join(removedGroups, ", "))
@@ -218,7 +217,7 @@ func (m *manager) AddGroup(hostName string, groups []string) {
 	newHost := NewHostByNameGroups(hostName, newGroups)
 	err := fs.Rename(host.FilePath, newHost.FilePath)
 	if err != nil {
-		display.ErrExit(fmt.Errorf("failed to delete groups"))
+		display.ErrStrExit("failed to delete groups")
 	}
 	m.hosts[newHost.Name] = newHost
 	fmt.Printf("added groups [%s]\n", strings.Join(addGroups, ", "))
@@ -226,16 +225,16 @@ func (m *manager) AddGroup(hostName string, groups []string) {
 
 func (m *manager) CreateNewHost(name string, groups []string, edit bool) {
 	if _, exist := m.hosts[name]; exist {
-		display.ErrExit(fmt.Errorf("host file '%s' already exists", name))
+		display.ErrStrExit(fmt.Sprintf("host file '%s' already exists", name))
 	}
 	host := NewHostByNameGroups(name, groups)
 	// create the file before editing
 	if err := fs.WriteFile(host.FilePath, []byte(""), hfs.Perm644); err != nil {
-		display.ErrExit(fmt.Errorf("failed to create file %s", host.FilePath), err)
+		display.ErrStrExit(fmt.Sprintf("failed to create file %s", host.FilePath), err)
 	}
 	if edit {
 		if err := m.editor.Open(host.FilePath); err != nil {
-			display.ErrExit(fmt.Errorf("failed to edit file '%s'", host.FilePath), err)
+			display.ErrStrExit(fmt.Sprintf("failed to edit file '%s'", host.FilePath), err)
 		}
 	}
 }
@@ -257,10 +256,10 @@ func (m *manager) DeleteHosts(hostNames []string) {
 
 func (m *manager) ChangeHostName(hostName string, newHostName string) {
 	if hostName == m.baseHost.Name || newHostName == m.baseHost.Name {
-		display.ErrExit(fmt.Errorf("can not change base host file name"))
+		display.ErrStrExit("can not change base host file name")
 	}
 	if _, exist := m.host(newHostName); exist {
-		display.ErrExit(fmt.Errorf("host '%s' has been existed", newHostName))
+		display.ErrStrExit(fmt.Sprintf("host '%s' has been existed", newHostName))
 	}
 	h := m.mustHost(hostName)
 	newHost := NewHostByNameGroups(newHostName, h.Groups)
@@ -297,7 +296,7 @@ func (m *manager) EditHostFile(hostName string) {
 func (m *manager) ApplyGroup(group string, simulate bool) {
 	hosts, exist := m.groups[group]
 	if !exist {
-		display.ErrExit(fmt.Errorf("not found group '%s'", group))
+		display.ErrStrExit(fmt.Sprintf("not found group '%s'", group))
 		return
 	}
 	hosts = append(hosts, m.baseHost)
@@ -328,7 +327,7 @@ func (m *manager) ApplyGroup(group string, simulate bool) {
 func (m *manager) PrintSysHost(max int) {
 	host, err := fs.Open(config.SysHost)
 	if err != nil {
-		display.Panic("can not read system host file", err)
+		display.ErrStrExit("can not read system host file", err)
 	}
 	defer host.Close()
 	scanner := bufio.NewScanner(host)
@@ -347,7 +346,7 @@ func (m *manager) PrintSysHost(max int) {
 
 func (m *manager) ChangeConfig(option string, value string) {
 	if err := m.config.Change(option, value); err != nil {
-		display.ErrExit(errors.New("failed to modify the config file"), err)
+		display.ErrStrExit("failed to modify the config file", err)
 	}
 }
 
@@ -362,7 +361,7 @@ func (m *manager) host(hostName string) (*Host, bool) {
 func (m *manager) mustHost(hostName string) *Host {
 	host, exist := m.host(hostName)
 	if !exist {
-		display.ErrExit(fmt.Errorf("host file '%s' is not existed", hostName))
+		display.ErrStrExit(fmt.Sprintf("host file '%s' is not existed", hostName))
 	}
 	return host
 }
@@ -375,7 +374,7 @@ func (m *manager) group(groupName string) ([]*Host, bool) {
 func (m *manager) mustGroup(groupName string) []*Host {
 	group, exist := m.group(groupName)
 	if !exist {
-		display.ErrExit(fmt.Errorf("group '%s' is not existed", groupName))
+		display.ErrStrExit(fmt.Sprintf("group '%s' is not existed", groupName))
 	}
 	return group
 }
@@ -397,7 +396,7 @@ func (m *manager) combineHosts(hosts []*Host, head string) []byte {
 	for _, host := range hosts {
 		file, err := fs.Open(host.FilePath)
 		if err != nil {
-			display.Panic("can not combine host", err)
+			display.ErrStrExit("can not combine host", err)
 		}
 		scanner := bufio.NewScanner(file)
 		b.WriteString("# " + host.Name + config.NewLine)
