@@ -4,6 +4,5 @@
 package editor
 
 const (
-	Default     = "notepad"
-	DefaultArgs = ""
+	Default = "notepad"
 )

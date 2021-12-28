@@ -4,6 +4,5 @@
 package editor
 
 const (
-	Default     = "vim"
-	DefaultArgs = "-n"
+	Default = "vim -n"
 )

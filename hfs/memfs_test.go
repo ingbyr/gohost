@@ -67,6 +67,8 @@ func TestMemFs_CreateDir(t *testing.T) {
 		}
 	}
 
+	printEntryTree(memFs)
+
 	var tests = []struct {
 		dir    string
 		wanted []string
