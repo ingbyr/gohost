@@ -5,9 +5,8 @@ import "gorm.io/gorm"
 type Host struct {
 	gorm.Model
 	Name    string
-	GroupID uint
 	Content string
-	Groups  []*Group `gorm:"many2many:group_hosts"`
+	Groups  []*Group `gorm:"many2many:host_group"`
 }
 
 func (h *Host) TableName() string {

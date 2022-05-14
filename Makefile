@@ -4,7 +4,7 @@ clean:
 	-rm -r dal/query/*
 	go clean
 
-gen:
+gen: clean
 	cd ./cmd/gen && go run .
 
 run:
