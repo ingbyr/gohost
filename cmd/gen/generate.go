@@ -10,6 +10,9 @@ func main() {
 		OutPath: "../../dal/query",
 		Mode:    gen.WithDefaultQuery,
 	})
-	g.ApplyBasic(model.Product{})
+	g.ApplyBasic(
+		model.Host{},
+		model.Group{},
+	)
 	g.Execute()
 }

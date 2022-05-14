@@ -1,2 +1,6 @@
 test.db
 output/
+*.log
+
+# Auto generate
+dal/query/

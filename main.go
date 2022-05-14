@@ -5,9 +5,6 @@
 package main
 
 import (
-	"context"
-
-	"github.com/ingbyr/gohost/biz"
 	"github.com/ingbyr/gohost/dal"
 	"github.com/ingbyr/gohost/dal/query"
 )
@@ -20,5 +17,4 @@ func init() {
 
 func main() {
 	// cmd.Execute()
-	biz.Query(context.Background())
 }

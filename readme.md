@@ -50,6 +50,10 @@ Gohost is a simple host switcher tool supporting Windows, Linux and macOS.
 ## Build source from linux
 
 ```sh
+#For linux
+sudo apt install build-essential
+make build-linux
+
 # For windows
 sudo apt install mingw-w64
 make build-windows

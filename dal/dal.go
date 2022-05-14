@@ -20,7 +20,8 @@ func ConnectDB(dsn string) (db *gorm.DB) {
 
 func AutoMigrate() {
 	err := DB.AutoMigrate(
-		&model.Product{},
+		&model.Host{},
+		&model.Group{},
 	)
 	if err != nil {
 		panic(fmt.Errorf("fail to migrate: %w", err))
