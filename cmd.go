@@ -1,12 +1,11 @@
-package cmd
+package main
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 )
 
 var (
-	root = &cobra.Command{
+	cmd = &cobra.Command{
 		Use:   "gohost",
 		Short: "Simple host switcher tool made by ingbyr",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -20,7 +19,5 @@ var (
 )
 
 func Execute() {
-	if err := root.Execute(); err != nil {
-		fmt.Println(err)
-	}
+
 }

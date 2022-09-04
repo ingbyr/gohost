@@ -1,10 +1,11 @@
-package tui
+package main
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type Model struct {
+	groupService *GroupService
 }
 
 func New() *Model {
