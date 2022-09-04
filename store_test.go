@@ -1,4 +1,4 @@
-package dal
+package main
 
 import (
 	"fmt"
@@ -79,7 +79,7 @@ func TestBoltHold(t *testing.T) {
 	//err = store.Insert(bolthold.NextSequence(), "!23")
 	//a.NoError(err)
 
-	err = store.ForEach(bolthold.Where("Category").Eq("blue"), func(record *Item) error{
+	err = store.ForEach(bolthold.Where("Category").Eq("blue"), func(record *Item) error {
 		fmt.Println(record)
 		return nil
 	})

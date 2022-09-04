@@ -1,15 +1,15 @@
-package dal
+package main
 
 import (
 	"github.com/timshannon/bolthold"
 	"os"
 )
 
-type Options struct {
+type StoreOptions struct {
 	File string
 	*bolthold.Options
 }
 
-func New(opt *Options) (*bolthold.Store, error) {
+func NewStore(opt *StoreOptions) (*bolthold.Store, error) {
 	return bolthold.Open(opt.File, os.ModePerm, opt.Options)
 }

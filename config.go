@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"github.com/timshannon/bolthold"
 	"os"
 	"path/filepath"
 )
@@ -11,7 +12,10 @@ type Config struct {
 	DBFile  string
 }
 
-var cfg *Config
+var (
+	cfg   *Config
+	store *bolthold.Store
+)
 
 func init() {
 	homeDir, err := os.UserHomeDir()
@@ -39,5 +43,13 @@ func init() {
 	cfg = &Config{
 		BaseDir: baseDir,
 		DBFile:  dbFile,
+	}
+
+	store, err = NewStore(&StoreOptions{
+		File:    cfg.DBFile,
+		Options: &bolthold.Options{},
+	})
+	if err != nil {
+		panic(err)
 	}
 }

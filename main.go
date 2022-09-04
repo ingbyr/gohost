@@ -2,12 +2,11 @@ package main
 
 import (
 	"github.com/timshannon/bolthold"
-	"gohost/dal"
 )
 
 func main() {
 	//cmd.Execute()
-	store, err := dal.New(&dal.Options{
+	store, err := NewStore(&StoreOptions{
 		File:    cfg.DBFile,
 		Options: &bolthold.Options{},
 	})
