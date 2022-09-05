@@ -26,7 +26,7 @@ func init() {
 	_, err = os.Stat(baseDir)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			if err := os.MkdirAll(filepath.Dir(baseDir), os.ModePerm); err != nil {
+			if err = os.MkdirAll(baseDir, os.ModePerm); err != nil {
 				panic(err)
 			}
 		} else {
@@ -35,10 +35,6 @@ func init() {
 	}
 
 	dbFile := filepath.Join(baseDir, "gohost.db")
-	_, err = os.Stat(dbFile)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		panic(err)
-	}
 
 	cfg = &Config{
 		BaseDir: baseDir,
