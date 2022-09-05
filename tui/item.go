@@ -5,7 +5,9 @@ import (
 	"reflect"
 )
 
-func wrapListItems(slice any) []list.Item {
+type itemWrapper func(any) list.Item
+
+func wrapListItems(slice any, wrapper itemWrapper) []list.Item {
 	v := reflect.ValueOf(slice)
 	if v.Kind() != reflect.Slice {
 		return nil
@@ -13,7 +15,7 @@ func wrapListItems(slice any) []list.Item {
 	items := make([]list.Item, v.Len())
 	for i := 0; i < v.Len(); i++ {
 		item := v.Index(i).Interface()
-		items[i] = item.(list.Item)
+		items[i] = wrapper(item)
 	}
 	return items
 }

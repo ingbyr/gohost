@@ -35,22 +35,6 @@ func (gs *Service) Tree() []*Node {
 	return gs.tree
 }
 
-func (gs *Service) Nodes() []*Node {
-	nodes := make([]*Node, 0, len(gs.groups))
-	for _, node := range gs.tree {
-		gs.dfsNode(&nodes, node, 0)
-	}
-	return nodes
-}
-
-func (gs *Service) dfsNode(nodes *[]*Node, node *Node, depth int) {
-	node.Depth = depth
-	*nodes = append(*nodes, node)
-	for _, child := range node.Children {
-		gs.dfsNode(nodes, child, depth+1)
-	}
-}
-
 func (gs *Service) loadGroups() ([]Group, error) {
 	var groups []Group
 	if err := store.Store().Find(&groups, &bolthold.Query{}); err != nil {
@@ -70,13 +54,26 @@ func (gs *Service) buildTree(groups []Group) {
 	for _, group := range groups {
 		gs.groups[group.ID] = NewGroupNode(group, 0)
 	}
+	// Build tree
 	for _, node := range gs.groups {
 		p, exist := gs.groups[node.Parent]
 		if !exist {
 			gs.tree = append(gs.tree, node)
 			continue
 		}
+		node.Depth = p.Depth + 1
 		p.Children = append(p.Children, node)
+	}
+	// Bfs to set depth
+	nodes := gs.tree
+	depth := 0
+	for len(nodes) > 0 {
+		for _, node := range nodes {
+			node.Depth = depth
+			nodes = append(nodes, node.Children...)
+			nodes = nodes[1:]
+		}
+		depth++
 	}
 }
 
@@ -100,4 +97,8 @@ func (gs *Service) Save(group Group) error {
 	}
 	gs.groups[group.ID] = NewGroupNode(group, 0)
 	return nil
+}
+
+func (gs *Service) Children(groupId uint) []*Node {
+	return gs.groups[groupId].Children
 }

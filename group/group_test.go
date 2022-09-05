@@ -3,12 +3,13 @@ package group
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	"gohost/config"
+	"gohost/store"
 	"testing"
 )
 
 func TestGroupService_Save(t *testing.T) {
-	defer config.store.Close()
+	s := store.Store()
+	defer s.Close()
 	a := assert.New(t)
 	gs := NewService()
 	groups := []Group{

@@ -28,7 +28,7 @@ type Model struct {
 	state         sessionState
 	help          help.Model
 	groupList     list.Model
-	selectedGroup *group.Node
+	selectedGroup *groupItem
 	hostList      list.Model
 	quitting      bool
 
@@ -41,7 +41,7 @@ func NewModel() (*Model, error) {
 	if err := groupService.Load(); err != nil {
 		return nil, err
 	}
-	groups := wrapListItems(groupService.Nodes())
+	groups := wrapListItems(groupService.Tree(), WrapGroupNode)
 
 	// Create group list view
 	groupList := list.New(groups, groupItemDelegate{}, 0, 0)
@@ -80,7 +80,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.quitting = true
 			cmds = append(cmds, tea.Quit)
 		case key.Matches(msg, m.keys.Enter):
-			m.selectedGroup = m.groupList.SelectedItem().(*group.Node)
+			m.selectedGroup = m.groupList.SelectedItem().(*groupItem)
+			children := m.groupService.Children(m.selectedGroup.ID)
+			selectedIndex := m.groupList.Index()
+			for i := range children {
+				if m.selectedGroup.isFold {
+					cmds = append(cmds, m.groupList.InsertItem(selectedIndex+i+1, WrapGroupNode(children[i])))
+				} else {
+					 m.groupList.RemoveItem(selectedIndex + 1)
+				}
+			}
+			m.selectedGroup.isFold = !m.selectedGroup.isFold
 		}
 	}
 

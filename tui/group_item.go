@@ -9,20 +9,37 @@ import (
 	"strings"
 )
 
+type groupItem struct {
+	*group.Node
+	isFold bool
+}
+
+func WrapGroupNode(groupNode any) list.Item {
+	node, ok := groupNode.(*group.Node)
+	if !ok {
+		return nil
+	}
+
+	return &groupItem{
+		Node:   node,
+		isFold: true,
+	}
+}
+
 type groupItemDelegate struct {
 }
 
 func (d groupItemDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
-	node, ok := item.(*group.Node)
+	groupNode, ok := item.(*groupItem)
 	if !ok {
 		return
 	}
 	var str string
-	spaces := strings.Repeat(" ", node.Depth)
+	spaces := strings.Repeat(" ", groupNode.Depth)
 	if m.Index() == index {
 		str = fmt.Sprintf("> %s%d. %s", spaces, index+1, item.FilterValue())
 	} else {
-		str = fmt.Sprintf("  %s%d. %s", spaces, index+1, node.Name)
+		str = fmt.Sprintf("  %s%d. %s", spaces, index+1, groupNode.Name)
 	}
 	_, _ = fmt.Fprint(w, str)
 }
