@@ -41,7 +41,7 @@ func NewModel() (*Model, error) {
 	if err := groupService.Load(); err != nil {
 		return nil, err
 	}
-	groups := wrapListItems(groupService.Tree())
+	groups := wrapListItems(groupService.Nodes())
 
 	// Create group list view
 	groupList := list.New(groups, groupItemDelegate{}, 0, 0)
