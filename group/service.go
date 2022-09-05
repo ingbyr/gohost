@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/timshannon/bolthold"
 	"gohost/store"
+	"sort"
 	"sync"
 )
 
@@ -65,11 +66,17 @@ func (gs *Service) buildTree(groups []Group) {
 		p.Children = append(p.Children, node)
 	}
 	// Bfs to set depth
+	sort.Slice(gs.tree, func(i, j int) bool {
+		return gs.tree[i].ID < gs.tree[j].ID
+	})
 	nodes := gs.tree
 	depth := 0
 	for len(nodes) > 0 {
 		for _, node := range nodes {
 			node.Depth = depth
+			sort.Slice(node.Children, func(i, j int) bool {
+				return node.Children[i].ID < node.Children[j].ID
+			})
 			nodes = append(nodes, node.Children...)
 			nodes = nodes[1:]
 		}
