@@ -7,7 +7,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"gohost/group"
 	"io"
-	"strconv"
 	"strings"
 )
 
@@ -105,7 +104,6 @@ func (v *GroupView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (v *GroupView) View() string {
-	v.groupList.Title = strconv.Itoa(v.selectedIndex)
 	return v.groupList.View()
 }
 
