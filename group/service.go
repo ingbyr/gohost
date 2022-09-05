@@ -8,34 +8,34 @@ import (
 )
 
 var (
-	instance *service
-	once     sync.Once
+	service     *Service
+	serviceOnce sync.Once
 )
 
-func Service() *service {
-	once.Do(func() {
-		instance = NewService()
+func GetService() *Service {
+	serviceOnce.Do(func() {
+		service = NewService()
 	})
-	return instance
+	return service
 }
 
-func NewService() *service {
-	return &service{
+func NewService() *Service {
+	return &Service{
 		groups: make(map[uint]*Node, 0),
 		tree:   make([]*Node, 0),
 	}
 }
 
-type service struct {
+type Service struct {
 	groups map[uint]*Node
 	tree   []*Node
 }
 
-func (gs *service) Tree() []*Node {
+func (gs *Service) Tree() []*Node {
 	return gs.tree
 }
 
-func (gs *service) loadGroups() ([]Group, error) {
+func (gs *Service) loadGroups() ([]Group, error) {
 	var groups []Group
 	if err := store.Store().Find(&groups, &bolthold.Query{}); err != nil {
 		if errors.Is(bolthold.ErrNotFound, err) {
@@ -47,7 +47,7 @@ func (gs *service) loadGroups() ([]Group, error) {
 	return groups, nil
 }
 
-func (gs *service) buildTree(groups []Group) {
+func (gs *Service) buildTree(groups []Group) {
 	if len(groups) == 0 {
 		return
 	}
@@ -64,7 +64,7 @@ func (gs *service) buildTree(groups []Group) {
 	}
 }
 
-func (gs *service) Load() error {
+func (gs *Service) Load() error {
 	groups, err := gs.loadGroups()
 	if err != nil {
 		return err
@@ -73,7 +73,7 @@ func (gs *service) Load() error {
 	return nil
 }
 
-func (gs *service) Save(group Group) error {
+func (gs *Service) Save(group Group) error {
 	if _, exist := gs.groups[group.ID]; exist {
 		return ErrGroupExist
 	}

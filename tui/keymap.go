@@ -9,6 +9,7 @@ type keyMaps struct {
 	Right key.Binding
 	Help  key.Binding
 	Quit  key.Binding
+	Enter key.Binding
 }
 
 func newKeys() keyMaps {
@@ -36,6 +37,10 @@ func newKeys() keyMaps {
 		Quit: key.NewBinding(
 			key.WithKeys("q", "esc", "ctrl+c"),
 			key.WithHelp("q", "quit"),
+		),
+		Enter: key.NewBinding(
+			key.WithKeys("enter"),
+			key.WithHelp("enter", "select or confirm"),
 		),
 	}
 }

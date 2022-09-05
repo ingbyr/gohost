@@ -24,29 +24,36 @@ var (
 )
 
 type Model struct {
-	keys      keyMaps
-	state     sessionState
-	help      help.Model
-	groupList list.Model
-	hostList  list.Model
-	quitting  bool
+	keys          keyMaps
+	state         sessionState
+	help          help.Model
+	groupList     list.Model
+	selectedGroup *group.Node
+	hostList      list.Model
+	quitting      bool
+
+	groupService *group.Service
 }
 
 func NewModel() (*Model, error) {
-	groupService := group.Service()
+	// Get group service
+	groupService := group.GetService()
 	if err := groupService.Load(); err != nil {
 		return nil, err
 	}
 	groups := wrapListItems(groupService.Tree())
 
-	keys := newKeys()
-	m := &Model{
-		keys:      keys,
-		groupList: list.New(groups, list.NewDefaultDelegate(), 0, 0),
-		help:      help.New(),
-	}
-
-	return m, nil
+	// Create group list view
+	groupList := list.New(groups, list.NewDefaultDelegate(), 0, 0)
+	// TODO add remaining help key
+	groupList.Title = "Groups"
+	groupList.SetShowHelp(false)
+	return &Model{
+		keys:         newKeys(),
+		groupList:    groupList,
+		help:         help.New(),
+		groupService: groupService,
+	}, nil
 }
 
 func (m Model) Init() tea.Cmd {
@@ -71,8 +78,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.help.ShowAll = !m.help.ShowAll
 		case key.Matches(msg, m.keys.Quit):
 			m.quitting = true
-			cmd = tea.Quit
-			cmds = append(cmds, cmd)
+			cmds = append(cmds, tea.Quit)
+		case key.Matches(msg, m.keys.Enter):
+			m.selectedGroup = m.groupList.SelectedItem().(*group.Node)
 		}
 	}
 
@@ -85,11 +93,14 @@ func (m Model) View() string {
 	var v string
 	switch m.state {
 	case groupView:
-		v += m.groupList.View()
+		v += lipgloss.JoinHorizontal(lipgloss.Top, m.groupList.View())
 	}
-	helpView := m.help.View(m.keys)
+	helpView := lipgloss.JoinVertical(lipgloss.Bottom, docStyle.Render(m.help.View(m.keys)))
 	v += helpView
-
 	docStyle.Render(v)
+	// Debug
+	if m.selectedGroup != nil {
+		v += lipgloss.JoinVertical(lipgloss.Top, m.selectedGroup.Name)
+	}
 	return v
 }
