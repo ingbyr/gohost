@@ -1,4 +1,4 @@
-package main
+package host
 
 type Host interface {
 	Name() string

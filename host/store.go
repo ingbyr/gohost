@@ -1,4 +1,4 @@
-package main
+package host
 
 type DBHost struct {
 	Name    string

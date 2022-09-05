@@ -1,10 +1,12 @@
-package main
+package tui
 
 import (
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"gohost/group"
 )
 
 type sessionState uint
@@ -16,24 +18,40 @@ const (
 )
 
 var (
+	docStyle          = lipgloss.NewStyle().Margin(1, 2)
 	modelStyle        = lipgloss.NewStyle().Padding(1, 2).BorderStyle(lipgloss.HiddenBorder())
 	focusedModelStyle = lipgloss.NewStyle().Padding(1, 2).BorderStyle(lipgloss.NormalBorder()).BorderForeground(lipgloss.Color("69"))
 )
 
 type Model struct {
-	keys         keyMaps
-	state        sessionState
-	help         help.Model
-	lastKey      string
-	quitting     bool
-	groupService *GroupService
+	keys      keyMaps
+	state     sessionState
+	help      help.Model
+	groupList list.Model
+	hostList  list.Model
+	quitting  bool
 }
 
-func NewModel() *Model {
-	return &Model{
-		keys: newKeys(),
-		help: help.New(),
+func NewModel() (*Model, error) {
+	groupService := group.Service()
+	groups, err := groupService.LoadGroups()
+	if err != nil {
+		return nil, err
 	}
+	groupItems := make([]list.Item, len(groups))
+	for i := range groups {
+		groupItems[i] = groups[i]
+	}
+	groupService.BuildTree(groups)
+
+	keys := newKeys()
+	m := &Model{
+		keys:      keys,
+		groupList: list.New(groupItems, list.NewDefaultDelegate(), 0, 0),
+		help:      help.New(),
+	}
+
+	return m, nil
 }
 
 func (m Model) Init() tea.Cmd {
@@ -45,17 +63,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
+		h, v := docStyle.GetFrameSize()
+		m.groupList.SetSize(msg.Width-h, msg.Height-v)
 		m.help.Width = msg.Width
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.keys.Up):
-			m.lastKey = "↑"
 		case key.Matches(msg, m.keys.Down):
-			m.lastKey = "↓"
 		case key.Matches(msg, m.keys.Left):
-			m.lastKey = "←"
 		case key.Matches(msg, m.keys.Right):
-			m.lastKey = "→"
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
 		case key.Matches(msg, m.keys.Quit):
@@ -64,6 +80,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, cmd)
 		}
 	}
+
+	m.groupList, cmd = m.groupList.Update(msg)
+	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)
 }
 
@@ -71,9 +90,11 @@ func (m Model) View() string {
 	var v string
 	switch m.state {
 	case groupView:
-
+		v += m.groupList.View()
 	}
 	helpView := m.help.View(m.keys)
 	v += helpView
+
+	docStyle.Render(v)
 	return v
 }

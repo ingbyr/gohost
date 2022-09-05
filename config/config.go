@@ -1,23 +1,18 @@
-package main
+package config
 
 import (
 	"errors"
-	"github.com/timshannon/bolthold"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
-type Config struct {
+type config struct {
 	BaseDir string
 	DBFile  string
 }
 
-var (
-	cfg   *Config
-	store *bolthold.Store
-)
-
-func init() {
+func New() *config {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)
@@ -36,16 +31,20 @@ func init() {
 
 	dbFile := filepath.Join(baseDir, "gohost.db")
 
-	cfg = &Config{
+	return &config{
 		BaseDir: baseDir,
 		DBFile:  dbFile,
 	}
+}
 
-	store, err = NewStore(&StoreOptions{
-		File:    cfg.DBFile,
-		Options: &bolthold.Options{},
+var (
+	cfg  *config
+	once sync.Once
+)
+
+func Config() *config {
+	once.Do(func() {
+		cfg = New()
 	})
-	if err != nil {
-		panic(err)
-	}
+	return cfg
 }
