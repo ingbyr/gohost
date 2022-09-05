@@ -7,22 +7,27 @@ import (
 	"io"
 )
 
-type itemDelegate struct {
+type groupItemDelegate struct {
 }
 
-func (d itemDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
-	str := fmt.Sprintf("%d. %s", index+1, item.FilterValue())
-	fmt.Fprint(w, str)
+func (d groupItemDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
+	var str string
+	if m.Index() == index {
+		str = fmt.Sprintf("> %d. %s", index+1, item.FilterValue())
+	} else {
+		str = fmt.Sprintf("  %d. %s", index+1, item.FilterValue())
+	}
+	_, _ = fmt.Fprint(w, str)
 }
 
-func (d itemDelegate) Height() int {
+func (d groupItemDelegate) Height() int {
 	return 1
 }
 
-func (d itemDelegate) Spacing() int {
+func (d groupItemDelegate) Spacing() int {
 	return 0
 }
 
-func (d itemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
+func (d groupItemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
 	return nil
 }

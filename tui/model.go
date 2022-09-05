@@ -44,7 +44,7 @@ func NewModel() (*Model, error) {
 	groups := wrapListItems(groupService.Tree())
 
 	// Create group list view
-	groupList := list.New(groups, list.NewDefaultDelegate(), 0, 0)
+	groupList := list.New(groups, groupItemDelegate{}, 0, 0)
 	// TODO add remaining help key
 	groupList.Title = "Groups"
 	groupList.SetShowHelp(false)
