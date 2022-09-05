@@ -19,19 +19,23 @@ func Service() *service {
 	return instance
 }
 
-type service struct {
-	Groups map[uint]*Node
-	Tree   []*Node
-}
-
 func NewService() *service {
 	return &service{
-		Groups: make(map[uint]*Node, 0),
-		Tree:   make([]*Node, 0),
+		groups: make(map[uint]*Node, 0),
+		tree:   make([]*Node, 0),
 	}
 }
 
-func (gs *service) LoadGroups() ([]Group, error) {
+type service struct {
+	groups map[uint]*Node
+	tree   []*Node
+}
+
+func (gs *service) Tree() []*Node {
+	return gs.tree
+}
+
+func (gs *service) loadGroups() ([]Group, error) {
 	var groups []Group
 	if err := store.Store().Find(&groups, &bolthold.Query{}); err != nil {
 		if errors.Is(bolthold.ErrNotFound, err) {
@@ -43,31 +47,40 @@ func (gs *service) LoadGroups() ([]Group, error) {
 	return groups, nil
 }
 
-func (gs *service) BuildTree(groups []Group) {
-	if len(gs.Groups) == 0 {
+func (gs *service) buildTree(groups []Group) {
+	if len(groups) == 0 {
 		return
 	}
 	for _, group := range groups {
-		gs.Groups[group.ID] = NewGroupNode(group)
+		gs.groups[group.ID] = NewGroupNode(group)
 	}
-	for _, node := range gs.Groups {
-		p, exist := gs.Groups[node.Parent]
+	for _, node := range gs.groups {
+		p, exist := gs.groups[node.Parent]
 		if !exist {
-			gs.Tree = append(gs.Tree, node)
+			gs.tree = append(gs.tree, node)
 			continue
 		}
 		p.Children = append(p.Children, node)
 	}
 }
 
+func (gs *service) Load() error {
+	groups, err := gs.loadGroups()
+	if err != nil {
+		return err
+	}
+	gs.buildTree(groups)
+	return nil
+}
+
 func (gs *service) Save(group Group) error {
-	if _, exist := gs.Groups[group.ID]; exist {
+	if _, exist := gs.groups[group.ID]; exist {
 		return ErrGroupExist
 	}
 	err := store.Store().Insert(group.ID, group)
 	if err != nil {
 		return err
 	}
-	gs.Groups[group.ID] = NewGroupNode(group)
+	gs.groups[group.ID] = NewGroupNode(group)
 	return nil
 }

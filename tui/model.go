@@ -18,7 +18,7 @@ const (
 )
 
 var (
-	docStyle          = lipgloss.NewStyle().Margin(1, 2)
+	docStyle          = lipgloss.NewStyle().Margin(1, 1)
 	modelStyle        = lipgloss.NewStyle().Padding(1, 2).BorderStyle(lipgloss.HiddenBorder())
 	focusedModelStyle = lipgloss.NewStyle().Padding(1, 2).BorderStyle(lipgloss.NormalBorder()).BorderForeground(lipgloss.Color("69"))
 )
@@ -34,20 +34,15 @@ type Model struct {
 
 func NewModel() (*Model, error) {
 	groupService := group.Service()
-	groups, err := groupService.LoadGroups()
-	if err != nil {
+	if err := groupService.Load(); err != nil {
 		return nil, err
 	}
-	groupItems := make([]list.Item, len(groups))
-	for i := range groups {
-		groupItems[i] = groups[i]
-	}
-	groupService.BuildTree(groups)
+	groups := wrapListItems(groupService.Tree())
 
 	keys := newKeys()
 	m := &Model{
 		keys:      keys,
-		groupList: list.New(groupItems, list.NewDefaultDelegate(), 0, 0),
+		groupList: list.New(groups, list.NewDefaultDelegate(), 0, 0),
 		help:      help.New(),
 	}
 

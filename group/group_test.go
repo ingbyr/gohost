@@ -42,7 +42,7 @@ func TestGroupService_Save(t *testing.T) {
 			a.NoError(err)
 		}
 	}
-	savedGroups, err := gs.LoadGroups()
+	savedGroups, err := gs.loadGroups()
 	a.NoError(err)
 	for i := range savedGroups {
 		fmt.Println("wtf", savedGroups[i])
@@ -52,13 +52,13 @@ func TestGroupService_Save(t *testing.T) {
 func TestGroupService_BuildTree(t *testing.T) {
 	a := assert.New(t)
 	gs := NewService()
-	groups, err := gs.LoadGroups()
+	groups, err := gs.loadGroups()
 	a.NoError(err)
 	for i := range groups {
 		fmt.Println(groups[i])
 	}
-	gs.BuildTree(groups)
-	for _, node := range gs.Tree {
+	gs.buildTree(groups)
+	for _, node := range gs.tree {
 		fmt.Println(node)
 	}
 }
