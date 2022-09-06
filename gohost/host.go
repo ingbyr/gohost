@@ -13,6 +13,7 @@ type Host interface {
 	SetContent([]byte)
 	GetDesc() string
 	GetGroupID() string
+	IsEnabled() bool
 }
 
 func (s *Service) SaveHost(host Host) error {

@@ -6,6 +6,7 @@ type LocalHost struct {
 	Content []byte
 	Desc    string
 	GroupID string
+	Enabled bool
 }
 
 // Implement of Host
@@ -35,8 +36,9 @@ func (h *LocalHost) GetGroupID() string {
 	return h.GroupID
 }
 
-// Implement of TreeNode
-var _ TreeNode = (*LocalHost)(nil)
+func (h *LocalHost) IsEnabled() bool {
+	return h.Enabled
+}
 
 func (h *LocalHost) FilterValue() string {
 	return h.Name

@@ -30,6 +30,6 @@ func TestService_SaveHost(t *testing.T) {
 func TestService_LoadHost(t *testing.T) {
 	hosts := GetService().loadLocalHosts("3")
 	for _, host := range hosts {
-		fmt.Println(host)
+		fmt.Printf("%+v\n", host)
 	}
 }

@@ -1,13 +1,12 @@
 package tui
 
 import (
+	"fmt"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"gohost/config"
 	"gohost/gohost"
-	"os"
 )
 
 type EditorView struct {
@@ -15,6 +14,8 @@ type EditorView struct {
 	hostEditor textarea.Model
 	host       gohost.Host
 	statusLine string
+	saved      bool
+	prevLen    int
 }
 
 func NewTextView(model *Model) *EditorView {
@@ -23,18 +24,17 @@ func NewTextView(model *Model) *EditorView {
 	return &EditorView{
 		model:      model,
 		hostEditor: hostEditor,
-		statusLine: "initializing",
+		host:       nil,
+		statusLine: "",
+		saved:      true,
+		prevLen:    0,
 	}
 }
 
 func (v *EditorView) Init() tea.Cmd {
 	return func() tea.Msg {
-		sysHost, err := os.ReadFile(config.Instance().SysHostFile)
-		if err != nil {
-			v.hostEditor.SetValue("Can not open system hosts file")
-			return nil
-		}
-		v.hostEditor.SetValue(string(sysHost))
+		// Display system host on start up
+		v.SetHost(gohost.SysHost())
 		return nil
 	}
 }
@@ -54,6 +54,8 @@ func (v *EditorView) Update(msg tea.Msg) []tea.Cmd {
 				err := gohost.GetService().UpdateHost(v.host)
 				if err != nil {
 					v.model.Log(err.Error())
+				} else {
+					v.SetSaved()
 				}
 			}
 		} else {
@@ -61,6 +63,7 @@ func (v *EditorView) Update(msg tea.Msg) []tea.Cmd {
 			msg = nil
 		}
 	}
+	v.RefreshStatusLine()
 	v.hostEditor, cmd = v.hostEditor.Update(msg)
 	return append(cmds, cmd)
 }
@@ -80,4 +83,22 @@ func (v *EditorView) Blur() {
 func (v *EditorView) SetHost(host gohost.Host) {
 	v.host = host
 	v.hostEditor.SetValue(string(host.GetContent()))
+	v.prevLen = v.hostEditor.Length()
+}
+
+func (v *EditorView) RefreshStatusLine() {
+	v.statusLine = fmt.Sprintf("file: %s, saved: %t\n", v.host.GetName(), v.IsSaved())
+}
+
+func (v *EditorView) IsSaved() bool {
+	saved := v.prevLen == v.hostEditor.Length()
+	if !saved {
+		v.saved = false
+	}
+	return v.saved && saved
+}
+
+func (v *EditorView) SetSaved() {
+	v.prevLen = v.hostEditor.Length()
+	v.saved = true
 }
