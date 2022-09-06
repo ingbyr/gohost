@@ -1,6 +1,6 @@
 package host
 
-type DBHost struct {
+type Local struct {
 	Name    string
 	Content string
 	Group   int
