@@ -8,8 +8,9 @@ import (
 )
 
 type config struct {
-	BaseDir string
-	DBFile  string
+	BaseDir     string
+	DBFile      string
+	SysHostFile string
 }
 
 func New() *config {
@@ -17,7 +18,7 @@ func New() *config {
 	if err != nil {
 		panic(err)
 	}
-	baseDir := filepath.Join(homeDir, ".local", "share", "gohost")
+	baseDir := filepath.Join(homeDir, ".gohost")
 	_, err = os.Stat(baseDir)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -28,12 +29,12 @@ func New() *config {
 			panic(err)
 		}
 	}
-
 	dbFile := filepath.Join(baseDir, "gohost.db")
-
+	sysHostFile := "/etc/hosts"
 	return &config{
-		BaseDir: baseDir,
-		DBFile:  dbFile,
+		BaseDir:     baseDir,
+		DBFile:      dbFile,
+		SysHostFile: sysHostFile,
 	}
 }
 
@@ -42,7 +43,7 @@ var (
 	once sync.Once
 )
 
-func Config() *config {
+func Instance() *config {
 	once.Do(func() {
 		cfg = New()
 	})

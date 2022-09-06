@@ -43,7 +43,9 @@ func NewModel() (*Model, error) {
 }
 
 func (m *Model) Init() tea.Cmd {
-	return nil
+	return tea.Batch(m.groupView.Init(),
+		m.editorView.Init(),
+		m.helpView.Init())
 }
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -77,8 +79,8 @@ func (m *Model) View() string {
 			modelStyle.Render(m.groupView.View()),
 			focusedModelStyle.Render(m.editorView.View()))
 	}
-	//str = lipgloss.JoinVertical(lipgloss.Left, str, m.helpView.View())
-	str += "\n" + m.helpView.View()
+	str = lipgloss.JoinVertical(lipgloss.Left, str, m.helpView.View())
+	//str += "\n" + m.helpView.View()
 	return str
 }
 
@@ -95,6 +97,8 @@ func (m *Model) switchNextState() sessionState {
 func (m *Model) SwitchState(state sessionState) {
 	if state == editorViewState {
 		m.editorView.Focus()
+	} else {
+		m.editorView.Blur()
 	}
 	m.state = state
 }

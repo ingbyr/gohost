@@ -37,16 +37,16 @@ func newKeys() keyMaps {
 			key.WithHelp("?", "toggle help"),
 		),
 		Quit: key.NewBinding(
-			key.WithKeys("q", "esc", "ctrl+c"),
-			key.WithHelp("q", "quit"),
+			key.WithKeys(  "ctrl+c"),
+			key.WithHelp("ctrl+c", "quit"),
 		),
 		Enter: key.NewBinding(
 			key.WithKeys("enter"),
 			key.WithHelp("enter", "select or confirm"),
 		),
 		Switch: key.NewBinding(
-			key.WithKeys("tab"),
-			key.WithHelp("tab", "switch view"),
+			key.WithKeys("ctrl+e"),
+			key.WithHelp("ctrl+e", "switch view"),
 		),
 		Save: key.NewBinding(
 			key.WithKeys("ctrl+s"),

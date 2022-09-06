@@ -16,7 +16,7 @@ var (
 
 func Instance() *Store {
 	once.Do(func() {
-		cfg := config.Config()
+		cfg := config.Instance()
 		instance = New(&options{
 			File: cfg.DBFile,
 			Options: &bolthold.Options{

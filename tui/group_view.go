@@ -85,13 +85,13 @@ func (v *GroupView) Init() tea.Cmd {
 }
 
 func (v *GroupView) Update(msg tea.Msg) []tea.Cmd {
-
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
+	v.groupList, cmd = v.groupList.Update(msg)
+	cmds = append(cmds, cmd)
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		v.groupList.SetHeight(msg.Height - v.model.reservedHeight)
-		// FIXME not work
 		v.groupList.SetWidth(msg.Width / 3)
 		v.model.helpView.debug = fmt.Sprintf("w %d h %d, w %d h %d", msg.Width, msg.Height, v.groupList.Width(), v.groupList.Height())
 	case tea.KeyMsg:
@@ -110,7 +110,6 @@ func (v *GroupView) Update(msg tea.Msg) []tea.Cmd {
 					}
 				}
 			}
-			v.groupList, cmd = v.groupList.Update(msg)
 		}
 	}
 
