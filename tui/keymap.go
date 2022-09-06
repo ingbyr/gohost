@@ -51,7 +51,8 @@ func (k keyMaps) ShortHelp() []key.Binding {
 
 func (k keyMaps) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Up, k.Down, k.Left, k.Right}, // first column
-		{k.Help, k.Quit},                // second column
+		{k.Up, k.Down}, // column
+		{k.Left, k.Right},
+		{k.Help, k.Quit},
 	}
 }

@@ -14,8 +14,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	//p := tea.NewProgram(m, tea.WithAltScreen())
-	p := tea.NewProgram(m)
+	p := tea.NewProgram(m, tea.WithAltScreen())
 	if err := p.Start(); err != nil {
 		panic(err)
 	}

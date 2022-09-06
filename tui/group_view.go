@@ -71,6 +71,7 @@ func NewGroupView(model *Model) *GroupView {
 	groupList.SetShowHelp(false)
 
 	return &GroupView{
+		model:        model,
 		groupList:    groupList,
 		selectedNode: nil,
 		service:      service,
@@ -81,13 +82,14 @@ func (v *GroupView) Init() tea.Cmd {
 	return nil
 }
 
-func (v *GroupView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (v *GroupView) Update(msg tea.Msg) []tea.Cmd {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		w, h := docStyle.GetFrameSize()
-		v.groupList.SetSize(msg.Width-w, msg.Height-h)
+		v.groupList.SetHeight(msg.Height - v.model.helpView.MaxHeight())
+		v.groupList.SetWidth(msg.Width)
+		v.model.helpView.debug = fmt.Sprintf("w %d h %d, w %d h %d", msg.Width, msg.Height, v.groupList.Width(), v.groupList.Height())
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, keys.Enter):
@@ -107,7 +109,7 @@ func (v *GroupView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	v.groupList, cmd = v.groupList.Update(msg)
-	return v, tea.Batch(append(cmds, cmd)...)
+	return append(cmds, cmd)
 }
 
 func (v *GroupView) View() string {
@@ -147,7 +149,10 @@ func (v *GroupView) foldSelectedGroup() {
 		}
 		node := items[next].(*gohost.Node[gohost.TreeNode])
 		if node.Depth > v.selectedNode.Depth {
+			node.IsFolded = true
 			v.groupList.RemoveItem(next)
+		} else {
+			break
 		}
 	}
 }
