@@ -1,7 +1,9 @@
 package gohost
 
 import (
+	"gohost/config"
 	"gohost/db"
+	"os"
 	"sort"
 	"sync"
 )
@@ -81,4 +83,24 @@ func (s *Service) Load() {
 
 func (s *Service) ChildNodes(nodeID string) []*Node[TreeNode] {
 	return s.nodes[nodeID].Children
+}
+
+// ApplyHost TODO apply host to system
+func (s *Service) ApplyHost(hosts []byte) {
+	// open system host file
+	sysHostFile, err := os.Create(config.Instance().SysHostFile)
+	if err != nil {
+		panic(err)
+	}
+	defer sysHostFile.Close()
+
+	// write hosts to system host file
+	if _, err = sysHostFile.Write(hosts); err != nil {
+		panic(err)
+	}
+}
+
+func (s *Service) CombineHost(hosts ...[]byte) []byte {
+	// TODO combine host
+	return nil
 }
