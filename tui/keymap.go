@@ -3,13 +3,14 @@ package tui
 import "github.com/charmbracelet/bubbles/key"
 
 type keyMaps struct {
-	Up    key.Binding
-	Down  key.Binding
-	Left  key.Binding
-	Right key.Binding
-	Help  key.Binding
-	Quit  key.Binding
-	Enter key.Binding
+	Up     key.Binding
+	Down   key.Binding
+	Left   key.Binding
+	Right  key.Binding
+	Help   key.Binding
+	Quit   key.Binding
+	Enter  key.Binding
+	Switch key.Binding
 }
 
 func newKeys() keyMaps {
@@ -42,6 +43,10 @@ func newKeys() keyMaps {
 			key.WithKeys("enter"),
 			key.WithHelp("enter", "select or confirm"),
 		),
+		Switch: key.NewBinding(
+			key.WithKeys("tab"),
+			key.WithHelp("tab", "switch view"),
+		),
 	}
 }
 
@@ -53,6 +58,7 @@ func (k keyMaps) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Up, k.Down}, // column
 		{k.Left, k.Right},
+		{k.Switch},
 		{k.Help, k.Quit},
 	}
 }

@@ -1,46 +1,48 @@
 package tui
 
 import (
-	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type TextView struct {
+type EditorView struct {
 	model        *Model
 	HostTextarea textarea.Model
 }
 
-func NewTextView(model *Model) *TextView {
+func NewTextView(model *Model) *EditorView {
 	t := textarea.New()
+	t.ShowLineNumbers = true
 	t.Placeholder = "Host items here"
-	t.Focus()
-	return &TextView{
+	return &EditorView{
 		model:        model,
 		HostTextarea: textarea.New(),
 	}
 }
 
-func (v *TextView) Init() tea.Cmd {
+func (v *EditorView) Init() tea.Cmd {
 	return nil
 }
 
-func (v *TextView) Update(msg tea.Msg) []tea.Cmd {
+func (v *EditorView) Update(msg tea.Msg) []tea.Cmd {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		v.HostTextarea.SetHeight(msg.Height - 10)
+		v.HostTextarea.SetHeight(msg.Height - v.model.helpView.MaxHeight())
 		v.HostTextarea.SetWidth(msg.Width - v.model.groupView.groupList.Width())
 	case tea.KeyMsg:
-		switch {
-		case key.Matches(msg, keys.Enter):
+		if v.model.state == editorViewState {
+			v.HostTextarea, cmd = v.HostTextarea.Update(msg)
 		}
 	}
-	v.HostTextarea, cmd = v.HostTextarea.Update(msg)
 	return append(cmds, cmd)
 }
 
-func (v *TextView) View() string {
+func (v *EditorView) View() string {
 	return v.HostTextarea.View()
+}
+
+func (v *EditorView) Focus() {
+	v.HostTextarea.Focus()
 }

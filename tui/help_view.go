@@ -46,7 +46,7 @@ func (h *HelpView) View() string {
 }
 
 func (h *HelpView) MaxHeight() int {
-	return 5
+	return 6
 }
 
 func (h *HelpView) Width() int {
