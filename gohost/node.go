@@ -4,8 +4,8 @@ import "github.com/charmbracelet/bubbles/list"
 
 type TreeNode interface {
 	list.Item
-	GetID() uint
-	GetParentID() uint
+	GetID() string
+	GetParentID() string
 }
 
 type Node[T TreeNode] struct {
@@ -28,10 +28,10 @@ func (n *Node[T]) FilterValue() string {
 	return n.Data.FilterValue()
 }
 
-func (n *Node[T]) GetID() uint {
+func (n *Node[T]) GetID() string {
 	return n.Data.GetID()
 }
 
-func (n *Node[T]) GetParentID() uint {
+func (n *Node[T]) GetParentID() string {
 	return n.Data.GetParentID()
 }

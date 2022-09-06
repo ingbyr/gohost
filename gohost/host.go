@@ -7,25 +7,33 @@ import (
 
 type Host interface {
 	TreeNode
-	GetID() uint
+	GetID() string
 	GetName() string
 	GetContent() []byte
+	SetContent([]byte)
 	GetDesc() string
-	GetGroupID() uint
+	GetGroupID() string
 }
 
 func (s *Service) SaveHost(host Host) error {
-	if err := s.store.Insert(host.GetDesc(), host); err != nil {
+	if err := s.store.Insert(host.GetID(), host); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *Service) LoadHosts(groupID uint) []Host {
+func (s *Service) UpdateHost(host Host) error {
+	if err := s.store.Update(host.GetID(), host); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Service) LoadHosts(groupID string) []Host {
 	return s.loadLocalHosts(groupID)
 }
 
-func (s *Service) LoadHostNodes(groupID uint) []*Node[TreeNode] {
+func (s *Service) LoadHostNodes(groupID string) []*Node[TreeNode] {
 	groupNode := s.nodes[groupID]
 	if groupNode == nil {
 		return nil
@@ -40,7 +48,7 @@ func (s *Service) LoadHostNodes(groupID uint) []*Node[TreeNode] {
 	return hostNodes
 }
 
-func (s *Service) loadLocalHosts(groupID uint) []Host {
+func (s *Service) loadLocalHosts(groupID string) []Host {
 	var hosts []*LocalHost
 	if err := s.store.FindNullable(&hosts, bolthold.Where("GroupID").Eq(groupID)); err != nil {
 		panic(err)

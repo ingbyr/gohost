@@ -21,14 +21,14 @@ func GetService() *Service {
 func NewService() *Service {
 	return &Service{
 		store: db.Instance(),
-		nodes: make(map[uint]*Node[TreeNode], 0),
+		nodes: make(map[string]*Node[TreeNode], 0),
 		tree:  make([]*Node[TreeNode], 0),
 	}
 }
 
 type Service struct {
 	store *db.Store
-	nodes map[uint]*Node[TreeNode]
+	nodes map[string]*Node[TreeNode]
 	tree  []*Node[TreeNode]
 }
 
@@ -79,6 +79,6 @@ func (s *Service) Load() {
 	s.buildTree()
 }
 
-func (s *Service) ChildNodes(nodeID uint) []*Node[TreeNode] {
+func (s *Service) ChildNodes(nodeID string) []*Node[TreeNode] {
 	return s.nodes[nodeID].Children
 }

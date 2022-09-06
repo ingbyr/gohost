@@ -90,7 +90,7 @@ func (v *GroupView) Update(msg tea.Msg) []tea.Cmd {
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		v.groupList.SetHeight(msg.Height - v.model.helpView.MaxHeight())
+		v.groupList.SetHeight(msg.Height - v.model.reservedHeight)
 		// FIXME not work
 		v.groupList.SetWidth(msg.Width / 3)
 		v.model.helpView.debug = fmt.Sprintf("w %d h %d, w %d h %d", msg.Width, msg.Height, v.groupList.Width(), v.groupList.Height())
@@ -167,5 +167,6 @@ func (v *GroupView) onHostNodeSelected(cmds *[]tea.Cmd) {
 	v.selectedHost = v.selectedNode.Data.(gohost.Host)
 	v.model.Log("select host: " + v.selectedHost.GetName())
 	v.model.SwitchState(editorViewState)
-	v.model.editorView.HostTextarea.Placeholder = "abc"
+	v.model.editorView.SetHost(v.selectedHost)
+
 }

@@ -23,16 +23,18 @@ var (
 )
 
 type Model struct {
-	state      sessionState
-	helpView   *HelpView
-	groupView  *GroupView
-	editorView *EditorView
-	quitting   bool
+	state          sessionState
+	helpView       *HelpView
+	groupView      *GroupView
+	editorView     *EditorView
+	reservedHeight int
+	quitting       bool
 }
 
 func NewModel() (*Model, error) {
 	model := &Model{
-		state: 0,
+		state:          0,
+		reservedHeight: 6,
 	}
 	model.helpView = NewHelpView(model)
 	model.groupView = NewGroupView(model)
@@ -75,7 +77,8 @@ func (m *Model) View() string {
 			modelStyle.Render(m.groupView.View()),
 			focusedModelStyle.Render(m.editorView.View()))
 	}
-	str = lipgloss.JoinVertical(lipgloss.Left, str, m.helpView.View())
+	//str = lipgloss.JoinVertical(lipgloss.Left, str, m.helpView.View())
+	str += "\n" + m.helpView.View()
 	return str
 }
 

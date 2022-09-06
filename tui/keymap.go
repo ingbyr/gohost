@@ -11,6 +11,7 @@ type keyMaps struct {
 	Quit   key.Binding
 	Enter  key.Binding
 	Switch key.Binding
+	Save   key.Binding
 }
 
 func newKeys() keyMaps {
@@ -46,6 +47,10 @@ func newKeys() keyMaps {
 		Switch: key.NewBinding(
 			key.WithKeys("tab"),
 			key.WithHelp("tab", "switch view"),
+		),
+		Save: key.NewBinding(
+			key.WithKeys("ctrl+s"),
+			key.WithHelp("ctrl+s", "save"),
 		),
 	}
 }

@@ -45,10 +45,6 @@ func (h *HelpView) View() string {
 	return helper
 }
 
-func (h *HelpView) MaxHeight() int {
-	return 6
-}
-
 func (h *HelpView) Width() int {
 	return h.view.Width
 }

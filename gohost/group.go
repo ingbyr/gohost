@@ -10,8 +10,8 @@ var (
 )
 
 type Group struct {
-	ID       uint `boltholdKey:"ID"`
-	ParentID uint
+	ID       string `boltholdKey:"ID"`
+	ParentID string
 	Name     string
 	Desc     string
 }
@@ -26,11 +26,11 @@ func (g Group) FilterValue() string {
 	return g.Name
 }
 
-func (g Group) GetID() uint {
+func (g Group) GetID() string {
 	return g.ID
 }
 
-func (g Group) GetParentID() uint {
+func (g Group) GetParentID() string {
 	return g.ParentID
 }
 
