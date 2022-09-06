@@ -5,7 +5,8 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"gohost/host"
+	"gohost/gohost"
+	"gohost/util"
 	"io"
 	"strings"
 )
@@ -15,19 +16,22 @@ type groupItemDelegate struct {
 }
 
 func (d groupItemDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
-	node, ok := item.(*host.Node[host.TreeNode])
+	node, ok := item.(*gohost.Node[gohost.TreeNode])
 	if !ok {
 		return
 	}
 	var str string
+	if m.Index() == index {
+		str = "> "
+	} else {
+		str = "  "
+	}
 	spaces := strings.Repeat(" ", node.Depth)
 	switch node := node.Data.(type) {
-	case host.Group:
-		if m.Index() == index {
-			str = fmt.Sprintf("> %s%d. %s", spaces, index, node.Name)
-		} else {
-			str = fmt.Sprintf("  %s%d. %s", spaces, index, node.Name)
-		}
+	case gohost.Group:
+		str += fmt.Sprintf("%s[G] %d. %s", spaces, index, node.Name)
+	case *gohost.LocalHost:
+		str += fmt.Sprintf("%s[L] %d. %s", spaces, index, node.Name)
 	}
 	_, _ = fmt.Fprint(w, str)
 }
@@ -47,19 +51,19 @@ func (d groupItemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
 // GroupView is tui view for nodes tree
 type GroupView struct {
 	groupList     list.Model
-	selectedGroup *host.Node[host.TreeNode]
+	selectedNode  *gohost.Node[gohost.TreeNode]
 	selectedIndex int
 
-	groupService *host.Service
+	service *gohost.Service
 }
 
 func NewGroupView() (*GroupView, error) {
 	// Get nodes service
-	groupService := host.GetService()
-	if err := groupService.Load(); err != nil {
+	service := gohost.GetService()
+	if err := service.Load(); err != nil {
 		return nil, err
 	}
-	groups := wrapListItems(groupService.Tree())
+	groups := util.WrapSlice[list.Item](service.Tree())
 
 	// Create nodes list view
 	groupList := list.New(groups, groupItemDelegate{}, 0, 0)
@@ -68,9 +72,9 @@ func NewGroupView() (*GroupView, error) {
 	groupList.SetShowHelp(false)
 
 	return &GroupView{
-		groupList:     groupList,
-		selectedGroup: nil,
-		groupService:  groupService,
+		groupList:    groupList,
+		selectedNode: nil,
+		service:      service,
 	}, nil
 }
 
@@ -90,17 +94,13 @@ func (v *GroupView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, keys.Enter):
 			selectedItem := v.groupList.SelectedItem()
 			if selectedItem != nil {
-				v.selectedGroup = selectedItem.(*host.Node[host.TreeNode])
+				v.selectedNode = selectedItem.(*gohost.Node[gohost.TreeNode])
 				v.selectedIndex = v.groupList.Index()
-				children := v.groupService.Children(v.selectedGroup.GetID())
-				if v.selectedGroup.IsFold {
-					for i := range children {
-						cmds = append(cmds, v.groupList.InsertItem(v.selectedIndex+i+1, children[i]))
-					}
-				} else {
-					v.foldSelectedGroup()
+				switch v.selectedNode.Data.(type) {
+				case gohost.Group:
+					cmds = v.onGroupNodeEnterClick(cmds)
+					v.selectedNode.IsFolded = !v.selectedNode.IsFolded
 				}
-				v.selectedGroup.IsFold = !v.selectedGroup.IsFold
 			}
 		}
 	}
@@ -113,6 +113,30 @@ func (v *GroupView) View() string {
 	return v.groupList.View()
 }
 
+func (v *GroupView) onGroupNodeEnterClick(cmds []tea.Cmd) []tea.Cmd {
+	if v.selectedNode.IsFolded {
+		cmds = v.unfoldSelectedGroup(cmds)
+	} else {
+		v.foldSelectedGroup()
+	}
+	return cmds
+}
+
+func (v *GroupView) unfoldSelectedGroup(cmds []tea.Cmd) []tea.Cmd {
+	subGroups := v.service.ChildNodes(v.selectedNode.GetID())
+	idx := v.selectedIndex
+	for i := range subGroups {
+		idx++
+		cmds = append(cmds, v.groupList.InsertItem(idx, subGroups[i]))
+	}
+	subHosts := v.service.LoadHostNodes(v.selectedNode.GetID())
+	for i := range subHosts {
+		idx++
+		cmds = append(cmds, v.groupList.InsertItem(idx, subHosts[i]))
+	}
+	return cmds
+}
+
 func (v *GroupView) foldSelectedGroup() {
 	items := v.groupList.Items()
 	next := v.selectedIndex + 1
@@ -120,8 +144,8 @@ func (v *GroupView) foldSelectedGroup() {
 		if items[next] == nil {
 			break
 		}
-		node := items[next].(*host.Node[host.TreeNode])
-		if node.Depth > v.selectedGroup.Depth {
+		node := items[next].(*gohost.Node[gohost.TreeNode])
+		if node.Depth > v.selectedNode.Depth {
 			v.groupList.RemoveItem(next)
 		}
 	}

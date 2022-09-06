@@ -1,6 +1,7 @@
-package store
+package db
 
 import (
+	"errors"
 	"github.com/timshannon/bolthold"
 	"go.etcd.io/bbolt"
 	"gohost/config"
@@ -9,11 +10,11 @@ import (
 )
 
 var (
-	instance *store
+	instance *Store
 	once     sync.Once
 )
 
-func Store() *store {
+func Instance() *Store {
 	once.Do(func() {
 		cfg := config.Config()
 		instance = New(&options{
@@ -33,14 +34,23 @@ type options struct {
 	*bolthold.Options
 }
 
-type store struct {
+type Store struct {
 	*bolthold.Store
 }
 
-func New(opt *options) *store {
+func New(opt *options) *Store {
 	s, err := bolthold.Open(opt.File, os.ModePerm, opt.Options)
 	if err != nil {
 		panic(err)
 	}
-	return &store{Store: s}
+	return &Store{Store: s}
+}
+
+func (s *Store) FindNullable(result interface{}, query *bolthold.Query) error {
+	err := s.Find(result, query)
+
+	if !errors.Is(bolthold.ErrNotFound, err) {
+		return err
+	}
+	return nil
 }

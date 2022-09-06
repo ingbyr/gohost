@@ -7,7 +7,7 @@ import (
 var (
 	cmd = &cobra.Command{
 		Use:   "gohost",
-		Short: "Simple host switcher tool made by ingbyr",
+		Short: "Simple gohost switcher tool made by ingbyr",
 		Run: func(cmd *cobra.Command, args []string) {
 			//m := tui.New()
 			//p := tea.NewProgram(m)
