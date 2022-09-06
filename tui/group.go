@@ -50,6 +50,7 @@ func (d groupItemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
 
 // GroupView is tui view for nodes tree
 type GroupView struct {
+	model         *Model
 	groupList     list.Model
 	selectedNode  *gohost.Node[gohost.TreeNode]
 	selectedIndex int
@@ -57,12 +58,10 @@ type GroupView struct {
 	service *gohost.Service
 }
 
-func NewGroupView() (*GroupView, error) {
+func NewGroupView(model *Model) *GroupView {
 	// Get nodes service
 	service := gohost.GetService()
-	if err := service.Load(); err != nil {
-		return nil, err
-	}
+	service.Load()
 	groups := util.WrapSlice[list.Item](service.Tree())
 
 	// Create nodes list view
@@ -75,7 +74,7 @@ func NewGroupView() (*GroupView, error) {
 		groupList:    groupList,
 		selectedNode: nil,
 		service:      service,
-	}, nil
+	}
 }
 
 func (v *GroupView) Init() tea.Cmd {
@@ -96,10 +95,12 @@ func (v *GroupView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if selectedItem != nil {
 				v.selectedNode = selectedItem.(*gohost.Node[gohost.TreeNode])
 				v.selectedIndex = v.groupList.Index()
-				switch v.selectedNode.Data.(type) {
+				switch node := v.selectedNode.Data.(type) {
 				case gohost.Group:
 					cmds = v.onGroupNodeEnterClick(cmds)
 					v.selectedNode.IsFolded = !v.selectedNode.IsFolded
+				case gohost.Host:
+					v.groupList.Title = "select host " + node.GetName()
 				}
 			}
 		}

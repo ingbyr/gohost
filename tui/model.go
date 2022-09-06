@@ -3,7 +3,6 @@ package tui
 import (
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -24,22 +23,19 @@ var (
 )
 
 type Model struct {
-	state sessionState
-	help  help.Model
+	state     sessionState
+	help      help.Model
 	groupView *GroupView
-	hostList      list.Model
-	quitting      bool
+	quitting  bool
 }
 
 func NewModel() (*Model, error) {
-	groupView, err := NewGroupView()
-	if err != nil {
-		return nil, err
+	model := &Model{
+		state: groupViewState,
+		help:  help.New(),
 	}
-	return &Model{
-		help:      help.New(),
-		groupView: groupView,
-	}, nil
+	model.groupView = NewGroupView(model)
+	return model, nil
 }
 
 func (m Model) Init() tea.Cmd {
