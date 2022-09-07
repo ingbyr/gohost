@@ -23,7 +23,7 @@ func (h *HelpView) Init() tea.Cmd {
 	return nil
 }
 
-func (h *HelpView) Update(msg tea.Msg) []tea.Cmd {
+func (h *HelpView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		h.view.Width = msg.Width
@@ -33,7 +33,7 @@ func (h *HelpView) Update(msg tea.Msg) []tea.Cmd {
 			h.view.ShowAll = !h.view.ShowAll
 		}
 	}
-	return nil
+	return h, nil
 }
 
 func (h *HelpView) View() string {

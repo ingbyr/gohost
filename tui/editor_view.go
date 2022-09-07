@@ -40,7 +40,7 @@ func (v *EditorView) Init() tea.Cmd {
 	}
 }
 
-func (v *EditorView) Update(msg tea.Msg) []tea.Cmd {
+func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
@@ -55,15 +55,15 @@ func (v *EditorView) Update(msg tea.Msg) []tea.Cmd {
 					v.host.SetContent([]byte(v.hostEditor.Value()))
 					err := gohost.GetService().UpdateHost(v.host)
 					if err != nil {
-						v.model.Log(err.Error())
+						v.model.log(err.Error())
 					} else {
 						v.SetSaved()
 					}
 				} else {
-					v.statusLine = "Can not edit this host"
+					v.model.log("Can not edit this")
 				}
 			case key.Matches(m, keys.Esc):
-				v.model.SwitchState(groupViewState)
+				v.model.switchState(treeViewState)
 			}
 		} else {
 			// Disable key
@@ -71,9 +71,10 @@ func (v *EditorView) Update(msg tea.Msg) []tea.Cmd {
 		}
 		v.statusLine = "hit key: " + m.String()
 	}
-	//v.RefreshStatusLine()
+	v.RefreshStatusLine()
 	v.hostEditor, cmd = v.hostEditor.Update(msg)
-	return append(cmds, cmd)
+	cmds = append(cmds, cmd)
+	return v, tea.Batch(cmds...)
 }
 
 func (v *EditorView) View() string {

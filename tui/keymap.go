@@ -2,6 +2,8 @@ package tui
 
 import "github.com/charmbracelet/bubbles/key"
 
+var keys = newKeys()
+
 type keyMaps struct {
 	Up     key.Binding
 	Down   key.Binding
@@ -16,8 +18,8 @@ type keyMaps struct {
 	New    key.Binding
 }
 
-func newKeys() keyMaps {
-	return keyMaps{
+func newKeys() *keyMaps {
+	return &keyMaps{
 		Up: key.NewBinding(
 			key.WithKeys("up", "k"),
 			key.WithHelp("↑/k", "move up"),

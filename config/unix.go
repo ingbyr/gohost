@@ -20,5 +20,6 @@ func New() *config {
 		BaseDir:     baseDir,
 		DBFile:      filepath.Join(baseDir, name+".db"),
 		SysHostFile: "/etc/hosts",
+		LineBreak:   "\n",
 	}
 }

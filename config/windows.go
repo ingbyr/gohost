@@ -20,5 +20,6 @@ func New() *config {
 		BaseDir:     baseDir,
 		DBFile:      filepath.Join(baseDir, name+".db"),
 		SysHostFile: "C:\\Windows\\System32\\drivers\\etc\\hosts",
+		LineBreak:   "\r\n",
 	}
 }

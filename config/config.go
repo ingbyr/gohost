@@ -8,6 +8,7 @@ type config struct {
 	BaseDir     string
 	DBFile      string
 	SysHostFile string
+	LineBreak   string
 }
 
 const (

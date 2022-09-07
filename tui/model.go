@@ -4,41 +4,38 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"gohost/tui/styles"
 	"strconv"
 )
 
 type sessionState int
 
 const (
-	groupViewState = iota
+	treeViewState = iota
 	editorViewState
 	nodeViewState
 	lastState
 )
 
-var (
-	modelStyle        = lipgloss.NewStyle().PaddingLeft(1).PaddingRight(1).BorderStyle(lipgloss.HiddenBorder())
-	focusedModelStyle = lipgloss.NewStyle().PaddingLeft(1).PaddingRight(1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(lipgloss.Color("69"))
-	keys              = newKeys()
-)
-
 type Model struct {
 	state          sessionState
 	helpView       *HelpView
-	groupView      *GroupView
+	groupView      *TreeView
 	editorView     *EditorView
+	nodeView       *NodeView
 	reservedHeight int
 	quitting       bool
 }
 
 func NewModel() (*Model, error) {
 	model := &Model{
-		state:          0,
+		state:          nodeViewState,
 		reservedHeight: 6,
 	}
 	model.helpView = NewHelpView(model)
-	model.groupView = NewGroupView(model)
+	model.groupView = NewTreeView(model)
 	model.editorView = NewTextView(model)
+	model.nodeView = NewNodeView(model)
 	return model, nil
 }
 
@@ -61,40 +58,50 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, tea.Quit)
 		}
 	}
-	cmds = append(cmds, m.groupView.Update(msg)...)
-	cmds = append(cmds, m.editorView.Update(msg)...)
-	cmds = append(cmds, m.helpView.Update(msg)...)
+	m.updateView(msg, &cmds, m.groupView)
+	m.updateView(msg, &cmds, m.editorView)
+	m.updateView(msg, &cmds, m.nodeView)
+	m.updateView(msg, &cmds, m.helpView)
 	return m, tea.Batch(cmds...)
 }
 
 func (m *Model) View() string {
 	var str string
 	switch m.state {
-	case groupViewState:
+	case treeViewState:
 		str = lipgloss.JoinHorizontal(lipgloss.Top,
-			focusedModelStyle.Render(m.groupView.View()),
-			modelStyle.Render(m.editorView.View()))
+			styles.FocusedView.Render(m.groupView.View()),
+			styles.DefaultView.Render(m.editorView.View()))
 	case editorViewState:
 		str = lipgloss.JoinHorizontal(lipgloss.Top,
-			modelStyle.Render(m.groupView.View()),
-			focusedModelStyle.Render(m.editorView.View()))
+			styles.DefaultView.Render(m.groupView.View()),
+			styles.FocusedView.Render(m.editorView.View()))
+	case nodeViewState:
+		str = lipgloss.JoinHorizontal(lipgloss.Top,
+			styles.DefaultView.Render(m.groupView.View()),
+			styles.FocusedView.Render(m.nodeView.View()),
+		)
 	}
 	str = lipgloss.JoinVertical(lipgloss.Left, str, m.helpView.View())
-	//str += "\n" + m.helpView.View()
 	return str
 }
 
-func (m *Model) Log(msg string) {
+func (m *Model) updateView(msg tea.Msg, cmds *[]tea.Cmd, view tea.Model) {
+	_, cmd := view.Update(msg)
+	*cmds = append(*cmds, cmd)
+}
+
+func (m *Model) log(msg string) {
 	m.helpView.debug = msg
 }
 
 func (m *Model) switchNextState() sessionState {
-	m.SwitchState((m.state + 1) % lastState)
-	m.Log("state:" + strconv.Itoa(int(m.state)))
+	m.switchState((m.state + 1) % lastState)
+	m.log("state:" + strconv.Itoa(int(m.state)))
 	return m.state
 }
 
-func (m *Model) SwitchState(state sessionState) {
+func (m *Model) switchState(state sessionState) {
 	if state == editorViewState {
 		m.editorView.Focus()
 	} else {

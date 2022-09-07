@@ -48,8 +48,8 @@ func (d groupItemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
 	return nil
 }
 
-// GroupView is tui view for nodes tree
-type GroupView struct {
+// TreeView is tui view for nodes tree
+type TreeView struct {
 	model         *Model
 	groupList     list.Model
 	selectedNode  *gohost.TreeNode
@@ -60,7 +60,7 @@ type GroupView struct {
 	service *gohost.Service
 }
 
-func NewGroupView(model *Model) *GroupView {
+func NewTreeView(model *Model) *TreeView {
 	// Get nodes service
 	service := gohost.GetService()
 	service.Load()
@@ -75,7 +75,7 @@ func NewGroupView(model *Model) *GroupView {
 	groupList.Title = "Groups"
 	groupList.SetShowHelp(false)
 
-	return &GroupView{
+	return &TreeView{
 		model:        model,
 		groupList:    groupList,
 		selectedNode: treeNodes[0],
@@ -83,11 +83,11 @@ func NewGroupView(model *Model) *GroupView {
 	}
 }
 
-func (v *GroupView) Init() tea.Cmd {
+func (v *TreeView) Init() tea.Cmd {
 	return nil
 }
 
-func (v *GroupView) Update(msg tea.Msg) []tea.Cmd {
+func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
@@ -96,7 +96,7 @@ func (v *GroupView) Update(msg tea.Msg) []tea.Cmd {
 		v.groupList.SetWidth(m.Width / 3)
 		v.model.helpView.debug = fmt.Sprintf("w %d h %d, w %d h %d", m.Width, m.Height, v.groupList.Width(), v.groupList.Height())
 	case tea.KeyMsg:
-		if v.model.state == groupViewState {
+		if v.model.state == treeViewState {
 			switch {
 			case key.Matches(m, keys.Enter):
 				selectedItem := v.groupList.SelectedItem()
@@ -117,14 +117,15 @@ func (v *GroupView) Update(msg tea.Msg) []tea.Cmd {
 		}
 	}
 	v.groupList, cmd = v.groupList.Update(msg)
-	return append(cmds, cmd)
+	cmds = append(cmds, cmd)
+	return v, tea.Batch(cmds...)
 }
 
-func (v *GroupView) View() string {
+func (v *TreeView) View() string {
 	return v.groupList.View()
 }
 
-func (v *GroupView) onGroupNodeEnterClick(cmds *[]tea.Cmd) {
+func (v *TreeView) onGroupNodeEnterClick(cmds *[]tea.Cmd) {
 	v.selectedGroup = v.selectedNode.Node.(*gohost.Group)
 	if v.selectedNode.IsFolded {
 		v.unfoldSelectedGroup(cmds)
@@ -134,7 +135,7 @@ func (v *GroupView) onGroupNodeEnterClick(cmds *[]tea.Cmd) {
 	v.selectedNode.IsFolded = !v.selectedNode.IsFolded
 }
 
-func (v *GroupView) unfoldSelectedGroup(cmds *[]tea.Cmd) {
+func (v *TreeView) unfoldSelectedGroup(cmds *[]tea.Cmd) {
 	subGroups := v.service.ChildNodes(v.selectedNode.GetID())
 	idx := v.selectedIndex
 	for i := range subGroups {
@@ -148,7 +149,7 @@ func (v *GroupView) unfoldSelectedGroup(cmds *[]tea.Cmd) {
 	}
 }
 
-func (v *GroupView) foldSelectedGroup() {
+func (v *TreeView) foldSelectedGroup() {
 	items := v.groupList.Items()
 	next := v.selectedIndex + 1
 	for i := next; i < len(items); i++ {
@@ -165,9 +166,9 @@ func (v *GroupView) foldSelectedGroup() {
 	}
 }
 
-func (v *GroupView) onHostNodeSelected(cmds *[]tea.Cmd) {
+func (v *TreeView) onHostNodeSelected(cmds *[]tea.Cmd) {
 	v.selectedHost = v.selectedNode.Node.(gohost.Host)
-	v.model.Log("select host: " + v.selectedHost.Title())
-	v.model.SwitchState(editorViewState)
+	v.model.log("select host: " + v.selectedHost.Title())
+	v.model.switchState(editorViewState)
 	v.model.editorView.SetHost(v.selectedHost)
 }
