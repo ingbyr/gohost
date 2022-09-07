@@ -21,6 +21,7 @@ type EditorView struct {
 func NewTextView(model *Model) *EditorView {
 	hostEditor := textarea.New()
 	hostEditor.ShowLineNumbers = true
+	hostEditor.CharLimit = 0
 	return &EditorView{
 		model:      model,
 		hostEditor: hostEditor,
@@ -66,6 +67,7 @@ func (v *EditorView) Update(msg tea.Msg) []tea.Cmd {
 			// Disable key
 			msg = nil
 		}
+		v.statusLine = "hit key: " + m.String()
 	}
 	//v.RefreshStatusLine()
 	v.hostEditor, cmd = v.hostEditor.Update(msg)
@@ -86,6 +88,7 @@ func (v *EditorView) Blur() {
 
 func (v *EditorView) SetHost(host gohost.Host) {
 	v.host = host
+	v.hostEditor.Reset()
 	v.hostEditor.SetValue(string(host.GetContent()))
 	v.prevLen = v.hostEditor.Length()
 }

@@ -4,7 +4,6 @@ import (
 	"gohost/config"
 	"gohost/db"
 	"os"
-	"sort"
 	"sync"
 )
 
@@ -36,6 +35,7 @@ type Service struct {
 	SysHostNode *TreeNode[Node]
 }
 
+// Tree the system host tree node is always first
 func (s *Service) Tree() []*TreeNode[Node] {
 	return s.tree
 }
@@ -46,9 +46,9 @@ func (s *Service) cacheNodes(nodes []*TreeNode[Node]) {
 	}
 }
 
-func (s *Service) buildTree() {
+func (s *Service) buildTree(nodes []*TreeNode[Node]) {
 	// Build tree
-	for _, node := range s.nodes {
+	for _, node := range nodes {
 		p, exist := s.nodes[node.Node.GetParentID()]
 		if !exist {
 			s.tree = append(s.tree, node)
@@ -58,19 +58,13 @@ func (s *Service) buildTree() {
 		p.Children = append(p.Children, node)
 	}
 	// Bfs to set depth
-	sort.Slice(s.tree, func(i, j int) bool {
-		return s.tree[i].Node.GetID() < s.tree[j].GetID()
-	})
-	nodes := s.tree
+	queue := s.tree
 	depth := 0
-	for len(nodes) > 0 {
-		for _, node := range nodes {
-			node.Depth = depth
-			sort.Slice(node.Children, func(i, j int) bool {
-				return node.Children[i].GetID() < node.Children[j].GetID()
-			})
-			nodes = append(nodes, node.Children...)
-			nodes = nodes[1:]
+	for len(queue) > 0 {
+		for _, treeNode := range queue {
+			treeNode.Depth = depth
+			queue = append(queue, treeNode.Children...)
+			queue = queue[1:]
 		}
 		depth++
 	}
@@ -80,7 +74,7 @@ func (s *Service) Load() {
 	nodes := []*TreeNode[Node]{s.SysHostNode}
 	nodes = append(nodes, s.loadGroupNodes()...)
 	s.cacheNodes(nodes)
-	s.buildTree()
+	s.buildTree(nodes)
 }
 
 func (s *Service) ChildNodes(nodeID string) []*TreeNode[Node] {

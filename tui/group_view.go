@@ -64,7 +64,8 @@ func NewGroupView(model *Model) *GroupView {
 	// Get nodes service
 	service := gohost.GetService()
 	service.Load()
-	groups := util.WrapSlice[list.Item](service.Tree())
+	treeNodes := service.Tree()
+	groups := util.WrapSlice[list.Item](treeNodes)
 
 	// Create nodes list view
 	groupList := list.New(groups, groupItemDelegate{}, 0, 0)
@@ -75,7 +76,7 @@ func NewGroupView(model *Model) *GroupView {
 	return &GroupView{
 		model:        model,
 		groupList:    groupList,
-		selectedNode: service.SysHostNode,
+		selectedNode: treeNodes[0],
 		service:      service,
 	}
 }

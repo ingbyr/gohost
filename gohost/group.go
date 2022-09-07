@@ -44,7 +44,6 @@ func (s *Service) loadGroups() []Group {
 
 func (s *Service) loadGroupNodes() []*TreeNode[Node] {
 	groups := s.loadGroups()
-
 	groupNodes := make([]*TreeNode[Node], 0, len(groups))
 	for _, group := range groups {
 		groupNodes = append(groupNodes, NewTreeNode[Node](group, 0))
