@@ -16,7 +16,7 @@ type groupItemDelegate struct {
 }
 
 func (d groupItemDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
-	node, ok := item.(*gohost.Node[gohost.TreeNode])
+	node, ok := item.(*gohost.TreeNode[gohost.Node])
 	if !ok {
 		return
 	}
@@ -27,11 +27,11 @@ func (d groupItemDelegate) Render(w io.Writer, m list.Model, index int, item lis
 		str = "  "
 	}
 	spaces := strings.Repeat(" ", node.Depth)
-	switch node := node.Data.(type) {
+	switch node := node.Node.(type) {
 	case gohost.Group:
 		str += fmt.Sprintf("%s[G] %d. %s", spaces, index, node.Name)
-	case *gohost.LocalHost:
-		str += fmt.Sprintf("%s[L] %d. %s", spaces, index, node.Name)
+	case gohost.Host:
+		str += fmt.Sprintf("%s[L] %d. %s", spaces, index, node.GetName())
 	}
 	_, _ = fmt.Fprint(w, str)
 }
@@ -52,7 +52,7 @@ func (d groupItemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
 type GroupView struct {
 	model         *Model
 	groupList     list.Model
-	selectedNode  *gohost.Node[gohost.TreeNode]
+	selectedNode  *gohost.TreeNode[gohost.Node]
 	selectedIndex int
 	selectedGroup gohost.Group
 	selectedHost  gohost.Host
@@ -75,7 +75,7 @@ func NewGroupView(model *Model) *GroupView {
 	return &GroupView{
 		model:        model,
 		groupList:    groupList,
-		selectedNode: nil,
+		selectedNode: service.SysHostNode,
 		service:      service,
 	}
 }
@@ -98,9 +98,9 @@ func (v *GroupView) Update(msg tea.Msg) []tea.Cmd {
 			case key.Matches(m, keys.Enter):
 				selectedItem := v.groupList.SelectedItem()
 				if selectedItem != nil {
-					v.selectedNode = selectedItem.(*gohost.Node[gohost.TreeNode])
+					v.selectedNode = selectedItem.(*gohost.TreeNode[gohost.Node])
 					v.selectedIndex = v.groupList.Index()
-					switch v.selectedNode.Data.(type) {
+					switch v.selectedNode.Node.(type) {
 					case gohost.Group:
 						v.onGroupNodeEnterClick(&cmds)
 					case gohost.Host:
@@ -122,7 +122,7 @@ func (v *GroupView) View() string {
 }
 
 func (v *GroupView) onGroupNodeEnterClick(cmds *[]tea.Cmd) {
-	v.selectedGroup = v.selectedNode.Data.(gohost.Group)
+	v.selectedGroup = v.selectedNode.Node.(gohost.Group)
 	if v.selectedNode.IsFolded {
 		v.unfoldSelectedGroup(cmds)
 	} else {
@@ -152,7 +152,7 @@ func (v *GroupView) foldSelectedGroup() {
 		if items[next] == nil {
 			break
 		}
-		node := items[next].(*gohost.Node[gohost.TreeNode])
+		node := items[next].(*gohost.TreeNode[gohost.Node])
 		if node.Depth > v.selectedNode.Depth {
 			node.IsFolded = true
 			v.groupList.RemoveItem(next)
@@ -163,10 +163,8 @@ func (v *GroupView) foldSelectedGroup() {
 }
 
 func (v *GroupView) onHostNodeSelected(cmds *[]tea.Cmd) {
-	// TODO display host content
-	v.selectedHost = v.selectedNode.Data.(gohost.Host)
+	v.selectedHost = v.selectedNode.Node.(gohost.Host)
 	v.model.Log("select host: " + v.selectedHost.GetName())
 	v.model.SwitchState(editorViewState)
 	v.model.editorView.SetHost(v.selectedHost)
-
 }

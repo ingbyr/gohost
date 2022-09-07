@@ -6,12 +6,8 @@ import (
 	"sync"
 )
 
-type sysHost struct {
-	name string
-	desc string
-}
-
 var (
+	_               Host = (*sysHost)(nil)
 	sysHostOnce     sync.Once
 	sysHostInstance *sysHost
 )
@@ -26,23 +22,28 @@ func SysHost() Host {
 	return sysHostInstance
 }
 
-// Implement of Host
-var _ Host = (*sysHost)(nil)
+type sysHost struct {
+	name string
+	desc string
+}
+
+func (s *sysHost) IsEditable() bool {
+	return false
+}
 
 func (s *sysHost) FilterValue() string {
 	return s.name
 }
 
 func (s *sysHost) GetParentID() string {
-	panic("implement me")
+	return ""
 }
 
 func (s *sysHost) GetID() string {
-	panic("implement me")
+	return "-1"
 }
 
 func (s *sysHost) GetName() string {
-	//TODO implement me
 	return s.name
 }
 
@@ -60,10 +61,6 @@ func (s *sysHost) SetContent(content []byte) {
 
 func (s *sysHost) GetDesc() string {
 	return s.desc
-}
-
-func (s *sysHost) GetGroupID() string {
-	panic("implement me")
 }
 
 func (s *sysHost) IsEnabled() bool {

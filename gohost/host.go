@@ -6,14 +6,14 @@ import (
 )
 
 type Host interface {
-	TreeNode
+	Node
 	GetID() string
 	GetName() string
 	GetContent() []byte
 	SetContent([]byte)
 	GetDesc() string
-	GetGroupID() string
 	IsEnabled() bool
+	IsEditable() bool
 }
 
 func (s *Service) SaveHost(host Host) error {
@@ -34,16 +34,16 @@ func (s *Service) LoadHosts(groupID string) []Host {
 	return s.loadLocalHosts(groupID)
 }
 
-func (s *Service) LoadHostNodes(groupID string) []*Node[TreeNode] {
+func (s *Service) LoadHostNodes(groupID string) []*TreeNode[Node] {
 	groupNode := s.nodes[groupID]
 	if groupNode == nil {
 		return nil
 	}
 	hostNodeDepth := groupNode.Depth + 1
 	hosts := s.LoadHosts(groupID)
-	hostNodes := make([]*Node[TreeNode], 0, len(hosts))
+	hostNodes := make([]*TreeNode[Node], 0, len(hosts))
 	for _, host := range hosts {
-		node := NewNode[TreeNode](host, hostNodeDepth)
+		node := NewTreeNode[Node](host, hostNodeDepth)
 		hostNodes = append(hostNodes, node)
 	}
 	return hostNodes

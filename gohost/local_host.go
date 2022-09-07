@@ -1,5 +1,7 @@
 package gohost
 
+var _ Host = (*LocalHost)(nil)
+
 type LocalHost struct {
 	ID      string `boltholdKey:"ID"`
 	Name    string
@@ -9,8 +11,9 @@ type LocalHost struct {
 	Enabled bool
 }
 
-// Implement of Host
-var _ Host = (*LocalHost)(nil)
+func (h *LocalHost) IsEditable() bool {
+	return true
+}
 
 func (h *LocalHost) GetID() string {
 	return h.ID

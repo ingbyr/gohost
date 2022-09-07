@@ -50,12 +50,16 @@ func (v *EditorView) Update(msg tea.Msg) []tea.Cmd {
 		if v.model.state == editorViewState {
 			switch {
 			case key.Matches(m, keys.Save):
-				v.host.SetContent([]byte(v.hostEditor.Value()))
-				err := gohost.GetService().UpdateHost(v.host)
-				if err != nil {
-					v.model.Log(err.Error())
+				if v.host.IsEditable() {
+					v.host.SetContent([]byte(v.hostEditor.Value()))
+					err := gohost.GetService().UpdateHost(v.host)
+					if err != nil {
+						v.model.Log(err.Error())
+					} else {
+						v.SetSaved()
+					}
 				} else {
-					v.SetSaved()
+					v.statusLine = "Can not edit this host"
 				}
 			}
 		} else {
@@ -63,7 +67,7 @@ func (v *EditorView) Update(msg tea.Msg) []tea.Cmd {
 			msg = nil
 		}
 	}
-	v.RefreshStatusLine()
+	//v.RefreshStatusLine()
 	v.hostEditor, cmd = v.hostEditor.Update(msg)
 	return append(cmds, cmd)
 }

@@ -18,7 +18,7 @@ func New() *config {
 	}
 	return &config{
 		BaseDir:     baseDir,
-		DBFile:      filepath.Join(baseDir, "gohost.db"),
+		DBFile:      filepath.Join(baseDir, name+".db"),
 		SysHostFile: "/etc/hosts",
 	}
 }
