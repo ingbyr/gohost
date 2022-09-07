@@ -24,7 +24,7 @@ func NewService() *Service {
 		store:       db.Instance(),
 		nodes:       make(map[string]*TreeNode, 0),
 		tree:        make([]*TreeNode, 0),
-		SysHostNode: NewTreeNode(SysHost(), 0),
+		SysHostNode: NewTreeNode(SysHost()),
 	}
 }
 
@@ -54,7 +54,7 @@ func (s *Service) buildTree(nodes []*TreeNode) {
 			s.tree = append(s.tree, node)
 			continue
 		}
-		node.Depth = p.Depth + 1
+		node.SetDepth(p.Depth + 1)
 		p.Children = append(p.Children, node)
 	}
 	// Bfs to set depth

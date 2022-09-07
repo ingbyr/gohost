@@ -62,6 +62,8 @@ func (v *EditorView) Update(msg tea.Msg) []tea.Cmd {
 				} else {
 					v.statusLine = "Can not edit this host"
 				}
+			case key.Matches(m, keys.Esc):
+				v.model.SwitchState(groupViewState)
 			}
 		} else {
 			// Disable key

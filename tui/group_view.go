@@ -28,7 +28,7 @@ func (d groupItemDelegate) Render(w io.Writer, m list.Model, index int, item lis
 	}
 	spaces := strings.Repeat(" ", node.Depth)
 	switch node := node.Node.(type) {
-	case gohost.Group:
+	case *gohost.Group:
 		str += fmt.Sprintf("%s[G] %d. %s", spaces, index, node.Name)
 	case gohost.Host:
 		str += fmt.Sprintf("%s[L] %d. %s", spaces, index, node.Title())
@@ -54,7 +54,7 @@ type GroupView struct {
 	groupList     list.Model
 	selectedNode  *gohost.TreeNode
 	selectedIndex int
-	selectedGroup gohost.Group
+	selectedGroup *gohost.Group
 	selectedHost  gohost.Host
 
 	service *gohost.Service
@@ -69,7 +69,8 @@ func NewGroupView(model *Model) *GroupView {
 
 	// Create nodes list view
 	//groupList := list.New(groups, groupItemDelegate{}, 0, 0)
-	groupList := list.New(groups, list.NewDefaultDelegate(), 0, 0)
+	delegate := list.NewDefaultDelegate()
+	groupList := list.New(groups, delegate, 0, 0)
 	// TODO add remaining help key
 	groupList.Title = "Groups"
 	groupList.SetShowHelp(false)
@@ -103,7 +104,7 @@ func (v *GroupView) Update(msg tea.Msg) []tea.Cmd {
 					v.selectedNode = selectedItem.(*gohost.TreeNode)
 					v.selectedIndex = v.groupList.Index()
 					switch v.selectedNode.Node.(type) {
-					case gohost.Group:
+					case *gohost.Group:
 						v.onGroupNodeEnterClick(&cmds)
 					case gohost.Host:
 						v.onHostNodeSelected(&cmds)
@@ -124,7 +125,7 @@ func (v *GroupView) View() string {
 }
 
 func (v *GroupView) onGroupNodeEnterClick(cmds *[]tea.Cmd) {
-	v.selectedGroup = v.selectedNode.Node.(gohost.Group)
+	v.selectedGroup = v.selectedNode.Node.(*gohost.Group)
 	if v.selectedNode.IsFolded {
 		v.unfoldSelectedGroup(cmds)
 	} else {

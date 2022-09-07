@@ -11,7 +11,7 @@ func TestGroupService_Save(t *testing.T) {
 	defer store.Close()
 	a := assert.New(t)
 	service := GetService()
-	groups := []Group{
+	groups := []*Group{
 		{ID: "1", ParentID: "0", Name: "g-1", Desc: "desc1"},
 		{ID: "11", ParentID: "1", Name: "g-1-1", Desc: "desc11"},
 		{ID: "111", ParentID: "11", Name: "g-1-1-1", Desc: "desc111"},

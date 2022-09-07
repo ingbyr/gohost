@@ -7,7 +7,6 @@ import (
 
 type Host interface {
 	Node
-	GetID() string
 	GetContent() []byte
 	SetContent([]byte)
 	IsEnabled() bool
@@ -41,7 +40,8 @@ func (s *Service) LoadHostNodes(groupID string) []*TreeNode {
 	hosts := s.LoadHosts(groupID)
 	hostNodes := make([]*TreeNode, 0, len(hosts))
 	for _, host := range hosts {
-		node := NewTreeNode(host, hostNodeDepth)
+		node := NewTreeNode(host)
+		node.SetDepth(hostNodeDepth)
 		hostNodes = append(hostNodes, node)
 	}
 	return hostNodes

@@ -1,6 +1,9 @@
 package gohost
 
-import "github.com/charmbracelet/bubbles/list"
+import (
+	"github.com/charmbracelet/bubbles/list"
+	"strings"
+)
 
 type Node interface {
 	list.DefaultItem
@@ -13,15 +16,27 @@ type TreeNode struct {
 	Children []*TreeNode
 	Depth    int
 	IsFolded bool
+
+	// depends on Depth
+	spaces string
 }
 
-func NewTreeNode(data Node, depth int) *TreeNode {
+func NewTreeNode(node Node) *TreeNode {
 	return &TreeNode{
-		Node:     data,
+		Node:     node,
 		Children: make([]*TreeNode, 0),
-		Depth:    depth,
+		Depth:    0,
 		IsFolded: true,
+		spaces:   "",
 	}
+}
+
+func (n *TreeNode) Title() string {
+	return n.spaces + n.Node.Title()
+}
+
+func (n *TreeNode) Description() string {
+	return n.spaces + n.Node.Description()
 }
 
 func (n *TreeNode) FilterValue() string {
@@ -34,4 +49,9 @@ func (n *TreeNode) GetID() string {
 
 func (n *TreeNode) GetParentID() string {
 	return n.Node.GetParentID()
+}
+
+func (n *TreeNode) SetDepth(depth int) {
+	n.Depth = depth
+	n.spaces = strings.Repeat(" ", depth)
 }
