@@ -3,7 +3,6 @@ package tui
 import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"gohost/config"
 	"gohost/tui/styles"
 	"strings"
 )
@@ -51,7 +50,7 @@ func (v *NodeView) View() string {
 	for i := range v.inputs {
 		b.WriteString(v.inputs[i].View())
 		if i < len(v.inputs)-1 {
-			b.WriteString(config.Instance().LineBreak)
+			b.WriteString(cfg.LineBreak)
 		}
 	}
 	return b.String()

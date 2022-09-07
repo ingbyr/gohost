@@ -1,7 +1,6 @@
 package gohost
 
 import (
-	"gohost/config"
 	"os"
 	"sync"
 )
@@ -16,7 +15,7 @@ func SysHost() Host {
 	sysHostOnce.Do(func() {
 		sysHostInstance = &sysHost{
 			name: "System Host",
-			desc: config.Instance().SysHostFile,
+			desc: cfg.SysHostFile,
 		}
 	})
 	return sysHostInstance
@@ -56,7 +55,7 @@ func (s *sysHost) GetName() string {
 }
 
 func (s *sysHost) GetContent() []byte {
-	hosts, err := os.ReadFile(config.Instance().SysHostFile)
+	hosts, err := os.ReadFile(cfg.SysHostFile)
 	if err != nil {
 		return []byte("Can not open system hosts file: \n" + err.Error())
 	}

@@ -4,8 +4,10 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"gohost/config"
 	"gohost/tui/styles"
 	"strconv"
+	"strings"
 )
 
 type sessionState int
@@ -16,6 +18,8 @@ const (
 	nodeViewState
 	lastState
 )
+
+var cfg = config.Instance()
 
 type Model struct {
 	state          sessionState
@@ -66,24 +70,24 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *Model) View() string {
-	var str string
+	var b strings.Builder
 	switch m.state {
 	case treeViewState:
-		str = lipgloss.JoinHorizontal(lipgloss.Top,
+		b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top,
 			styles.FocusedView.Render(m.groupView.View()),
-			styles.DefaultView.Render(m.editorView.View()))
+			styles.DefaultView.Render(m.editorView.View())))
 	case editorViewState:
-		str = lipgloss.JoinHorizontal(lipgloss.Top,
+		b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top,
 			styles.DefaultView.Render(m.groupView.View()),
-			styles.FocusedView.Render(m.editorView.View()))
+			styles.FocusedView.Render(m.editorView.View())))
 	case nodeViewState:
-		str = lipgloss.JoinHorizontal(lipgloss.Top,
+		b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top,
 			styles.DefaultView.Render(m.groupView.View()),
-			styles.FocusedView.Render(m.nodeView.View()),
-		)
+			styles.FocusedView.Render(m.nodeView.View())))
 	}
-	str = lipgloss.JoinVertical(lipgloss.Left, str, m.helpView.View())
-	return str
+
+	v := lipgloss.JoinVertical(lipgloss.Left, b.String(), m.helpView.View())
+	return v
 }
 
 func (m *Model) updateView(msg tea.Msg, cmds *[]tea.Cmd, view tea.Model) {

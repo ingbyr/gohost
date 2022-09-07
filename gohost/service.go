@@ -10,6 +10,7 @@ import (
 var (
 	service     *Service
 	serviceOnce sync.Once
+	cfg         = config.Instance()
 )
 
 func GetService() *Service {
@@ -84,7 +85,7 @@ func (s *Service) ChildNodes(nodeID string) []*TreeNode {
 // ApplyHost TODO apply host to system
 func (s *Service) ApplyHost(hosts []byte) {
 	// open system host file
-	sysHostFile, err := os.Create(config.Instance().SysHostFile)
+	sysHostFile, err := os.Create(cfg.SysHostFile)
 	if err != nil {
 		panic(err)
 	}
