@@ -42,6 +42,12 @@ func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		v.inputs[i], cmd = v.inputs[i].Update(msg)
 		cmds = append(cmds, cmd)
 	}
+	//switch m := msg.(type) {
+	//case tea.KeyMsg:
+	//	switch {
+	//
+	//	}
+	//}
 	return v, cmd
 }
 

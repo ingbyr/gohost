@@ -8,14 +8,20 @@ import (
 )
 
 type HelpView struct {
-	view        help.Model
+	model       *Model
+	helpView    help.Model
+	shortHelp   map[sessionState][]key.Binding
+	fullHelp    map[sessionState][][]key.Binding
 	debug       string
 	enableDebug bool
 }
 
 func NewHelpView(model *Model) *HelpView {
 	return &HelpView{
-		view:        help.New(),
+		model:       model,
+		helpView:    help.New(),
+		shortHelp:   make(map[sessionState][]key.Binding, 8),
+		fullHelp:    make(map[sessionState][][]key.Binding, 8),
 		enableDebug: true,
 	}
 }
@@ -27,19 +33,14 @@ func (h *HelpView) Init() tea.Cmd {
 func (h *HelpView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		h.view.Width = msg.Width
-	case tea.KeyMsg:
-		switch {
-		case key.Matches(msg, keys.Help):
-			h.view.ShowAll = !h.view.ShowAll
-		}
+		h.helpView.Width = msg.Width
 	}
 	return h, nil
 }
 
 func (h *HelpView) View() string {
 	var b strings.Builder
-	b.WriteString(h.view.View(keys))
+	b.WriteString(h.helpView.View(h))
 	if h.enableDebug {
 		b.WriteString(cfg.LineBreak)
 		b.WriteString("Debug: ")
@@ -48,6 +49,22 @@ func (h *HelpView) View() string {
 	return b.String()
 }
 
+func (h *HelpView) ShortHelp() []key.Binding {
+	return h.shortHelp[h.model.state]
+}
+
+func (h *HelpView) FullHelp() [][]key.Binding {
+	return h.fullHelp[h.model.preState]
+}
+
 func (h *HelpView) Width() int {
-	return h.view.Width
+	return h.helpView.Width
+}
+
+func (h *HelpView) SetShortHelp(state sessionState, kb []key.Binding) {
+	h.shortHelp[state] = kb
+}
+
+func (h *HelpView) SetFullHelp(state sessionState, kb [][]key.Binding) {
+	h.fullHelp[state] = kb
 }

@@ -54,7 +54,7 @@ func newKeys() *keyMaps {
 		),
 		Switch: key.NewBinding(
 			key.WithKeys("ctrl+e"),
-			key.WithHelp("ctrl+e", "switch view"),
+			key.WithHelp("ctrl+e", "switch helpView"),
 		),
 		Save: key.NewBinding(
 			key.WithKeys("ctrl+s"),
@@ -73,8 +73,8 @@ func (k keyMaps) ShortHelp() []key.Binding {
 
 func (k keyMaps) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Up, k.Down}, // column
-		{k.Left, k.Right},
+		//{k.Up, k.Down}, // column
+		//{k.Left, k.Right},
 		{k.Switch, k.New},
 		{k.Save},
 		{k.Help, k.Quit},
