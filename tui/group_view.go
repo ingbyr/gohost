@@ -16,7 +16,7 @@ type groupItemDelegate struct {
 }
 
 func (d groupItemDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
-	node, ok := item.(*gohost.TreeNode[gohost.Node])
+	node, ok := item.(*gohost.TreeNode)
 	if !ok {
 		return
 	}
@@ -31,7 +31,7 @@ func (d groupItemDelegate) Render(w io.Writer, m list.Model, index int, item lis
 	case gohost.Group:
 		str += fmt.Sprintf("%s[G] %d. %s", spaces, index, node.Name)
 	case gohost.Host:
-		str += fmt.Sprintf("%s[L] %d. %s", spaces, index, node.GetName())
+		str += fmt.Sprintf("%s[L] %d. %s", spaces, index, node.Title())
 	}
 	_, _ = fmt.Fprint(w, str)
 }
@@ -52,7 +52,7 @@ func (d groupItemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
 type GroupView struct {
 	model         *Model
 	groupList     list.Model
-	selectedNode  *gohost.TreeNode[gohost.Node]
+	selectedNode  *gohost.TreeNode
 	selectedIndex int
 	selectedGroup gohost.Group
 	selectedHost  gohost.Host
@@ -68,7 +68,8 @@ func NewGroupView(model *Model) *GroupView {
 	groups := util.WrapSlice[list.Item](treeNodes)
 
 	// Create nodes list view
-	groupList := list.New(groups, groupItemDelegate{}, 0, 0)
+	//groupList := list.New(groups, groupItemDelegate{}, 0, 0)
+	groupList := list.New(groups, list.NewDefaultDelegate(), 0, 0)
 	// TODO add remaining help key
 	groupList.Title = "Groups"
 	groupList.SetShowHelp(false)
@@ -99,7 +100,7 @@ func (v *GroupView) Update(msg tea.Msg) []tea.Cmd {
 			case key.Matches(m, keys.Enter):
 				selectedItem := v.groupList.SelectedItem()
 				if selectedItem != nil {
-					v.selectedNode = selectedItem.(*gohost.TreeNode[gohost.Node])
+					v.selectedNode = selectedItem.(*gohost.TreeNode)
 					v.selectedIndex = v.groupList.Index()
 					switch v.selectedNode.Node.(type) {
 					case gohost.Group:
@@ -153,7 +154,7 @@ func (v *GroupView) foldSelectedGroup() {
 		if items[next] == nil {
 			break
 		}
-		node := items[next].(*gohost.TreeNode[gohost.Node])
+		node := items[next].(*gohost.TreeNode)
 		if node.Depth > v.selectedNode.Depth {
 			node.IsFolded = true
 			v.groupList.RemoveItem(next)
@@ -165,7 +166,7 @@ func (v *GroupView) foldSelectedGroup() {
 
 func (v *GroupView) onHostNodeSelected(cmds *[]tea.Cmd) {
 	v.selectedHost = v.selectedNode.Node.(gohost.Host)
-	v.model.Log("select host: " + v.selectedHost.GetName())
+	v.model.Log("select host: " + v.selectedHost.Title())
 	v.model.SwitchState(editorViewState)
 	v.model.editorView.SetHost(v.selectedHost)
 }

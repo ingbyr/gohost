@@ -94,7 +94,7 @@ func (v *EditorView) SetHost(host gohost.Host) {
 }
 
 func (v *EditorView) RefreshStatusLine() {
-	v.statusLine = fmt.Sprintf("file: %s, saved: %t\n", v.host.GetName(), v.IsSaved())
+	v.statusLine = fmt.Sprintf("file: %s, saved: %t\n", v.host.Title(), v.IsSaved())
 }
 
 func (v *EditorView) IsSaved() bool {

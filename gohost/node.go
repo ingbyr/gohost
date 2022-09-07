@@ -3,35 +3,35 @@ package gohost
 import "github.com/charmbracelet/bubbles/list"
 
 type Node interface {
-	list.Item
+	list.DefaultItem
 	GetID() string
 	GetParentID() string
 }
 
-type TreeNode[T Node] struct {
-	Node     T
-	Children []*TreeNode[T]
+type TreeNode struct {
+	Node
+	Children []*TreeNode
 	Depth    int
 	IsFolded bool
 }
 
-func NewTreeNode[T Node](data T, depth int) *TreeNode[T] {
-	return &TreeNode[T]{
+func NewTreeNode(data Node, depth int) *TreeNode {
+	return &TreeNode{
 		Node:     data,
-		Children: make([]*TreeNode[T], 0),
+		Children: make([]*TreeNode, 0),
 		Depth:    depth,
 		IsFolded: true,
 	}
 }
 
-func (n *TreeNode[T]) FilterValue() string {
+func (n *TreeNode) FilterValue() string {
 	return n.Node.FilterValue()
 }
 
-func (n *TreeNode[T]) GetID() string {
+func (n *TreeNode) GetID() string {
 	return n.Node.GetID()
 }
 
-func (n *TreeNode[T]) GetParentID() string {
+func (n *TreeNode) GetParentID() string {
 	return n.Node.GetParentID()
 }

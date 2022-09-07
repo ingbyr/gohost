@@ -42,11 +42,11 @@ func (s *Service) loadGroups() []Group {
 	return groups
 }
 
-func (s *Service) loadGroupNodes() []*TreeNode[Node] {
+func (s *Service) loadGroupNodes() []*TreeNode {
 	groups := s.loadGroups()
-	groupNodes := make([]*TreeNode[Node], 0, len(groups))
+	groupNodes := make([]*TreeNode, 0, len(groups))
 	for _, group := range groups {
-		groupNodes = append(groupNodes, NewTreeNode[Node](group, 0))
+		groupNodes = append(groupNodes, NewTreeNode(group, 0))
 	}
 	return groupNodes
 }
@@ -60,6 +60,6 @@ func (s *Service) SaveGroup(group Group) error {
 		return err
 	}
 	// FIXME set correct depth
-	s.nodes[group.ID] = NewTreeNode[Node](&group, 0)
+	s.nodes[group.ID] = NewTreeNode(&group, 0)
 	return nil
 }

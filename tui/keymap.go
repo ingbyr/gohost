@@ -12,6 +12,7 @@ type keyMaps struct {
 	Enter  key.Binding
 	Switch key.Binding
 	Save   key.Binding
+	New    key.Binding
 }
 
 func newKeys() keyMaps {
@@ -37,7 +38,7 @@ func newKeys() keyMaps {
 			key.WithHelp("?", "toggle help"),
 		),
 		Quit: key.NewBinding(
-			key.WithKeys(  "ctrl+c"),
+			key.WithKeys("ctrl+c"),
 			key.WithHelp("ctrl+c", "quit"),
 		),
 		Enter: key.NewBinding(
@@ -52,6 +53,10 @@ func newKeys() keyMaps {
 			key.WithKeys("ctrl+s"),
 			key.WithHelp("ctrl+s", "save"),
 		),
+		New: key.NewBinding(
+			key.WithKeys("ctrl+n"),
+			key.WithHelp("ctrl+n", "new"),
+		),
 	}
 }
 
@@ -63,7 +68,8 @@ func (k keyMaps) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Up, k.Down}, // column
 		{k.Left, k.Right},
-		{k.Switch},
+		{k.Switch, k.New},
+		{k.Save},
 		{k.Help, k.Quit},
 	}
 }

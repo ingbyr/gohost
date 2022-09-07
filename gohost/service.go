@@ -22,31 +22,31 @@ func GetService() *Service {
 func NewService() *Service {
 	return &Service{
 		store:       db.Instance(),
-		nodes:       make(map[string]*TreeNode[Node], 0),
-		tree:        make([]*TreeNode[Node], 0),
-		SysHostNode: NewTreeNode[Node](SysHost(), 0),
+		nodes:       make(map[string]*TreeNode, 0),
+		tree:        make([]*TreeNode, 0),
+		SysHostNode: NewTreeNode(SysHost(), 0),
 	}
 }
 
 type Service struct {
 	store       *db.Store
-	nodes       map[string]*TreeNode[Node]
-	tree        []*TreeNode[Node]
-	SysHostNode *TreeNode[Node]
+	nodes       map[string]*TreeNode
+	tree        []*TreeNode
+	SysHostNode *TreeNode
 }
 
 // Tree the system host tree node is always first
-func (s *Service) Tree() []*TreeNode[Node] {
+func (s *Service) Tree() []*TreeNode {
 	return s.tree
 }
 
-func (s *Service) cacheNodes(nodes []*TreeNode[Node]) {
+func (s *Service) cacheNodes(nodes []*TreeNode) {
 	for _, node := range nodes {
 		s.nodes[node.GetID()] = node
 	}
 }
 
-func (s *Service) buildTree(nodes []*TreeNode[Node]) {
+func (s *Service) buildTree(nodes []*TreeNode) {
 	// Build tree
 	for _, node := range nodes {
 		p, exist := s.nodes[node.Node.GetParentID()]
@@ -71,13 +71,13 @@ func (s *Service) buildTree(nodes []*TreeNode[Node]) {
 }
 
 func (s *Service) Load() {
-	nodes := []*TreeNode[Node]{s.SysHostNode}
+	nodes := []*TreeNode{s.SysHostNode}
 	nodes = append(nodes, s.loadGroupNodes()...)
 	s.cacheNodes(nodes)
 	s.buildTree(nodes)
 }
 
-func (s *Service) ChildNodes(nodeID string) []*TreeNode[Node] {
+func (s *Service) ChildNodes(nodeID string) []*TreeNode {
 	return s.nodes[nodeID].Children
 }
 

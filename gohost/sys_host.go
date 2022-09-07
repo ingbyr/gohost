@@ -27,6 +27,14 @@ type sysHost struct {
 	desc string
 }
 
+func (s *sysHost) Title() string {
+	return s.name
+}
+
+func (s *sysHost) Description() string {
+	return s.desc
+}
+
 func (s *sysHost) IsEditable() bool {
 	return false
 }

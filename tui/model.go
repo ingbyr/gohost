@@ -12,7 +12,7 @@ type sessionState int
 const (
 	groupViewState = iota
 	editorViewState
-	sysHostViewState
+	nodeViewState
 	lastState
 )
 

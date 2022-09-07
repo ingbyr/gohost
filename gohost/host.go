@@ -8,10 +8,8 @@ import (
 type Host interface {
 	Node
 	GetID() string
-	GetName() string
 	GetContent() []byte
 	SetContent([]byte)
-	GetDesc() string
 	IsEnabled() bool
 	IsEditable() bool
 }
@@ -34,16 +32,16 @@ func (s *Service) LoadHosts(groupID string) []Host {
 	return s.loadLocalHosts(groupID)
 }
 
-func (s *Service) LoadHostNodes(groupID string) []*TreeNode[Node] {
+func (s *Service) LoadHostNodes(groupID string) []*TreeNode {
 	groupNode := s.nodes[groupID]
 	if groupNode == nil {
 		return nil
 	}
 	hostNodeDepth := groupNode.Depth + 1
 	hosts := s.LoadHosts(groupID)
-	hostNodes := make([]*TreeNode[Node], 0, len(hosts))
+	hostNodes := make([]*TreeNode, 0, len(hosts))
 	for _, host := range hosts {
-		node := NewTreeNode[Node](host, hostNodeDepth)
+		node := NewTreeNode(host, hostNodeDepth)
 		hostNodes = append(hostNodes, node)
 	}
 	return hostNodes
