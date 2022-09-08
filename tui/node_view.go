@@ -2,6 +2,7 @@ package tui
 
 import (
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"gohost/tui/styles"
@@ -13,9 +14,11 @@ type NodeView struct {
 	preFocusIdx int
 	focusIdx    int
 	inputs      []textinput.Model
+	nodeTypes   list.Model
 }
 
 func NewNodeView(model *Model) *NodeView {
+	// Text inputs
 	nodeNameTextInput := textinput.New()
 	nodeNameTextInput.Prompt = "Name: "
 	nodeNameTextInput.Focus()
@@ -25,11 +28,15 @@ func NewNodeView(model *Model) *NodeView {
 	descTextInput := textinput.New()
 	descTextInput.Prompt = "Description: "
 
+	// Node type choices
+	nodeTypes := list.New([]list.Item{GroupNode, LocalHost, RemoteHost}, list.NewDefaultDelegate(), 20, 20)
+
 	view := &NodeView{
 		model:       model,
 		preFocusIdx: 0,
 		focusIdx:    0,
 		inputs:      []textinput.Model{nodeNameTextInput, descTextInput},
+		nodeTypes:   nodeTypes,
 	}
 
 	return view
@@ -43,6 +50,9 @@ func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
+	case tea.WindowSizeMsg:
+		v.nodeTypes.SetHeight(m.Height - v.model.reservedHeight)
+		v.nodeTypes.SetWidth(m.Width / 3 * 2)
 	case tea.KeyMsg:
 		if v.model.state == nodeViewState {
 			switch {
@@ -61,6 +71,8 @@ func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		v.inputs[i], cmd = v.inputs[i].Update(msg)
 		cmds = append(cmds, cmd)
 	}
+	v.nodeTypes, cmd = v.nodeTypes.Update(msg)
+	cmds = append(cmds, cmd)
 	return v, tea.Batch(cmds...)
 }
 
@@ -72,6 +84,8 @@ func (v *NodeView) View() string {
 			b.WriteString(cfg.LineBreak)
 		}
 	}
+	b.WriteString("\n")
+	b.WriteString(v.nodeTypes.View())
 	return b.String()
 }
 
