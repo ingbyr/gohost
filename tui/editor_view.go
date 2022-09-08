@@ -5,7 +5,6 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"gohost/gohost"
 )
 
@@ -58,8 +57,9 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
 	case tea.WindowSizeMsg:
-		v.hostEditor.SetHeight(m.Height)
+		v.hostEditor.SetHeight(m.Height - 2)
 		v.hostEditor.SetWidth(m.Width)
+		//v.model.log(fmt.Sprintf("editor view: w %d h %d", v.hostEditor.Width(), v.hostEditor.Height()))
 	case tea.KeyMsg:
 		if v.model.state == editorViewState {
 			switch {
@@ -91,7 +91,8 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (v *EditorView) View() string {
-	return lipgloss.JoinVertical(lipgloss.Top, v.hostEditor.View(), v.statusLine)
+	//return lipgloss.JoinVertical(lipgloss.Top, v.hostEditor.View(), v.statusLine)
+	return v.hostEditor.View()
 }
 
 func (v *EditorView) Focus() {

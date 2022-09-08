@@ -97,7 +97,7 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		v.nodeList.SetHeight(m.Height)
 		v.nodeList.SetWidth(m.Width)
-		v.model.log(fmt.Sprintf("tree view w: %d h: %d", m.Width, m.Height))
+		//v.model.log(fmt.Sprintf("tree view w: %d h: %d", v.nodeList.Width(), v.nodeList.Height()))
 	case tea.KeyMsg:
 		if v.model.state == treeViewState {
 			switch {

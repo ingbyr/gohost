@@ -14,7 +14,7 @@ var (
 func SysHost() Host {
 	sysHostOnce.Do(func() {
 		sysHostInstance = &sysHost{
-			name: "System Host",
+			name: "System Host               wrf                 asdfasdf",
 			desc: cfg.SysHostFile,
 		}
 	})

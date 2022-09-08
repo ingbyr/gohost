@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -36,7 +37,7 @@ type Model struct {
 func NewModel() (*Model, error) {
 	model := &Model{
 		state:          treeViewState,
-		reservedHeight: 10,
+		reservedHeight: 1,
 	}
 	model.logView = NewLogView(model)
 	model.helpView = NewHelpView(model)
@@ -47,6 +48,7 @@ func NewModel() (*Model, error) {
 }
 
 func (m *Model) Init() tea.Cmd {
+	m.log(fmt.Sprintf("view h %d w %d", styles.DefaultView.GetHeight(), styles.DefaultView.GetWidth()))
 	return tea.Batch(
 		m.treeView.Init(),
 		m.editorView.Init(),
@@ -65,7 +67,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Batch(cmds...)
 
 	case tea.KeyMsg:
-		m.log("hit key " + msg.String())
 		switch {
 		case key.Matches(msg, keys.Switch):
 			m.switchNextState()
@@ -96,27 +97,27 @@ func (m *Model) View() string {
 	case treeViewState:
 		v = lipgloss.JoinVertical(lipgloss.Left,
 			lipgloss.JoinHorizontal(lipgloss.Top,
+				styles.DefaultView.Render(m.logView.View()),
 				styles.FocusedView.Render(m.treeView.View()),
 				styles.DefaultView.Render(m.editorView.View()),
-				m.logView.View(),
 			),
 			m.helpView.View())
 
 	case editorViewState:
 		v = lipgloss.JoinVertical(lipgloss.Left,
 			lipgloss.JoinHorizontal(lipgloss.Top,
+				styles.DefaultView.Render(m.logView.View()),
 				styles.DefaultView.Render(m.treeView.View()),
 				styles.FocusedView.Render(m.editorView.View()),
-				m.logView.View(),
 			),
 			m.helpView.View())
 
 	case nodeViewState:
 		v = lipgloss.JoinVertical(lipgloss.Left,
 			lipgloss.JoinHorizontal(lipgloss.Top,
+				styles.DefaultView.Render(m.logView.View()),
 				styles.DefaultView.Render(m.treeView.View()),
 				styles.FocusedView.Render(m.nodeView.View()),
-				m.logView.View(),
 			),
 			m.helpView.View(),
 		)
@@ -161,10 +162,13 @@ func (m *Model) setFullHelp(state sessionState, kb [][]key.Binding) {
 }
 
 func (m *Model) resizeViews(sizeMsg tea.WindowSizeMsg, cmds *[]tea.Cmd) {
-	m.updateView(tea.WindowSizeMsg{Width: sizeMsg.Width / 3, Height: sizeMsg.Height - m.reservedHeight}, cmds, m.treeView)
-	m.updateView(tea.WindowSizeMsg{Width: sizeMsg.Width / 3, Height: sizeMsg.Height - m.reservedHeight}, cmds, m.editorView)
-	m.updateView(tea.WindowSizeMsg{Width: sizeMsg.Width / 3, Height: sizeMsg.Height - m.reservedHeight}, cmds, m.nodeView)
-	m.updateView(tea.WindowSizeMsg{Width: sizeMsg.Width / 3, Height: sizeMsg.Height - m.reservedHeight}, cmds, m.logView)
-	m.updateView(tea.WindowSizeMsg{Width: sizeMsg.Width, Height: sizeMsg.Height}, cmds, m.helpView)
+	m.log(fmt.Sprintf("window w %d h %d", sizeMsg.Width, sizeMsg.Height))
+	width := sizeMsg.Width / 3
+	height := sizeMsg.Height - m.reservedHeight
+	m.updateView(tea.WindowSizeMsg{Width: width, Height: height}, cmds, m.treeView)
+	m.updateView(tea.WindowSizeMsg{Width: width, Height: height}, cmds, m.editorView)
+	m.updateView(tea.WindowSizeMsg{Width: width, Height: height}, cmds, m.nodeView)
+	m.updateView(tea.WindowSizeMsg{Width: width, Height: height}, cmds, m.logView)
+	m.updateView(tea.WindowSizeMsg{Width: sizeMsg.Width, Height: 1}, cmds, m.helpView)
 	//m.log(fmt.Sprintf("w: %d h: %d", sizeMsg.Width, sizeMsg.Height))
 }

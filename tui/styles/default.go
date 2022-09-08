@@ -2,12 +2,26 @@ package styles
 
 import "github.com/charmbracelet/lipgloss"
 
-const padding = 3
+const padding = 0
 
 var (
-	DefaultView   = lipgloss.NewStyle().PaddingLeft(padding).PaddingRight(padding).BorderStyle(lipgloss.HiddenBorder())
-	WidgetView    = lipgloss.NewStyle().PaddingBottom(padding).BorderStyle(lipgloss.HiddenBorder())
-	FocusedView   = lipgloss.NewStyle().PaddingLeft(padding).PaddingRight(padding).BorderStyle(lipgloss.NormalBorder()).BorderForeground(lipgloss.Color("69"))
-	FocusedWidget = lipgloss.NewStyle().Foreground(lipgloss.Color("69"))
-	None          = lipgloss.NewStyle()
+	None = lipgloss.NewStyle()
+	DefaultView = None
+	FocusedView = None
+	FocusedWidget = None
+
+	//DefaultView = lipgloss.NewStyle().
+	//		PaddingLeft(padding).
+	//		PaddingRight(padding).
+	//		BorderStyle(lipgloss.NormalBorder()).
+	//		BorderForeground(lipgloss.Color("70"))
+	//
+	//FocusedView = lipgloss.NewStyle().
+	//		PaddingLeft(padding).
+	//		PaddingRight(padding).
+	//		BorderStyle(lipgloss.NormalBorder()).
+	//		BorderForeground(lipgloss.Color("69"))
+	//
+	//FocusedWidget = lipgloss.NewStyle().
+	//		Foreground(lipgloss.Color("69"))
 )

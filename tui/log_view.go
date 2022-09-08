@@ -5,13 +5,15 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"io"
+	"time"
 )
 
 func NewLogView(model *Model) *LogView {
-	m := list.New([]list.Item{&LogItem{"Start recording log"}}, &LogItemDelegate{}, 0, 0)
-	m.SetShowStatusBar(false)
+	m := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
+	m.Title = "Logs"
+	m.SetShowStatusBar(true)
 	m.SetShowHelp(false)
-	m.SetShowTitle(false)
+	m.SetShowTitle(true)
 	m.SetShowPagination(false)
 	return &LogView{
 		main:  model,
@@ -45,16 +47,28 @@ func (l *LogView) View() string {
 
 func (l *LogView) InsertLog(msg string) {
 	last := len(l.model.Items())
-	l.model.InsertItem(last, &LogItem{msg})
+	l.model.InsertItem(last, &LogItem{
+		log:  msg,
+		time: time.Now().String(),
+	})
 	l.model.Select(last)
 }
 
 type LogItem struct {
-	log string
+	log  string
+	time string
 }
 
 func (l LogItem) FilterValue() string {
 	return l.log
+}
+
+func (l LogItem) Title() string {
+	return l.log
+}
+
+func (l LogItem) Description() string {
+	return l.time
 }
 
 type LogItemDelegate struct {
@@ -76,7 +90,7 @@ func (d *LogItemDelegate) Height() int {
 }
 
 func (d *LogItemDelegate) Spacing() int {
-	return 0
+	return 1
 }
 
 func (d *LogItemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
