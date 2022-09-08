@@ -3,43 +3,51 @@ package tui
 import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"gohost/tui/styles"
+	"gohost/tui/view"
+	"gohost/tui/widget"
 	"strings"
 )
 
+var _ view.View = (*NodeView)(nil)
+
 type NodeView struct {
-	model       *Model
+	model *Model
+	*view.BaseView
 	preFocusIdx int
 	focusIdx    int
-	inputs      []textinput.Model
-	nodeTypes   list.Model
+	nodeTypes   *widget.List
 }
 
 func NewNodeView(model *Model) *NodeView {
 	// Text inputs
-	nodeNameTextInput := textinput.New()
-	nodeNameTextInput.Prompt = "Name: "
+	nodeNameTextInput := widget.NewTextInput()
+	nodeNameTextInput.Prompt = "ID: "
 	nodeNameTextInput.Focus()
-	nodeNameTextInput.PromptStyle = styles.FocusedModel
-	nodeNameTextInput.TextStyle = styles.FocusedModel
 
-	descTextInput := textinput.New()
+	descTextInput := widget.NewTextInput()
 	descTextInput.Prompt = "Description: "
 
-	// Node type choices
-	nodeTypes := list.New([]list.Item{GroupNode, LocalHost, RemoteHost}, list.NewDefaultDelegate(), 20, 20)
+	urlTextInput := widget.NewTextInput()
+	urlTextInput.Prompt = "Url: "
 
-	view := &NodeView{
+	// Node type choices
+	//nodeTypes := list.New([]list.Item{GroupNode, LocalHost, RemoteHost}, list.NewDefaultDelegate(), 20, 20)
+	nodeTypes := widget.NewList([]list.Item{GroupNode, LocalHost, RemoteHost}, list.NewDefaultDelegate(), 20, 20)
+
+	nodeView := &NodeView{
 		model:       model,
+		BaseView:    view.New(),
 		preFocusIdx: 0,
 		focusIdx:    0,
-		inputs:      []textinput.Model{nodeNameTextInput, descTextInput},
 		nodeTypes:   nodeTypes,
 	}
+	nodeView.AddWidget(nodeNameTextInput)
+	nodeView.AddWidget(descTextInput)
+	nodeView.AddWidget(urlTextInput)
+	nodeView.AddWidget(nodeTypes)
 
-	return view
+	return nodeView
 }
 
 func (v *NodeView) Init() tea.Cmd {
@@ -58,68 +66,29 @@ func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch {
 			case key.Matches(m, keys.Enter, keys.Up, keys.Down):
 				if key.Matches(m, keys.Enter, keys.Down) {
-					cmds = append(cmds, v.setFocusInput(v.idxAfterFocusInput()))
+					cmds = append(cmds, v.FocusNextWidget()...)
 				} else {
-					cmds = append(cmds, v.setFocusInput(v.idxBeforeFocusInput()))
+					cmds = append(cmds, v.FocusPreWidget()...)
 				}
 			}
 		} else {
 			return nil, tea.Batch(cmds...)
 		}
 	}
-	for i := range v.inputs {
-		v.inputs[i], cmd = v.inputs[i].Update(msg)
-		cmds = append(cmds, cmd)
-	}
-	v.nodeTypes, cmd = v.nodeTypes.Update(msg)
+
+	_, cmd = v.BaseView.Update(msg)
 	cmds = append(cmds, cmd)
+
+	//v.nodeTypes, cmd = v.nodeTypes.Update(msg)
+	//cmds = append(cmds, cmd)
+
 	return v, tea.Batch(cmds...)
 }
 
 func (v *NodeView) View() string {
 	var b strings.Builder
-	for i := range v.inputs {
-		b.WriteString(v.inputs[i].View())
-		if i < len(v.inputs)-1 {
-			b.WriteString(cfg.LineBreak)
-		}
-	}
-	b.WriteString("\n")
-	b.WriteString(v.nodeTypes.View())
+	b.WriteString(v.BaseView.View())
+	//b.WriteString("\n")
+	//b.WriteString(v.nodeTypes.View())
 	return b.String()
-}
-
-func (v *NodeView) idxAfterFocusInput() int {
-	id := v.focusIdx + 1
-	if id >= len(v.inputs) {
-		id = 0
-	}
-	return id
-}
-
-func (v *NodeView) idxBeforeFocusInput() int {
-	id := v.focusIdx - 1
-	if id < 0 {
-		id = len(v.inputs) - 1
-	}
-	return id
-}
-
-func (v *NodeView) setFocusInput(idx int) tea.Cmd {
-	v.preFocusIdx = v.focusIdx
-	v.focusIdx = idx
-
-	preInput := v.inputs[v.preFocusIdx]
-	preInput.TextStyle = styles.None
-	preInput.PromptStyle = styles.None
-	preInput.Blur()
-	v.inputs[v.preFocusIdx] = preInput
-
-	input := v.inputs[v.focusIdx]
-	input.TextStyle = styles.FocusedModel
-	input.PromptStyle = styles.FocusedModel
-	cmd := input.Focus()
-	v.inputs[v.focusIdx] = input
-
-	return cmd
 }
