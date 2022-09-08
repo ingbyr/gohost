@@ -34,7 +34,7 @@ type Model struct {
 
 func NewModel() (*Model, error) {
 	model := &Model{
-		state:          treeViewState,
+		state:          nodeViewState,
 		reservedHeight: 6,
 	}
 	model.helpView = NewHelpView(model)
