@@ -5,7 +5,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"gohost/tui/styles"
 	"gohost/tui/widget"
-	"strings"
 )
 
 type View interface {
@@ -41,6 +40,10 @@ func (v *BaseView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
+	case tea.WindowSizeMsg:
+		for i := 0; i < len(v.Widgets); i++ {
+
+		}
 	case tea.KeyMsg:
 		switch m.String() {
 		case "up", "down":
@@ -56,11 +59,11 @@ func (v *BaseView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (v *BaseView) View() string {
-	var b strings.Builder
+	var str string
 	for i := 0; i < len(v.Widgets); i++ {
-		b.WriteString(lipgloss.JoinVertical(lipgloss.Left, v.WidgetStyle.Render(v.Widgets[i].View())))
+		str = lipgloss.JoinVertical(lipgloss.Left, str, v.Widgets[i].View())
 	}
-	return b.String()
+	return str
 }
 
 func (v *BaseView) AddWidget(widget widget.Widget) {

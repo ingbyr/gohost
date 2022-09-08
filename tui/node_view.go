@@ -44,8 +44,8 @@ func NewNodeView(model *Model) *NodeView {
 		nodeTypes:   nodeTypes,
 	}
 	nodeView.WidgetStyle = styles.DefaultView
-	//nodeView.AddWidget(nodeNameTextInput)
-	//nodeView.AddWidget(descTextInput)
+	nodeView.AddWidget(nodeNameTextInput)
+	nodeView.AddWidget(descTextInput)
 	nodeView.AddWidget(urlTextInput)
 	nodeView.AddWidget(nodeTypes)
 
@@ -61,8 +61,8 @@ func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
 	case tea.WindowSizeMsg:
-		v.nodeTypes.SetHeight(m.Height - v.model.reservedHeight)
-		v.nodeTypes.SetWidth(m.Width / 3 * 2)
+		v.nodeTypes.SetHeight(m.Height)
+		v.nodeTypes.SetWidth(m.Width)
 	case tea.KeyMsg:
 		if v.model.state == nodeViewState {
 			switch {
@@ -81,16 +81,11 @@ func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	_, cmd = v.BaseView.Update(msg)
 	cmds = append(cmds, cmd)
 
-	//v.nodeTypes, cmd = v.nodeTypes.Update(msg)
-	//cmds = append(cmds, cmd)
-
 	return v, tea.Batch(cmds...)
 }
 
 func (v *NodeView) View() string {
 	var b strings.Builder
 	b.WriteString(v.BaseView.View())
-	//b.WriteString("\n")
-	//b.WriteString(v.nodeTypes.View())
 	return b.String()
 }

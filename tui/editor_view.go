@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"fmt"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
@@ -57,7 +56,7 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
 	case tea.WindowSizeMsg:
-		v.hostEditor.SetHeight(m.Height - 2)
+		v.hostEditor.SetHeight(m.Height)
 		v.hostEditor.SetWidth(m.Width)
 		//v.model.log(fmt.Sprintf("editor view: w %d h %d", v.hostEditor.Width(), v.hostEditor.Height()))
 	case tea.KeyMsg:
@@ -111,7 +110,7 @@ func (v *EditorView) SetHost(host gohost.Host) {
 }
 
 func (v *EditorView) RefreshStatusLine() {
-	v.statusLine = fmt.Sprintf("file: %s, saved: %t\n", v.host.Title(), v.IsSaved())
+	//v.statusLine = fmt.Sprintf("file: %s, saved: %t\n", v.host.Title(), v.IsSaved())
 }
 
 func (v *EditorView) IsSaved() bool {

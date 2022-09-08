@@ -18,37 +18,37 @@ type Choice struct {
 	selectIndexAfterUnfocus int
 }
 
-func (l *Choice) Init() tea.Cmd {
+func (c *Choice) Init() tea.Cmd {
 	return nil
 }
 
-func (l *Choice) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (c *Choice) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
 	case tea.WindowSizeMsg:
-		l.SetHeight(m.Height / 5)
-		l.SetWidth(m.Width / 5)
+		c.SetHeight(m.Height / 5)
+		c.SetWidth(m.Width / 5)
 	}
-	l.Model, cmd = l.Model.Update(msg)
+	c.Model, cmd = c.Model.Update(msg)
 	cmds = append(cmds, cmd)
-	return l, tea.Batch(cmds...)
+	return c, tea.Batch(cmds...)
 }
 
-func (l *Choice) Focus() tea.Cmd {
-	l.Select(l.selectIndexAfterUnfocus)
+func (c *Choice) Focus() tea.Cmd {
+	c.Select(c.selectIndexAfterUnfocus)
 	return nil
 }
 
-func (l *Choice) Unfocus() tea.Cmd {
-	l.selectIndexAfterUnfocus = l.Index()
+func (c *Choice) Unfocus() tea.Cmd {
+	c.selectIndexAfterUnfocus = c.Index()
 	return nil
 }
 
-func (l *Choice) HandleKeyUp() bool {
-	return !(l.Model.Index() == 0)
+func (c *Choice) HandleKeyUp() bool {
+	return !(c.Model.Index() == 0)
 }
 
-func (l *Choice) HandleKeyDown() bool {
-	return !(l.Model.Index() == len(l.Model.Items())-1)
+func (c *Choice) HandleKeyDown() bool {
+	return !(c.Model.Index() == len(c.Model.Items())-1)
 }

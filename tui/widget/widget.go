@@ -8,4 +8,7 @@ type Widget interface {
 	Unfocus() tea.Cmd
 	HandleKeyUp() bool
 	HandleKeyDown() bool
+	SetWidth(width int)
+	SetHeight(height int)
+	// TODO add width height percent
 }

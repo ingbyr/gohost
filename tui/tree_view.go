@@ -56,8 +56,8 @@ type TreeView struct {
 	selectedIndex int
 	selectedGroup *gohost.Group
 	selectedHost  gohost.Host
-
-	service *gohost.Service
+	width, height int
+	service       *gohost.Service
 }
 
 func NewTreeView(model *Model) *TreeView {
@@ -95,8 +95,8 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
 	case tea.WindowSizeMsg:
-		v.nodeList.SetHeight(m.Height)
-		v.nodeList.SetWidth(m.Width)
+		v.SetHeight(m.Height)
+		v.SetWidth(m.Width)
 		//v.model.log(fmt.Sprintf("tree view w: %d h: %d", v.nodeList.Width(), v.nodeList.Height()))
 	case tea.KeyMsg:
 		if v.model.state == treeViewState {
@@ -134,6 +134,16 @@ func (v *TreeView) ShortHelp() []key.Binding {
 
 func (v *TreeView) FullHelp() [][]key.Binding {
 	return v.nodeList.FullHelp()
+}
+
+func (v *TreeView) SetWidth(width int) {
+	v.nodeList.SetWidth(width)
+	v.width = width
+}
+
+func (v *TreeView) SetHeight(height int) {
+	v.nodeList.SetHeight(height)
+	v.height = height
 }
 
 func (v *TreeView) onGroupNodeEnterClick(cmds *[]tea.Cmd) {

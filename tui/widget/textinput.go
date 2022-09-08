@@ -20,6 +20,14 @@ type TextInput struct {
 	textinput.Model
 }
 
+func (t *TextInput) SetWidth(width int) {
+	t.Model.Width = width
+}
+
+func (t *TextInput) SetHeight(height int) {
+
+}
+
 func (t *TextInput) Init() tea.Cmd {
 	return nil
 }

@@ -36,8 +36,9 @@ type Model struct {
 
 func NewModel() (*Model, error) {
 	model := &Model{
-		state:          treeViewState,
-		reservedHeight: 1,
+		state: nodeViewState,
+		// Style border top 1, bottom 1 and help 1 line
+		reservedHeight: 3,
 	}
 	model.logView = NewLogView(model)
 	model.helpView = NewHelpView(model)
@@ -162,13 +163,12 @@ func (m *Model) setFullHelp(state sessionState, kb [][]key.Binding) {
 }
 
 func (m *Model) resizeViews(sizeMsg tea.WindowSizeMsg, cmds *[]tea.Cmd) {
-	m.log(fmt.Sprintf("window w %d h %d", sizeMsg.Width, sizeMsg.Height))
-	width := sizeMsg.Width / 3
+	//m.log(fmt.Sprintf("window w %d h %d", sizeMsg.Width, sizeMsg.Height))
+	width := sizeMsg.Width/3 - 4
 	height := sizeMsg.Height - m.reservedHeight
 	m.updateView(tea.WindowSizeMsg{Width: width, Height: height}, cmds, m.treeView)
 	m.updateView(tea.WindowSizeMsg{Width: width, Height: height}, cmds, m.editorView)
 	m.updateView(tea.WindowSizeMsg{Width: width, Height: height}, cmds, m.nodeView)
 	m.updateView(tea.WindowSizeMsg{Width: width, Height: height}, cmds, m.logView)
 	m.updateView(tea.WindowSizeMsg{Width: sizeMsg.Width, Height: 1}, cmds, m.helpView)
-	//m.log(fmt.Sprintf("w: %d h: %d", sizeMsg.Width, sizeMsg.Height))
 }
