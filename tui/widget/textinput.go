@@ -43,10 +43,10 @@ func (t *TextInput) Unfocus() tea.Cmd {
 	return nil
 }
 
-func (t *TextInput) HasNext() bool {
+func (t *TextInput) HandleKeyUp() bool {
 	return false
 }
 
-func (t *TextInput) HasPre() bool {
+func (t *TextInput) HandleKeyDown() bool {
 	return false
 }

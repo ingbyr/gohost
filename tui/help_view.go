@@ -4,7 +4,6 @@ import (
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
-	"strings"
 )
 
 type HelpView struct {
@@ -12,7 +11,6 @@ type HelpView struct {
 	helpView    help.Model
 	shortHelp   map[sessionState][]key.Binding
 	fullHelp    map[sessionState][][]key.Binding
-	debug       string
 	enableDebug bool
 }
 
@@ -39,14 +37,7 @@ func (h *HelpView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (h *HelpView) View() string {
-	var b strings.Builder
-	b.WriteString(h.helpView.View(h))
-	if h.enableDebug {
-		b.WriteString(cfg.LineBreak)
-		b.WriteString("Debug: ")
-		b.WriteString(h.debug)
-	}
-	return b.String()
+	return h.helpView.View(h)
 }
 
 func (h *HelpView) ShortHelp() []key.Binding {

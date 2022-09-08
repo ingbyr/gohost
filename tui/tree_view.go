@@ -70,22 +70,23 @@ func NewTreeView(model *Model) *TreeView {
 	// Create nodes list helpView
 	//nodeList := list.New(groups, groupItemDelegate{}, 0, 0)
 	delegate := list.NewDefaultDelegate()
-	groupList := list.New(groups, delegate, 0, 0)
+	nodeList := list.New(groups, delegate, 0, 0)
 	// TODO add remaining help key
-	groupList.Title = "Groups"
-	groupList.SetShowHelp(false)
+	nodeList.Title = "Groups"
+	nodeList.SetShowStatusBar(false)
+	nodeList.SetShowHelp(false)
 
 	return &TreeView{
 		model:        model,
-		nodeList:     groupList,
+		nodeList:     nodeList,
 		selectedNode: treeNodes[0],
 		service:      service,
 	}
 }
 
 func (v *TreeView) Init() tea.Cmd {
-	v.model.SetShortHelp(treeViewState, v.nodeList.ShortHelp())
-	v.model.SetFullHelp(treeViewState, v.nodeList.FullHelp())
+	v.model.setShortHelp(treeViewState, v.nodeList.ShortHelp())
+	v.model.setFullHelp(treeViewState, v.nodeList.FullHelp())
 	return nil
 }
 
@@ -94,9 +95,9 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
 	case tea.WindowSizeMsg:
-		v.nodeList.SetHeight(m.Height - v.model.reservedHeight)
-		v.nodeList.SetWidth(m.Width / 3)
-		v.model.helpView.debug = fmt.Sprintf("w %d h %d, w %d h %d", m.Width, m.Height, v.nodeList.Width(), v.nodeList.Height())
+		v.nodeList.SetHeight(m.Height)
+		v.nodeList.SetWidth(m.Width)
+		v.model.log(fmt.Sprintf("tree view w: %d h: %d", m.Width, m.Height))
 	case tea.KeyMsg:
 		if v.model.state == treeViewState {
 			switch {

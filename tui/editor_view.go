@@ -34,7 +34,7 @@ func NewTextView(model *Model) *EditorView {
 
 func (v *EditorView) Init() tea.Cmd {
 	km := v.hostEditor.KeyMap
-	v.model.SetShortHelp(editorViewState, []key.Binding{
+	v.model.setShortHelp(editorViewState, []key.Binding{
 		keys.Up,
 		keys.Down,
 		keys.Left,
@@ -42,7 +42,7 @@ func (v *EditorView) Init() tea.Cmd {
 		keys.Save,
 		keys.Esc,
 	})
-	v.model.SetFullHelp(editorViewState, [][]key.Binding{
+	v.model.setFullHelp(editorViewState, [][]key.Binding{
 		{keys.Up, keys.Down, keys.Left, keys.Right, keys.Save},
 		{km.CharacterForward, km.CharacterBackward}, // TODO add all key map from textarea.KeyMap
 	})
@@ -58,8 +58,8 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
 	case tea.WindowSizeMsg:
-		v.hostEditor.SetHeight(m.Height - v.model.reservedHeight - 1)
-		v.hostEditor.SetWidth(m.Width - v.model.treeView.nodeList.Width())
+		v.hostEditor.SetHeight(m.Height)
+		v.hostEditor.SetWidth(m.Width)
 	case tea.KeyMsg:
 		if v.model.state == editorViewState {
 			switch {

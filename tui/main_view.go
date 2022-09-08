@@ -24,6 +24,7 @@ var cfg = config.Instance()
 type Model struct {
 	preState       sessionState
 	state          sessionState
+	logView        *LogView
 	helpView       *HelpView
 	treeView       *TreeView
 	editorView     *EditorView
@@ -34,9 +35,10 @@ type Model struct {
 
 func NewModel() (*Model, error) {
 	model := &Model{
-		state:          nodeViewState,
-		reservedHeight: 6,
+		state:          treeViewState,
+		reservedHeight: 10,
 	}
+	model.logView = NewLogView(model)
 	model.helpView = NewHelpView(model)
 	model.treeView = NewTreeView(model)
 	model.editorView = NewTextView(model)
@@ -45,16 +47,25 @@ func NewModel() (*Model, error) {
 }
 
 func (m *Model) Init() tea.Cmd {
-	return tea.Batch(m.treeView.Init(),
+	return tea.Batch(
+		m.treeView.Init(),
 		m.editorView.Init(),
-		m.helpView.Init())
+		m.nodeView.Init(),
+		m.logView.Init(),
+		m.helpView.Init(),
+	)
 }
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
+		// Overwrite size msg for each component
+		m.resizeViews(msg, &cmds)
+		return m, tea.Batch(cmds...)
+
 	case tea.KeyMsg:
+		m.log("hit key " + msg.String())
 		switch {
 		case key.Matches(msg, keys.Switch):
 			m.switchNextState()
@@ -71,6 +82,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	}
+	m.updateView(msg, &cmds, m.logView)
 	m.updateView(msg, &cmds, m.treeView)
 	m.updateView(msg, &cmds, m.editorView)
 	m.updateView(msg, &cmds, m.nodeView)
@@ -86,21 +98,28 @@ func (m *Model) View() string {
 			lipgloss.JoinHorizontal(lipgloss.Top,
 				styles.FocusedView.Render(m.treeView.View()),
 				styles.DefaultView.Render(m.editorView.View()),
+				m.logView.View(),
 			),
 			m.helpView.View())
 
 	case editorViewState:
-		v = lipgloss.JoinHorizontal(lipgloss.Left,
+		v = lipgloss.JoinVertical(lipgloss.Left,
 			lipgloss.JoinHorizontal(lipgloss.Top,
 				styles.DefaultView.Render(m.treeView.View()),
-				styles.FocusedView.Render(m.editorView.View())),
+				styles.FocusedView.Render(m.editorView.View()),
+				m.logView.View(),
+			),
 			m.helpView.View())
 
 	case nodeViewState:
 		v = lipgloss.JoinVertical(lipgloss.Left,
 			lipgloss.JoinHorizontal(lipgloss.Top,
 				styles.DefaultView.Render(m.treeView.View()),
-				styles.FocusedView.Render(m.nodeView.View())))
+				styles.FocusedView.Render(m.nodeView.View()),
+				m.logView.View(),
+			),
+			m.helpView.View(),
+		)
 
 	case helpViewState:
 		v = m.helpView.View()
@@ -114,7 +133,7 @@ func (m *Model) updateView(msg tea.Msg, cmds *[]tea.Cmd, view tea.Model) {
 }
 
 func (m *Model) log(msg string) {
-	m.helpView.debug = msg
+	m.logView.InsertLog(msg)
 }
 
 func (m *Model) switchNextState() sessionState {
@@ -133,10 +152,19 @@ func (m *Model) switchState(state sessionState) {
 	m.state = state
 }
 
-func (m *Model) SetShortHelp(state sessionState, kb []key.Binding) {
+func (m *Model) setShortHelp(state sessionState, kb []key.Binding) {
 	m.helpView.SetShortHelp(state, kb)
 }
 
-func (m *Model) SetFullHelp(state sessionState, kb [][]key.Binding) {
+func (m *Model) setFullHelp(state sessionState, kb [][]key.Binding) {
 	m.helpView.SetFullHelp(state, kb)
+}
+
+func (m *Model) resizeViews(sizeMsg tea.WindowSizeMsg, cmds *[]tea.Cmd) {
+	m.updateView(tea.WindowSizeMsg{Width: sizeMsg.Width / 3, Height: sizeMsg.Height - m.reservedHeight}, cmds, m.treeView)
+	m.updateView(tea.WindowSizeMsg{Width: sizeMsg.Width / 3, Height: sizeMsg.Height - m.reservedHeight}, cmds, m.editorView)
+	m.updateView(tea.WindowSizeMsg{Width: sizeMsg.Width / 3, Height: sizeMsg.Height - m.reservedHeight}, cmds, m.nodeView)
+	m.updateView(tea.WindowSizeMsg{Width: sizeMsg.Width / 3, Height: sizeMsg.Height - m.reservedHeight}, cmds, m.logView)
+	m.updateView(tea.WindowSizeMsg{Width: sizeMsg.Width, Height: sizeMsg.Height}, cmds, m.helpView)
+	//m.log(fmt.Sprintf("w: %d h: %d", sizeMsg.Width, sizeMsg.Height))
 }

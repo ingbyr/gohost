@@ -6,6 +6,6 @@ type Widget interface {
 	tea.Model
 	Focus() tea.Cmd
 	Unfocus() tea.Cmd
-	HasNext() bool
-	HasPre() bool
+	HandleKeyUp() bool
+	HandleKeyDown() bool
 }

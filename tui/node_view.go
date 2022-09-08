@@ -4,6 +4,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"gohost/tui/styles"
 	"gohost/tui/view"
 	"gohost/tui/widget"
 	"strings"
@@ -16,7 +17,7 @@ type NodeView struct {
 	*view.BaseView
 	preFocusIdx int
 	focusIdx    int
-	nodeTypes   *widget.List
+	nodeTypes   *widget.Choice
 }
 
 func NewNodeView(model *Model) *NodeView {
@@ -32,8 +33,8 @@ func NewNodeView(model *Model) *NodeView {
 	urlTextInput.Prompt = "Url: "
 
 	// Node type choices
-	//nodeTypes := list.New([]list.Item{GroupNode, LocalHost, RemoteHost}, list.NewDefaultDelegate(), 20, 20)
-	nodeTypes := widget.NewList([]list.Item{GroupNode, LocalHost, RemoteHost}, list.NewDefaultDelegate(), 20, 20)
+	// TODO get width and height from NewNodeView args
+	nodeTypes := widget.NewChoice([]list.Item{GroupNode, LocalHost, RemoteHost}, list.NewDefaultDelegate(), 2, 20)
 
 	nodeView := &NodeView{
 		model:       model,
@@ -42,8 +43,9 @@ func NewNodeView(model *Model) *NodeView {
 		focusIdx:    0,
 		nodeTypes:   nodeTypes,
 	}
-	nodeView.AddWidget(nodeNameTextInput)
-	nodeView.AddWidget(descTextInput)
+	nodeView.WidgetStyle = styles.DefaultView
+	//nodeView.AddWidget(nodeNameTextInput)
+	//nodeView.AddWidget(descTextInput)
 	nodeView.AddWidget(urlTextInput)
 	nodeView.AddWidget(nodeTypes)
 
