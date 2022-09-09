@@ -53,11 +53,10 @@ func (v *BaseView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			_, cmd = v.Widgets[v.focus].Update(msg)
 			return v, cmd
 		}
-	default:
-		for i := 0; i < len(v.Widgets); i++ {
-			_, cmd = v.Widgets[v.focus].Update(msg)
-			cmds = append(cmds, cmd)
-		}
+	}
+	for i := 0; i < len(v.Widgets); i++ {
+		_, cmd = v.Widgets[v.focus].Update(msg)
+		cmds = append(cmds, cmd)
 	}
 
 	return v, tea.Batch(cmds...)
@@ -75,7 +74,7 @@ func (v *BaseView) View() string {
 			continue
 		}
 		str = lipgloss.JoinVertical(lipgloss.Left, str, v.Widgets[i].View())
-		log.Debug(fmt.Sprintf("cur h %d, view h %d", lipgloss.Height(str), v.height))
+		//log.Debug(fmt.Sprintf("cur h %d, view h %d", lipgloss.Height(str), v.height))
 	}
 	return str
 }
@@ -106,10 +105,18 @@ func (v *BaseView) AddWidget(widget Widget) {
 }
 
 func (v *BaseView) FocusNextWidget() []tea.Cmd {
-	return v.setFocusWidget(v.idxAfterFocusWidget(), FocusFirstMode)
+	nextFocus := v.idxAfterFocusWidget()
+	if nextFocus == v.focus {
+		return nil
+	}
+	return v.setFocusWidget(nextFocus, FocusFirstMode)
 }
 
 func (v *BaseView) FocusPreWidget() []tea.Cmd {
+	nextFocus := v.idxBeforeFocusWidget()
+	if nextFocus == v.focus {
+		return nil
+	}
 	return v.setFocusWidget(v.idxBeforeFocusWidget(), FocusLastMode)
 }
 

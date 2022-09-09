@@ -67,6 +67,7 @@ func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		if v.model.state == nodeViewState {
 			switch {
+			// FIXME enter duplicated on last item
 			case key.Matches(m, keys.Enter, keys.Up, keys.Down):
 				if key.Matches(m, keys.Enter, keys.Down) {
 					cmds = append(cmds, v.FocusNextWidget()...)
