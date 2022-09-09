@@ -5,8 +5,8 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"gohost/log"
-	"gohost/tui/styles"
 	"gohost/tui/view"
 	"gohost/tui/widget"
 )
@@ -44,7 +44,7 @@ func NewNodeView(model *Model) *NodeView {
 		focusIdx:    0,
 		nodeTypes:   nodeTypes,
 	}
-	nodeView.WidgetStyle = styles.DefaultView
+	nodeView.WidgetStyle = lipgloss.NewStyle().PaddingBottom(1)
 	nodeView.AddWidget(nodeNameTextInput)
 	nodeView.AddWidget(descTextInput)
 	nodeView.AddWidget(urlTextInput)

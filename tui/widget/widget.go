@@ -9,5 +9,7 @@ type Widget interface {
 	HandleKeyUp() bool
 	HandleKeyDown() bool
 	SetWidth(width int)
-	SetHeight(height int) int
+	SetHeight(height int)
+	Width() int
+	Height() int
 }

@@ -46,9 +46,8 @@ func (v *BaseView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
 	case tea.WindowSizeMsg:
-		for i := 0; i < len(v.Widgets); i++ {
-
-		}
+		v.SetSize(m.Width, m.Height)
+		return v, nil
 	case tea.KeyMsg:
 		switch m.String() {
 		case "up", "down":
@@ -66,31 +65,36 @@ func (v *BaseView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (v *BaseView) View() string {
 	var str string
 	for i := 0; i < len(v.Widgets); i++ {
-		str = lipgloss.JoinVertical(lipgloss.Left, str, v.Widgets[i].View())
-		if lipgloss.Height(str) > v.height {
-			break
+		w := v.Widgets[i]
+		if w.Height()+lipgloss.Height(str) > v.height {
+			return str
 		}
+		if i == 0 {
+			str = lipgloss.JoinVertical(lipgloss.Left, w.View())
+			continue
+		}
+		str = lipgloss.JoinVertical(lipgloss.Left, str, v.Widgets[i].View())
+		log.Debug(fmt.Sprintf("cur h %d, view h %d", lipgloss.Height(str), v.height))
 	}
 	return str
 }
 func (v *BaseView) SetSize(width, height int) {
 	v.width = width
 	v.height = height
-	remain := height
-	height = height / len(v.Widgets)
+	remain := v.height
+	height = v.height / len(v.Widgets)
 	for i := 0; i < len(v.Widgets); i++ {
 		w := v.Widgets[i]
 		w.SetWidth(width)
 		if i == len(v.Widgets)-1 {
 			w.SetHeight(remain)
-			log.Debug(fmt.Sprintf("base view w %d h %d", width, remain))
+			log.Debug(fmt.Sprintf("base view w %d h %d", width, w.Height()))
 		} else {
-			h := w.SetHeight(height)
-			remain -= h
-			log.Debug(fmt.Sprintf("base view w %d h %d", width, h))
+			w.SetHeight(height)
+			remain -= w.Height()
+			log.Debug(fmt.Sprintf("base view w %d h %d", width, w.Height()))
 		}
 	}
-
 }
 
 func (v *BaseView) AddWidget(widget widget.Widget) {

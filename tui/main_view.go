@@ -44,7 +44,7 @@ func NewModel() (*Model, error) {
 	model := &Model{
 		//state:  treeViewState,
 		state:             nodeViewState,
-		styleWidth:        styleWidth,
+		styleWidth:        styleWidth * 2,
 		styleHeight:       styleHeight,
 		shortHelperHeight: 1,
 	}
@@ -164,13 +164,12 @@ func (m *Model) setFullHelp(state sessionState, kb [][]key.Binding) {
 
 func (m *Model) resizeViews(sizeMsg tea.WindowSizeMsg, cmds *[]tea.Cmd) {
 	log.Debug(fmt.Sprintf("window w %d h %d", sizeMsg.Width, sizeMsg.Height))
-	m.leftViewWidth = (sizeMsg.Width - m.styleWidth*2) / 3
-	m.rightViewWidth = sizeMsg.Width - m.leftViewWidth - m.styleWidth*2
+	m.leftViewWidth = (sizeMsg.Width - m.styleWidth) / 3
+	m.rightViewWidth = (sizeMsg.Width - m.styleWidth) - m.leftViewWidth
 	height := sizeMsg.Height - m.styleHeight - m.shortHelperHeight
 	log.Debug(fmt.Sprintf("left w %d right w %d h %d", m.leftViewWidth, m.rightViewWidth, height))
 	m.updateView(tea.WindowSizeMsg{Width: m.leftViewWidth, Height: height}, cmds, m.treeView)
 	m.updateView(tea.WindowSizeMsg{Width: m.rightViewWidth, Height: height}, cmds, m.editorView)
-	// FIXME why this need minus 1 ?
-	m.updateView(tea.WindowSizeMsg{Width: m.rightViewWidth - 1, Height: height - 1}, cmds, m.nodeView)
+	m.updateView(tea.WindowSizeMsg{Width: m.rightViewWidth, Height: height}, cmds, m.nodeView)
 	m.updateView(tea.WindowSizeMsg{Width: sizeMsg.Width, Height: 1}, cmds, m.helpView)
 }

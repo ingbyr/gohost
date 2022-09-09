@@ -1,10 +1,8 @@
 package widget
 
 import (
-	"fmt"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"gohost/log"
 )
 
 var _ Widget = (*Choice)(nil)
@@ -16,7 +14,6 @@ func NewChoice(items []list.Item) *Choice {
 	model.SetShowPagination(true)
 	model.SetShowStatusBar(false)
 	model.SetFilteringEnabled(false)
-	model.SetShowTitle(false)
 	return &Choice{
 		Model: model,
 	}
@@ -38,7 +35,6 @@ func (c *Choice) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		c.SetHeight(m.Height)
 		c.SetWidth(m.Width)
-		log.Debug(fmt.Sprintf("choice w %d h %d", c.Model.Width(), c.Model.Height()))
 	}
 	c.Model, cmd = c.Model.Update(msg)
 	cmds = append(cmds, cmd)
@@ -67,7 +63,6 @@ func (c *Choice) SetWidth(width int) {
 	c.Model.SetWidth(width)
 }
 
-func (c *Choice) SetHeight(height int) int {
+func (c *Choice) SetHeight(height int) {
 	c.Model.SetHeight(height)
-	return c.Model.Height()
 }

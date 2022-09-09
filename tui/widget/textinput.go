@@ -20,12 +20,20 @@ type TextInput struct {
 	textinput.Model
 }
 
-func (t *TextInput) SetWidth(width int) {
-	t.Model.Width = width - len(t.Prompt)
+func (t *TextInput) Width() int {
+	return t.Model.Width
 }
 
-func (t *TextInput) SetHeight(height int) int {
+func (t *TextInput) Height() int {
 	return 1
+}
+
+func (t *TextInput) SetWidth(width int) {
+	t.Model.Width = width - len(t.Prompt) - 1
+}
+
+func (t *TextInput) SetHeight(height int) {
+	return
 }
 
 func (t *TextInput) Init() tea.Cmd {
