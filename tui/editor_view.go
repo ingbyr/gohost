@@ -7,6 +7,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"gohost/gohost"
 	"gohost/log"
+	"gohost/tui/keys"
 )
 
 type EditorView struct {
@@ -92,6 +93,7 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (v *EditorView) View() string {
+	// TODO add status line for editor view
 	//return lipgloss.JoinVertical(lipgloss.Top, v.hostEditor.View(), v.statusLine)
 	return v.hostEditor.View()
 }

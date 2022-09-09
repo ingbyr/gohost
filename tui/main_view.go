@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"gohost/config"
 	"gohost/log"
+	"gohost/tui/keys"
 	"gohost/tui/styles"
 	"strconv"
 )

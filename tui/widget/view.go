@@ -1,4 +1,4 @@
-package view
+package widget
 
 import (
 	"fmt"
@@ -6,12 +6,11 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"gohost/log"
 	"gohost/tui/styles"
-	"gohost/tui/widget"
 )
 
 type View interface {
 	tea.Model
-	AddWidget(widget widget.Widget)
+	AddWidget(widget Widget)
 	FocusNextWidget() []tea.Cmd
 	FocusPreWidget() []tea.Cmd
 	SetSize(width, height int)
@@ -21,7 +20,7 @@ var _ View = (*BaseView)(nil)
 
 func New() *BaseView {
 	return &BaseView{
-		Widgets:     make([]widget.Widget, 0),
+		Widgets:     make([]Widget, 0),
 		WidgetStyle: styles.None,
 		preFocus:    0,
 		focus:       0,
@@ -29,7 +28,7 @@ func New() *BaseView {
 }
 
 type BaseView struct {
-	Widgets     []widget.Widget
+	Widgets     []Widget
 	WidgetStyle lipgloss.Style
 	preFocus    int
 	focus       int
@@ -54,11 +53,13 @@ func (v *BaseView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			_, cmd = v.Widgets[v.focus].Update(msg)
 			return v, cmd
 		}
+	default:
+		for i := 0; i < len(v.Widgets); i++ {
+			_, cmd = v.Widgets[v.focus].Update(msg)
+			cmds = append(cmds, cmd)
+		}
 	}
-	for i := 0; i < len(v.Widgets); i++ {
-		_, cmd = v.Widgets[v.focus].Update(msg)
-		cmds = append(cmds, cmd)
-	}
+
 	return v, tea.Batch(cmds...)
 }
 
@@ -97,7 +98,7 @@ func (v *BaseView) SetSize(width, height int) {
 	}
 }
 
-func (v *BaseView) AddWidget(widget widget.Widget) {
+func (v *BaseView) AddWidget(widget Widget) {
 	if widget == nil {
 		return
 	}
@@ -105,11 +106,11 @@ func (v *BaseView) AddWidget(widget widget.Widget) {
 }
 
 func (v *BaseView) FocusNextWidget() []tea.Cmd {
-	return v.setFocusWidget(v.idxAfterFocusWidget())
+	return v.setFocusWidget(v.idxAfterFocusWidget(), FocusFirstMode)
 }
 
 func (v *BaseView) FocusPreWidget() []tea.Cmd {
-	return v.setFocusWidget(v.idxBeforeFocusWidget())
+	return v.setFocusWidget(v.idxBeforeFocusWidget(), FocusLastMode)
 }
 
 func (v *BaseView) idxAfterFocusWidget() int {
@@ -134,11 +135,11 @@ func (v *BaseView) idxBeforeFocusWidget() int {
 	return idx
 }
 
-func (v *BaseView) setFocusWidget(idx int) []tea.Cmd {
+func (v *BaseView) setFocusWidget(idx int, mode FocusMode) []tea.Cmd {
 	v.preFocus = v.focus
 	v.focus = idx
 	return []tea.Cmd{
 		v.Widgets[v.preFocus].Unfocus(),
-		v.Widgets[v.focus].Focus(),
+		v.Widgets[v.focus].Focus(mode),
 	}
 }

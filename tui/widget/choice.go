@@ -1,68 +1,151 @@
 package widget
 
 import (
+	"fmt"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	"gohost/log"
+	"gohost/tui/keys"
+	"strings"
 )
 
-var _ Widget = (*Choice)(nil)
+type FocusMode int
 
-func NewChoice(items []list.Item) *Choice {
-	delegate := list.NewDefaultDelegate()
-	model := list.New(items, delegate, 0, 0)
-	model.SetShowHelp(false)
-	model.SetShowPagination(true)
-	model.SetShowStatusBar(false)
-	model.SetFilteringEnabled(false)
-	return &Choice{
-		Model: model,
+const (
+	FocusFirstMode FocusMode = iota
+	FocusLastMode
+)
+
+var _ Widget = (*Choices)(nil)
+
+func NewChoice(items []list.DefaultItem) *Choices {
+	return &Choices{
+		items:            items,
+		SelectedPrefix:   "[v]",
+		UnselectedPrefix: "[ ]",
+		MorePlaceHold:    "...",
+		CursorStyle:      lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "#EE6FF8", Dark: "#EE6FF8"}),
+		width:            0,
+		height:           0,
+		focused:          false,
+		cursorIndex:      -1,
+		selectedIndex:    -1,
 	}
 }
 
-type Choice struct {
-	list.Model
-	selectIndexAfterUnfocus int
+type Choices struct {
+	items            []list.DefaultItem
+	SelectedPrefix   string
+	UnselectedPrefix string
+	MorePlaceHold    string
+	CursorStyle      lipgloss.Style
+	width, height    int
+	focused          bool
+	cursorIndex      int
+	selectedIndex    int
 }
 
-func (c *Choice) Init() tea.Cmd {
+func (c *Choices) Items() []list.DefaultItem {
+	return c.items
+}
+
+func (c *Choices) View() string {
+	if c.width <= 0 || c.height <= 0 {
+		return ""
+	}
+	var b strings.Builder
+	for i := 0; i < len(c.items); i++ {
+		item := c.items[i]
+		if i == c.height-1 {
+			b.WriteString(c.MorePlaceHold)
+			break
+		}
+		if i == c.selectedIndex {
+			b.WriteString(c.SelectedPrefix)
+		} else {
+			b.WriteString(c.UnselectedPrefix)
+		}
+		if i == c.cursorIndex {
+			b.WriteString(c.CursorStyle.Render(item.Title()))
+		} else {
+			b.WriteString(item.Title())
+		}
+		b.WriteString(cfg.LineBreak)
+	}
+	return b.String()
+}
+
+func (c *Choices) Width() int {
+	return c.width
+}
+
+func (c *Choices) Height() int {
+	return c.height
+}
+
+func (c *Choices) Init() tea.Cmd {
 	return nil
 }
 
-func (c *Choice) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (c *Choices) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
 	case tea.WindowSizeMsg:
 		c.SetHeight(m.Height)
 		c.SetWidth(m.Width)
+	case tea.KeyMsg:
+		switch {
+		case key.Matches(m, keys.Up):
+			if c.cursorIndex > 0 {
+				c.cursorIndex--
+			}
+		case key.Matches(m, keys.Down):
+			if c.cursorIndex < len(c.items)-1 {
+				c.cursorIndex++
+			}
+		case key.Matches(m, keys.Enter):
+			c.selectedIndex = c.cursorIndex
+		}
 	}
-	c.Model, cmd = c.Model.Update(msg)
+	log.Debug(fmt.Sprintf("choice cursor %d selected %d", c.cursorIndex, c.selectedIndex))
 	cmds = append(cmds, cmd)
 	return c, tea.Batch(cmds...)
 }
 
-func (c *Choice) Focus() tea.Cmd {
-	c.Select(c.selectIndexAfterUnfocus)
+func (c *Choices) Focus(mode FocusMode) tea.Cmd {
+	c.focused = true
+	if len(c.items) == 0 {
+		return nil
+	}
+	if mode == FocusFirstMode {
+		c.cursorIndex = -1
+	} else if mode == FocusLastMode {
+		c.cursorIndex = len(c.items)
+	}
 	return nil
 }
 
-func (c *Choice) Unfocus() tea.Cmd {
-	c.selectIndexAfterUnfocus = c.Index()
+func (c *Choices) Unfocus() tea.Cmd {
+	c.focused = false
+	c.cursorIndex = -1
 	return nil
 }
 
-func (c *Choice) HandleKeyUp() bool {
-	return !(c.Model.Index() == 0)
+func (c *Choices) HandleKeyUp() bool {
+	return !(c.cursorIndex == 0)
 }
 
-func (c *Choice) HandleKeyDown() bool {
-	return !(c.Model.Index() == len(c.Model.Items())-1)
+func (c *Choices) HandleKeyDown() bool {
+	return !(c.cursorIndex == len(c.Items())-1)
 }
 
-func (c *Choice) SetWidth(width int) {
-	c.Model.SetWidth(width)
+func (c *Choices) SetWidth(width int) {
+	c.width = width
 }
 
-func (c *Choice) SetHeight(height int) {
-	c.Model.SetHeight(height)
+func (c *Choices) SetHeight(height int) {
+	c.height = height
 }

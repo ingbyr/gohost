@@ -1,10 +1,15 @@
 package widget
 
-import tea "github.com/charmbracelet/bubbletea"
+import (
+	tea "github.com/charmbracelet/bubbletea"
+	"gohost/config"
+)
+
+var cfg = config.Instance()
 
 type Widget interface {
 	tea.Model
-	Focus() tea.Cmd
+	Focus(mode FocusMode) tea.Cmd
 	Unfocus() tea.Cmd
 	HandleKeyUp() bool
 	HandleKeyDown() bool

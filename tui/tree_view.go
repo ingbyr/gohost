@@ -7,6 +7,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"gohost/gohost"
 	"gohost/log"
+	"gohost/tui/keys"
 	"gohost/util"
 	"io"
 	"strings"

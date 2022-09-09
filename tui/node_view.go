@@ -7,25 +7,25 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"gohost/log"
-	"gohost/tui/view"
+	"gohost/tui/keys"
 	"gohost/tui/widget"
 )
 
-var _ view.View = (*NodeView)(nil)
+var _ widget.View = (*NodeView)(nil)
 
 type NodeView struct {
 	model *Model
-	*view.BaseView
+	*widget.BaseView
 	preFocusIdx int
 	focusIdx    int
-	nodeTypes   *widget.Choice
+	nodeTypes   *widget.Choices
 }
 
 func NewNodeView(model *Model) *NodeView {
 	// Text inputs
 	nodeNameTextInput := widget.NewTextInput()
 	nodeNameTextInput.Prompt = "ID: "
-	nodeNameTextInput.Focus()
+	nodeNameTextInput.Focus(widget.FocusFirstMode)
 
 	descTextInput := widget.NewTextInput()
 	descTextInput.Prompt = "Description: "
@@ -34,12 +34,11 @@ func NewNodeView(model *Model) *NodeView {
 	urlTextInput.Prompt = "Url: "
 
 	// Node type choices
-	nodeTypes := widget.NewChoice([]list.Item{GroupNode, LocalHost, RemoteHost})
-	nodeTypes.Title = "Type"
+	nodeTypes := widget.NewChoice([]list.DefaultItem{GroupNode, LocalHost, RemoteHost})
 
 	nodeView := &NodeView{
 		model:       model,
-		BaseView:    view.New(),
+		BaseView:    widget.New(),
 		preFocusIdx: 0,
 		focusIdx:    0,
 		nodeTypes:   nodeTypes,
@@ -54,7 +53,7 @@ func NewNodeView(model *Model) *NodeView {
 }
 
 func (v *NodeView) Init() tea.Cmd {
-	v.model.setShortHelp(nodeViewState, keys.ArrowsHelp())
+	v.model.setShortHelp(nodeViewState, keys.Arrows())
 	return nil
 }
 

@@ -46,7 +46,7 @@ func (t *TextInput) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return t, cmd
 }
 
-func (t *TextInput) Focus() tea.Cmd {
+func (t *TextInput) Focus(mode FocusMode) tea.Cmd {
 	t.TextStyle = styles.FocusedWidget
 	t.PromptStyle = styles.FocusedWidget
 	return t.Model.Focus()
