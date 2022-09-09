@@ -9,6 +9,5 @@ type Widget interface {
 	HandleKeyUp() bool
 	HandleKeyDown() bool
 	SetWidth(width int)
-	SetHeight(height int)
-	// TODO add width height percent
+	SetHeight(height int) int
 }

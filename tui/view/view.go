@@ -1,8 +1,10 @@
 package view
 
 import (
+	"fmt"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"gohost/log"
 	"gohost/tui/styles"
 	"gohost/tui/widget"
 )
@@ -12,6 +14,7 @@ type View interface {
 	AddWidget(widget widget.Widget)
 	FocusNextWidget() []tea.Cmd
 	FocusPreWidget() []tea.Cmd
+	SetSize(width, height int)
 }
 
 var _ View = (*BaseView)(nil)
@@ -30,6 +33,8 @@ type BaseView struct {
 	WidgetStyle lipgloss.Style
 	preFocus    int
 	focus       int
+	width       int
+	height      int
 }
 
 func (v *BaseView) Init() tea.Cmd {
@@ -62,8 +67,30 @@ func (v *BaseView) View() string {
 	var str string
 	for i := 0; i < len(v.Widgets); i++ {
 		str = lipgloss.JoinVertical(lipgloss.Left, str, v.Widgets[i].View())
+		if lipgloss.Height(str) > v.height {
+			break
+		}
 	}
 	return str
+}
+func (v *BaseView) SetSize(width, height int) {
+	v.width = width
+	v.height = height
+	remain := height
+	height = height / len(v.Widgets)
+	for i := 0; i < len(v.Widgets); i++ {
+		w := v.Widgets[i]
+		w.SetWidth(width)
+		if i == len(v.Widgets)-1 {
+			w.SetHeight(remain)
+			log.Debug(fmt.Sprintf("base view w %d h %d", width, remain))
+		} else {
+			h := w.SetHeight(height)
+			remain -= h
+			log.Debug(fmt.Sprintf("base view w %d h %d", width, h))
+		}
+	}
+
 }
 
 func (v *BaseView) AddWidget(widget widget.Widget) {

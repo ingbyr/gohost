@@ -1,13 +1,14 @@
 package tui
 
 import (
+	"fmt"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"gohost/log"
 	"gohost/tui/styles"
 	"gohost/tui/view"
 	"gohost/tui/widget"
-	"strings"
 )
 
 var _ view.View = (*NodeView)(nil)
@@ -33,8 +34,8 @@ func NewNodeView(model *Model) *NodeView {
 	urlTextInput.Prompt = "Url: "
 
 	// Node type choices
-	// TODO get width and height from NewNodeView args
-	nodeTypes := widget.NewChoice([]list.Item{GroupNode, LocalHost, RemoteHost}, list.NewDefaultDelegate(), 2, 20)
+	nodeTypes := widget.NewChoice([]list.Item{GroupNode, LocalHost, RemoteHost})
+	nodeTypes.Title = "Type"
 
 	nodeView := &NodeView{
 		model:       model,
@@ -53,6 +54,7 @@ func NewNodeView(model *Model) *NodeView {
 }
 
 func (v *NodeView) Init() tea.Cmd {
+	v.model.setShortHelp(nodeViewState, keys.ArrowsHelp())
 	return nil
 }
 
@@ -61,8 +63,8 @@ func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
 	case tea.WindowSizeMsg:
-		v.nodeTypes.SetHeight(m.Height)
-		v.nodeTypes.SetWidth(m.Width)
+		v.SetSize(m.Width, m.Height)
+		log.Debug(fmt.Sprintf("node view w %d h %d", m.Width, m.Height))
 	case tea.KeyMsg:
 		if v.model.state == nodeViewState {
 			switch {
@@ -85,7 +87,5 @@ func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (v *NodeView) View() string {
-	var b strings.Builder
-	b.WriteString(v.BaseView.View())
-	return b.String()
+	return v.BaseView.View()
 }

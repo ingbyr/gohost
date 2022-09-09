@@ -1,0 +1,310 @@
+[Debug] style w 4 h 2
+[Debug] window w 126 h 26
+[Debug] left w 39 right w 79 h 23
+[Debug] tree view w 39 h 23
+[Debug] editor view w 79 h 23
+[Debug] view w 79 h 23
+[Debug] node view w 79 h 23
+[Debug] style w 4 h 2
+[Debug] window w 126 h 26
+[Debug] left w 39 right w 79 h 23
+[Debug] tree view w 39 h 23
+[Debug] editor view w 79 h 23
+[Debug] base view w 79 h 23
+[Debug] node view w 79 h 23
+[Debug] ==============
+[Debug] style w 4 h 2
+[Debug] window w 126 h 26
+[Debug] left w 39 right w 79 h 23
+[Debug] tree view w 39 h 23
+[Debug] editor view w 79 h 23
+[Debug] base view w 79 h 23
+[Debug] node view w 79 h 23
+[Debug] choice w 79 h 23
+[Debug] ==============
+[Debug] style w 4 h 2
+[Debug] window w 126 h 26
+[Debug] left w 39 right w 79 h 23
+[Debug] tree view w 39 h 23
+[Debug] editor view w 79 h 23
+[Debug] base view w 79 h 23
+[Debug] node view w 79 h 23
+[Debug] choice w 79 h 23
+[Debug] state:3
+[Debug] state:0
+[Debug] ==============
+[Debug] style w 4 h 2
+[Debug] window w 126 h 26
+[Debug] left w 39 right w 79 h 23
+[Debug] tree view w 39 h 23
+[Debug] editor view w 79 h 23
+[Debug] base view w 79 h 23
+[Debug] node view w 79 h 23
+[Debug] choice w 79 h 23
+[Debug] state:3
+[Debug] state:0
+[Debug] select host: System Host               wrf                 asdfasdf
+[Debug] ==============
+[Debug] style w 4 h 2
+[Debug] window w 126 h 26
+[Debug] left w 39 right w 79 h 23
+[Debug] tree view w 39 h 23
+[Debug] editor view w 79 h 23
+[Debug] base view w 79 h 23
+[Debug] node view w 79 h 23
+[Debug] choice w 79 h 23
+[Debug] state:3
+[Debug] state:0
+[Debug] ==============
+[Debug] style w 4 h 2
+[Debug] window w 126 h 26
+[Debug] left w 39 right w 79 h 23
+[Debug] tree view w 39 h 23
+[Debug] editor view w 79 h 23
+[Debug] base view w 79 h 23
+[Debug] node view w 79 h 23
+[Debug] choice w 79 h 23
+[Debug] state:3
+[Debug] state:0
+[Debug] ==============
+[Debug] style w 4 h 2
+[Debug] window w 126 h 26
+[Debug] left w 39 right w 79 h 23
+[Debug] tree view w 39 h 23
+[Debug] editor view w 79 h 23
+[Debug] base view w 79 h 23
+[Debug] node view w 79 h 23
+[Debug] choice w 79 h 23
+[Debug] state:3
+[Debug] state:0
+[Debug] ==============
+[Debug] style w 4 h 2
+[Debug] window w 126 h 26
+[Debug] left w 39 right w 79 h 23
+[Debug] tree view w 39 h 23
+[Debug] editor view w 79 h 23
+[Debug] base view w 79 h 23
+[Debug] node view w 79 h 23
+[Debug] choice w 79 h 23
+[Debug] ==============
+[Debug] style w 4 h 2
+[Debug] window w 126 h 26
+[Debug] left w 39 right w 79 h 23
+[Debug] tree view w 39 h 23
+[Debug] editor view w 79 h 23
+[Debug] base view w 78 h 23
+[Debug] node view w 78 h 23
+[Debug] choice w 78 h 23
+[Debug] ==============
+[Debug] style w 4 h 2
+[Debug] window w 126 h 26
+[Debug] left w 39 right w 79 h 23
+[Debug] tree view w 39 h 23
+[Debug] editor view w 79 h 23
+[Debug] base view w 78 h 23
+[Debug] node view w 78 h 23
+[Debug] choice w 78 h 23
+[Debug] ==============
+[Debug] style w 4 h 2
+[Debug] window w 126 h 26
+[Debug] left w 39 right w 79 h 23
+[Debug] tree view w 39 h 23
+[Debug] editor view w 79 h 23
+[Debug] base view w 78 h 23
+[Debug] node view w 78 h 23
+[Debug] choice w 78 h 23
+[Debug] ==============
+[Debug] style w 4 h 2
+[Debug] window w 126 h 26
+[Debug] left w 39 right w 79 h 23
+[Debug] tree view w 39 h 23
+[Debug] editor view w 79 h 23
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 20
+[Debug] node view w 78 h 23
+[Debug] window w 126 h 11
+[Debug] left w 39 right w 79 h 8
+[Debug] tree view w 39 h 8
+[Debug] editor view w 79 h 8
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 5
+[Debug] node view w 78 h 8
+[Debug] choice w 78 h 8
+[Debug] choice w 78 h 8
+[Debug] choice w 78 h 8
+[Debug] choice w 78 h 8
+[Debug] window w 62 h 11
+[Debug] left w 18 right w 36 h 8
+[Debug] tree view w 18 h 8
+[Debug] editor view w 36 h 8
+[Debug] base view w 35 h 1
+[Debug] base view w 35 h 1
+[Debug] base view w 35 h 1
+[Debug] base view w 35 h 5
+[Debug] node view w 35 h 8
+[Debug] choice w 35 h 8
+[Debug] choice w 35 h 8
+[Debug] choice w 35 h 8
+[Debug] choice w 35 h 8
+[Debug] window w 62 h 26
+[Debug] left w 18 right w 36 h 23
+[Debug] tree view w 18 h 23
+[Debug] editor view w 36 h 23
+[Debug] base view w 35 h 1
+[Debug] base view w 35 h 1
+[Debug] base view w 35 h 1
+[Debug] base view w 35 h 20
+[Debug] node view w 35 h 23
+[Debug] choice w 35 h 23
+[Debug] choice w 35 h 23
+[Debug] choice w 35 h 23
+[Debug] choice w 35 h 23
+[Debug] window w 113 h 16
+[Debug] left w 35 right w 70 h 13
+[Debug] tree view w 35 h 13
+[Debug] editor view w 70 h 13
+[Debug] base view w 69 h 1
+[Debug] base view w 69 h 1
+[Debug] base view w 69 h 1
+[Debug] base view w 69 h 10
+[Debug] node view w 69 h 13
+[Debug] choice w 69 h 13
+[Debug] choice w 69 h 13
+[Debug] choice w 69 h 13
+[Debug] choice w 69 h 13
+[Debug] window w 126 h 11
+[Debug] left w 39 right w 79 h 8
+[Debug] tree view w 39 h 8
+[Debug] editor view w 79 h 8
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 5
+[Debug] node view w 78 h 8
+[Debug] choice w 78 h 8
+[Debug] choice w 78 h 8
+[Debug] choice w 78 h 8
+[Debug] choice w 78 h 8
+[Debug] window w 113 h 16
+[Debug] left w 35 right w 70 h 13
+[Debug] tree view w 35 h 13
+[Debug] editor view w 70 h 13
+[Debug] base view w 69 h 1
+[Debug] base view w 69 h 1
+[Debug] base view w 69 h 1
+[Debug] base view w 69 h 10
+[Debug] node view w 69 h 13
+[Debug] choice w 69 h 13
+[Debug] choice w 69 h 13
+[Debug] choice w 69 h 13
+[Debug] choice w 69 h 13
+[Debug] window w 126 h 11
+[Debug] left w 39 right w 79 h 8
+[Debug] tree view w 39 h 8
+[Debug] editor view w 79 h 8
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 5
+[Debug] node view w 78 h 8
+[Debug] choice w 78 h 8
+[Debug] choice w 78 h 8
+[Debug] choice w 78 h 8
+[Debug] choice w 78 h 8
+[Debug] window w 126 h 26
+[Debug] left w 39 right w 79 h 23
+[Debug] tree view w 39 h 23
+[Debug] editor view w 79 h 23
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 20
+[Debug] node view w 78 h 23
+[Debug] choice w 78 h 23
+[Debug] choice w 78 h 23
+[Debug] choice w 78 h 23
+[Debug] choice w 78 h 23
+[Debug] ==============
+[Debug] style w 4 h 2
+[Debug] window w 126 h 26
+[Debug] left w 39 right w 79 h 23
+[Debug] tree view w 39 h 23
+[Debug] editor view w 79 h 23
+[Debug] base view w 79 h 1
+[Debug] base view w 79 h 1
+[Debug] base view w 79 h 1
+[Debug] base view w 79 h 20
+[Debug] node view w 79 h 23
+[Debug] ==============
+[Debug] style w 4 h 2
+[Debug] window w 126 h 26
+[Debug] left w 39 right w 79 h 23
+[Debug] tree view w 39 h 23
+[Debug] editor view w 79 h 23
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 19
+[Debug] node view w 78 h 22
+[Debug] window w 126 h 11
+[Debug] left w 39 right w 79 h 8
+[Debug] tree view w 39 h 8
+[Debug] editor view w 79 h 8
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 4
+[Debug] node view w 78 h 7
+[Debug] choice w 78 h 7
+[Debug] choice w 78 h 7
+[Debug] choice w 78 h 7
+[Debug] choice w 78 h 7
+[Debug] window w 113 h 16
+[Debug] left w 35 right w 70 h 13
+[Debug] tree view w 35 h 13
+[Debug] editor view w 70 h 13
+[Debug] base view w 69 h 1
+[Debug] base view w 69 h 1
+[Debug] base view w 69 h 1
+[Debug] base view w 69 h 9
+[Debug] node view w 69 h 12
+[Debug] window w 126 h 11
+[Debug] left w 39 right w 79 h 8
+[Debug] tree view w 39 h 8
+[Debug] editor view w 79 h 8
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 4
+[Debug] node view w 78 h 7
+[Debug] window w 113 h 16
+[Debug] left w 35 right w 70 h 13
+[Debug] tree view w 35 h 13
+[Debug] editor view w 70 h 13
+[Debug] base view w 69 h 1
+[Debug] base view w 69 h 1
+[Debug] base view w 69 h 1
+[Debug] base view w 69 h 9
+[Debug] node view w 69 h 12
+[Debug] window w 126 h 11
+[Debug] left w 39 right w 79 h 8
+[Debug] tree view w 39 h 8
+[Debug] editor view w 79 h 8
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 4
+[Debug] node view w 78 h 7
+[Debug] window w 126 h 26
+[Debug] left w 39 right w 79 h 23
+[Debug] tree view w 39 h 23
+[Debug] editor view w 79 h 23
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 1
+[Debug] base view w 78 h 19
+[Debug] node view w 78 h 22

@@ -71,6 +71,10 @@ func (k keyMaps) ShortHelp() []key.Binding {
 	return []key.Binding{k.Help, k.Quit}
 }
 
+func (k keyMaps) ArrowsHelp() []key.Binding {
+	return []key.Binding{k.Up, k.Down, k.Left, k.Right}
+}
+
 func (k keyMaps) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		//{k.Up, k.Down}, // column

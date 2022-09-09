@@ -6,6 +6,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"gohost/gohost"
+	"gohost/log"
 	"gohost/util"
 	"io"
 	"strings"
@@ -70,8 +71,8 @@ func NewTreeView(model *Model) *TreeView {
 	// Create nodes list helpView
 	//nodeList := list.New(groups, groupItemDelegate{}, 0, 0)
 	delegate := list.NewDefaultDelegate()
+	delegate.SetSpacing(0)
 	nodeList := list.New(groups, delegate, 0, 0)
-	// TODO add remaining help key
 	nodeList.Title = "Groups"
 	nodeList.SetShowStatusBar(false)
 	nodeList.SetShowHelp(false)
@@ -95,9 +96,9 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
 	case tea.WindowSizeMsg:
-		v.SetHeight(m.Height)
 		v.SetWidth(m.Width)
-		//v.model.log(fmt.Sprintf("tree view w: %d h: %d", v.nodeList.Width(), v.nodeList.Height()))
+		v.SetHeight(m.Height)
+		log.Debug(fmt.Sprintf("tree view w %d h %d", v.nodeList.Width(), v.nodeList.Height()))
 	case tea.KeyMsg:
 		if v.model.state == treeViewState {
 			switch {
@@ -189,7 +190,7 @@ func (v *TreeView) foldSelectedGroup() {
 
 func (v *TreeView) onHostNodeSelected(cmds *[]tea.Cmd) {
 	v.selectedHost = v.selectedNode.Node.(gohost.Host)
-	v.model.log("select host: " + v.selectedHost.Title())
+	log.Debug("select host: " + v.selectedHost.Title())
 	v.model.switchState(editorViewState)
 	v.model.editorView.SetHost(v.selectedHost)
 }

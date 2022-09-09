@@ -1,10 +1,12 @@
 package tui
 
 import (
+	"fmt"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 	"gohost/gohost"
+	"gohost/log"
 )
 
 type EditorView struct {
@@ -58,7 +60,7 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		v.hostEditor.SetHeight(m.Height)
 		v.hostEditor.SetWidth(m.Width)
-		//v.model.log(fmt.Sprintf("editor view: w %d h %d", v.hostEditor.Width(), v.hostEditor.Height()))
+		log.Debug(fmt.Sprintf("editor view w %d h %d", m.Width, m.Height))
 	case tea.KeyMsg:
 		if v.model.state == editorViewState {
 			switch {
@@ -67,12 +69,12 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					v.host.SetContent([]byte(v.hostEditor.Value()))
 					err := gohost.GetService().UpdateHost(v.host)
 					if err != nil {
-						v.model.log(err.Error())
+						log.Debug(err.Error())
 					} else {
 						v.SetSaved()
 					}
 				} else {
-					v.model.log("Can not edit this")
+					log.Debug("Can not edit this")
 				}
 			case key.Matches(m, keys.Esc):
 				v.model.switchState(treeViewState)
