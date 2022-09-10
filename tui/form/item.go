@@ -7,14 +7,13 @@ import (
 
 var cfg = config.Instance()
 
-type Widget interface {
+type Item interface {
 	tea.Model
 	Focus(mode FocusMode) tea.Cmd
 	Unfocus() tea.Cmd
-	HandleKeyUp() bool
-	HandleKeyDown() bool
 	SetWidth(width int)
 	SetHeight(height int)
 	Width() int
 	Height() int
+	InterceptKey(m tea.KeyMsg) bool
 }

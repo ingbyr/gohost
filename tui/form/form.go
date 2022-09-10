@@ -12,7 +12,7 @@ import (
 
 type Form interface {
 	tea.Model
-	AddWidget(widget Widget)
+	AddWidget(widget Item)
 	FocusNextWidget() []tea.Cmd
 	FocusPreWidget() []tea.Cmd
 	SetSize(width, height int)
@@ -22,7 +22,7 @@ var _ Form = (*BaseForm)(nil)
 
 func New() *BaseForm {
 	return &BaseForm{
-		Widgets:     make([]Widget, 0),
+		Items:       make([]Item, 0),
 		WidgetStyle: styles.None,
 		preFocus:    0,
 		focus:       0,
@@ -30,7 +30,7 @@ func New() *BaseForm {
 }
 
 type BaseForm struct {
-	Widgets     []Widget
+	Items       []Item
 	WidgetStyle lipgloss.Style
 	preFocus    int
 	focus       int
@@ -39,7 +39,7 @@ type BaseForm struct {
 }
 
 func (v *BaseForm) Init() tea.Cmd {
-	panic("implement me")
+	return nil
 }
 
 func (v *BaseForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -50,14 +50,36 @@ func (v *BaseForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		v.SetSize(m.Width, m.Height)
 		return v, nil
 	case tea.KeyMsg:
+		focusedItem := v.Items[v.focus]
 		switch {
-		case key.Matches(m, keys.Up), key.Matches(m, keys.Down):
-			_, cmd = v.Widgets[v.focus].Update(msg)
+		case key.Matches(m, keys.Up):
+			intercepted := focusedItem.InterceptKey(m)
+			_, cmd = focusedItem.Update(msg)
+			if intercepted  {
+				return v, cmd
+			}
+			cmds = append(cmds, v.FocusPreWidget()...)
+			return v, cmd
+		case key.Matches(m, keys.Down):
+			intercepted := focusedItem.InterceptKey(m)
+			_, cmd = focusedItem.Update(msg)
+			if intercepted  {
+				return v, cmd
+			}
+			cmds = append(cmds, v.FocusNextWidget()...)
+			return v, cmd
+		case key.Matches(m, keys.Enter):
+			intercepted := focusedItem.InterceptKey(m)
+			_, cmd = focusedItem.Update(msg)
+			if intercepted  {
+				return v, cmd
+			}
+			cmds = append(cmds, v.FocusNextWidget()...)
 			return v, cmd
 		}
 	}
-	for i := 0; i < len(v.Widgets); i++ {
-		_, cmd = v.Widgets[i].Update(msg)
+	for i := 0; i < len(v.Items); i++ {
+		_, cmd = v.Items[i].Update(msg)
 		cmds = append(cmds, cmd)
 	}
 
@@ -66,8 +88,8 @@ func (v *BaseForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (v *BaseForm) View() string {
 	var str string
-	for i := 0; i < len(v.Widgets); i++ {
-		w := v.Widgets[i]
+	for i := 0; i < len(v.Items); i++ {
+		w := v.Items[i]
 		if w.Height()+lipgloss.Height(str) > v.height {
 			return str
 		}
@@ -75,7 +97,7 @@ func (v *BaseForm) View() string {
 			str = lipgloss.JoinVertical(lipgloss.Left, w.View())
 			continue
 		}
-		str = lipgloss.JoinVertical(lipgloss.Left, str, v.Widgets[i].View())
+		str = lipgloss.JoinVertical(lipgloss.Left, str, v.Items[i].View())
 		//log.Debug(fmt.Sprintf("cur h %d, view h %d", lipgloss.Height(str), v.height))
 	}
 	return str
@@ -84,11 +106,11 @@ func (v *BaseForm) SetSize(width, height int) {
 	v.width = width
 	v.height = height
 	remain := v.height
-	height = v.height / len(v.Widgets)
-	for i := 0; i < len(v.Widgets); i++ {
-		w := v.Widgets[i]
+	height = v.height / len(v.Items)
+	for i := 0; i < len(v.Items); i++ {
+		w := v.Items[i]
 		w.SetWidth(width)
-		if i == len(v.Widgets)-1 {
+		if i == len(v.Items)-1 {
 			w.SetHeight(remain)
 			log.Debug(fmt.Sprintf("base view w %d h %d", width, w.Height()))
 		} else {
@@ -99,11 +121,11 @@ func (v *BaseForm) SetSize(width, height int) {
 	}
 }
 
-func (v *BaseForm) AddWidget(widget Widget) {
+func (v *BaseForm) AddWidget(widget Item) {
 	if widget == nil {
 		return
 	}
-	v.Widgets = append(v.Widgets, widget)
+	v.Items = append(v.Items, widget)
 }
 
 func (v *BaseForm) FocusNextWidget() []tea.Cmd {
@@ -123,23 +145,17 @@ func (v *BaseForm) FocusPreWidget() []tea.Cmd {
 }
 
 func (v *BaseForm) idxAfterFocusWidget() int {
-	if v.Widgets[v.focus].HandleKeyDown() {
-		return v.focus
-	}
 	idx := v.focus + 1
-	if idx >= len(v.Widgets) {
+	if idx >= len(v.Items) {
 		idx = 0
 	}
 	return idx
 }
 
 func (v *BaseForm) idxBeforeFocusWidget() int {
-	if v.Widgets[v.focus].HandleKeyUp() {
-		return v.focus
-	}
 	idx := v.focus - 1
 	if idx < 0 {
-		idx = len(v.Widgets) - 1
+		idx = len(v.Items) - 1
 	}
 	return idx
 }
@@ -148,7 +164,7 @@ func (v *BaseForm) setFocusWidget(idx int, mode FocusMode) []tea.Cmd {
 	v.preFocus = v.focus
 	v.focus = idx
 	return []tea.Cmd{
-		v.Widgets[v.preFocus].Unfocus(),
-		v.Widgets[v.focus].Focus(mode),
+		v.Items[v.preFocus].Unfocus(),
+		v.Items[v.focus].Focus(mode),
 	}
 }

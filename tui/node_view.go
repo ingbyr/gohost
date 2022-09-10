@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -62,21 +61,12 @@ func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		log.Debug(fmt.Sprintf("node view w %d h %d", m.Width, m.Height))
 	case tea.KeyMsg:
 		if v.model.state == nodeViewState {
-			switch {
-			// FIXME enter duplicated on last item
-			case key.Matches(m, keys.Up):
-				cmds = append(cmds, v.FocusPreWidget()...)
-			case key.Matches(m, keys.Down):
-				cmds = append(cmds, v.FocusNextWidget()...)
-			}
+			_, cmd = v.BaseForm.Update(msg)
 		} else {
-			return nil, tea.Batch(cmds...)
+			return nil, nil
 		}
 	}
-
-	_, cmd = v.BaseForm.Update(msg)
 	cmds = append(cmds, cmd)
-
 	return v, tea.Batch(cmds...)
 }
 

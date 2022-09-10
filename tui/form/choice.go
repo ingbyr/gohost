@@ -18,7 +18,7 @@ const (
 	FocusLastMode
 )
 
-var _ Widget = (*Choices)(nil)
+var _ Item = (*Choices)(nil)
 
 func NewChoice(items []list.DefaultItem) *Choices {
 	return &Choices{
@@ -107,7 +107,9 @@ func (c *Choices) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				c.cursorIndex++
 			}
 		case key.Matches(m, keys.Enter):
-			c.selectedIndex = c.cursorIndex
+			if c.cursorIndex >= 0 {
+				c.selectedIndex = c.cursorIndex
+			}
 		}
 	}
 	log.Debug(fmt.Sprintf("choice cursor %d selected %d", c.cursorIndex, c.selectedIndex))
@@ -121,9 +123,9 @@ func (c *Choices) Focus(mode FocusMode) tea.Cmd {
 		return nil
 	}
 	if mode == FocusFirstMode {
-		c.cursorIndex = -1
+		c.cursorIndex = 0
 	} else if mode == FocusLastMode {
-		c.cursorIndex = len(c.items)
+		c.cursorIndex = len(c.items) - 1
 	}
 	return nil
 }
@@ -134,12 +136,16 @@ func (c *Choices) Unfocus() tea.Cmd {
 	return nil
 }
 
-func (c *Choices) HandleKeyUp() bool {
-	return !(c.cursorIndex == 0)
-}
-
-func (c *Choices) HandleKeyDown() bool {
-	return !(c.cursorIndex == len(c.Items())-1)
+func (c *Choices) InterceptKey(keyMsg tea.KeyMsg) bool {
+	switch {
+	case key.Matches(keyMsg, keys.Up):
+		return !(c.cursorIndex == 0)
+	case key.Matches(keyMsg, keys.Down):
+		return !(c.cursorIndex == len(c.Items())-1)
+	case key.Matches(keyMsg, keys.Enter):
+		return true
+	}
+	return false
 }
 
 func (c *Choices) SetWidth(width int) {

@@ -6,7 +6,7 @@ import (
 	"gohost/tui/styles"
 )
 
-var _ Widget = (*TextInput)(nil)
+var _ Item = (*TextInput)(nil)
 
 func NewTextInput() *TextInput {
 	t := &TextInput{
@@ -59,10 +59,6 @@ func (t *TextInput) Unfocus() tea.Cmd {
 	return nil
 }
 
-func (t *TextInput) HandleKeyUp() bool {
-	return false
-}
-
-func (t *TextInput) HandleKeyDown() bool {
+func (t *TextInput) InterceptKey(keyMsg tea.KeyMsg) bool {
 	return false
 }
