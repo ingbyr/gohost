@@ -1,4 +1,4 @@
-package widget
+package form
 
 import (
 	"github.com/charmbracelet/bubbles/textinput"

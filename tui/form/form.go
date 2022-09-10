@@ -1,14 +1,16 @@
-package widget
+package form
 
 import (
 	"fmt"
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"gohost/log"
+	"gohost/tui/keys"
 	"gohost/tui/styles"
 )
 
-type View interface {
+type Form interface {
 	tea.Model
 	AddWidget(widget Widget)
 	FocusNextWidget() []tea.Cmd
@@ -16,10 +18,10 @@ type View interface {
 	SetSize(width, height int)
 }
 
-var _ View = (*BaseView)(nil)
+var _ Form = (*BaseForm)(nil)
 
-func New() *BaseView {
-	return &BaseView{
+func New() *BaseForm {
+	return &BaseForm{
 		Widgets:     make([]Widget, 0),
 		WidgetStyle: styles.None,
 		preFocus:    0,
@@ -27,7 +29,7 @@ func New() *BaseView {
 	}
 }
 
-type BaseView struct {
+type BaseForm struct {
 	Widgets     []Widget
 	WidgetStyle lipgloss.Style
 	preFocus    int
@@ -36,11 +38,11 @@ type BaseView struct {
 	height      int
 }
 
-func (v *BaseView) Init() tea.Cmd {
+func (v *BaseForm) Init() tea.Cmd {
 	panic("implement me")
 }
 
-func (v *BaseView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (v *BaseForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
@@ -48,21 +50,21 @@ func (v *BaseView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		v.SetSize(m.Width, m.Height)
 		return v, nil
 	case tea.KeyMsg:
-		switch m.String() {
-		case "up", "down":
+		switch {
+		case key.Matches(m, keys.Up), key.Matches(m, keys.Down):
 			_, cmd = v.Widgets[v.focus].Update(msg)
 			return v, cmd
 		}
 	}
 	for i := 0; i < len(v.Widgets); i++ {
-		_, cmd = v.Widgets[v.focus].Update(msg)
+		_, cmd = v.Widgets[i].Update(msg)
 		cmds = append(cmds, cmd)
 	}
 
 	return v, tea.Batch(cmds...)
 }
 
-func (v *BaseView) View() string {
+func (v *BaseForm) View() string {
 	var str string
 	for i := 0; i < len(v.Widgets); i++ {
 		w := v.Widgets[i]
@@ -78,7 +80,7 @@ func (v *BaseView) View() string {
 	}
 	return str
 }
-func (v *BaseView) SetSize(width, height int) {
+func (v *BaseForm) SetSize(width, height int) {
 	v.width = width
 	v.height = height
 	remain := v.height
@@ -97,14 +99,14 @@ func (v *BaseView) SetSize(width, height int) {
 	}
 }
 
-func (v *BaseView) AddWidget(widget Widget) {
+func (v *BaseForm) AddWidget(widget Widget) {
 	if widget == nil {
 		return
 	}
 	v.Widgets = append(v.Widgets, widget)
 }
 
-func (v *BaseView) FocusNextWidget() []tea.Cmd {
+func (v *BaseForm) FocusNextWidget() []tea.Cmd {
 	nextFocus := v.idxAfterFocusWidget()
 	if nextFocus == v.focus {
 		return nil
@@ -112,7 +114,7 @@ func (v *BaseView) FocusNextWidget() []tea.Cmd {
 	return v.setFocusWidget(nextFocus, FocusFirstMode)
 }
 
-func (v *BaseView) FocusPreWidget() []tea.Cmd {
+func (v *BaseForm) FocusPreWidget() []tea.Cmd {
 	nextFocus := v.idxBeforeFocusWidget()
 	if nextFocus == v.focus {
 		return nil
@@ -120,7 +122,7 @@ func (v *BaseView) FocusPreWidget() []tea.Cmd {
 	return v.setFocusWidget(v.idxBeforeFocusWidget(), FocusLastMode)
 }
 
-func (v *BaseView) idxAfterFocusWidget() int {
+func (v *BaseForm) idxAfterFocusWidget() int {
 	if v.Widgets[v.focus].HandleKeyDown() {
 		return v.focus
 	}
@@ -131,7 +133,7 @@ func (v *BaseView) idxAfterFocusWidget() int {
 	return idx
 }
 
-func (v *BaseView) idxBeforeFocusWidget() int {
+func (v *BaseForm) idxBeforeFocusWidget() int {
 	if v.Widgets[v.focus].HandleKeyUp() {
 		return v.focus
 	}
@@ -142,7 +144,7 @@ func (v *BaseView) idxBeforeFocusWidget() int {
 	return idx
 }
 
-func (v *BaseView) setFocusWidget(idx int, mode FocusMode) []tea.Cmd {
+func (v *BaseForm) setFocusWidget(idx int, mode FocusMode) []tea.Cmd {
 	v.preFocus = v.focus
 	v.focus = idx
 	return []tea.Cmd{

@@ -7,41 +7,37 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"gohost/log"
+	"gohost/tui/form"
 	"gohost/tui/keys"
-	"gohost/tui/widget"
 )
 
-var _ widget.View = (*NodeView)(nil)
+var _ form.Form = (*NodeView)(nil)
 
 type NodeView struct {
 	model *Model
-	*widget.BaseView
-	preFocusIdx int
-	focusIdx    int
-	nodeTypes   *widget.Choices
+	*form.BaseForm
+	nodeTypes *form.Choices
 }
 
 func NewNodeView(model *Model) *NodeView {
 	// Text inputs
-	nodeNameTextInput := widget.NewTextInput()
+	nodeNameTextInput := form.NewTextInput()
 	nodeNameTextInput.Prompt = "ID: "
-	nodeNameTextInput.Focus(widget.FocusFirstMode)
+	nodeNameTextInput.Focus(form.FocusFirstMode)
 
-	descTextInput := widget.NewTextInput()
+	descTextInput := form.NewTextInput()
 	descTextInput.Prompt = "Description: "
 
-	urlTextInput := widget.NewTextInput()
+	urlTextInput := form.NewTextInput()
 	urlTextInput.Prompt = "Url: "
 
 	// Node type choices
-	nodeTypes := widget.NewChoice([]list.DefaultItem{GroupNode, LocalHost, RemoteHost})
+	nodeTypes := form.NewChoice([]list.DefaultItem{GroupNode, LocalHost, RemoteHost})
 
 	nodeView := &NodeView{
-		model:       model,
-		BaseView:    widget.New(),
-		preFocusIdx: 0,
-		focusIdx:    0,
-		nodeTypes:   nodeTypes,
+		model:     model,
+		BaseForm:  form.New(),
+		nodeTypes: nodeTypes,
 	}
 	nodeView.WidgetStyle = lipgloss.NewStyle().PaddingBottom(1)
 	nodeView.AddWidget(nodeNameTextInput)
@@ -68,24 +64,22 @@ func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if v.model.state == nodeViewState {
 			switch {
 			// FIXME enter duplicated on last item
-			case key.Matches(m, keys.Enter, keys.Up, keys.Down):
-				if key.Matches(m, keys.Enter, keys.Down) {
-					cmds = append(cmds, v.FocusNextWidget()...)
-				} else {
-					cmds = append(cmds, v.FocusPreWidget()...)
-				}
+			case key.Matches(m, keys.Up):
+				cmds = append(cmds, v.FocusPreWidget()...)
+			case key.Matches(m, keys.Down):
+				cmds = append(cmds, v.FocusNextWidget()...)
 			}
 		} else {
 			return nil, tea.Batch(cmds...)
 		}
 	}
 
-	_, cmd = v.BaseView.Update(msg)
+	_, cmd = v.BaseForm.Update(msg)
 	cmds = append(cmds, cmd)
 
 	return v, tea.Batch(cmds...)
 }
 
 func (v *NodeView) View() string {
-	return v.BaseView.View()
+	return v.BaseForm.View()
 }
