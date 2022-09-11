@@ -1,14 +1,18 @@
 package form
 
 import (
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"gohost/log"
+	"gohost/tui/keys"
 	"gohost/tui/styles"
 )
 
 func NewButton(text string) *Button {
 	return &Button{
 		Text:           text,
+		OnClick:        func() {},
 		focused:        false,
 		focusedStyle:   styles.None,
 		unfocusedStyle: styles.None,
@@ -17,6 +21,7 @@ func NewButton(text string) *Button {
 
 type Button struct {
 	Text           string
+	OnClick        func()
 	focused        bool
 	focusedStyle   lipgloss.Style
 	unfocusedStyle lipgloss.Style
@@ -27,6 +32,13 @@ func (b *Button) Init() tea.Cmd {
 }
 
 func (b *Button) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch m := msg.(type) {
+	case tea.KeyMsg:
+		if key.Matches(m, keys.Enter) {
+			log.Debug("hit he button by enter")
+			b.OnClick()
+		}
+	}
 	return b, nil
 }
 
@@ -48,6 +60,9 @@ func (b *Button) Unfocus() tea.Cmd {
 }
 
 func (b *Button) InterceptKey(m tea.KeyMsg) bool {
+	if key.Matches(m, keys.Enter) {
+		return true
+	}
 	return false
 }
 

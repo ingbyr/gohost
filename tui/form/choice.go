@@ -135,6 +135,13 @@ func (c *Choices) InterceptKey(keyMsg tea.KeyMsg) bool {
 	return false
 }
 
+func (c *Choices) SelectedItem() list.DefaultItem {
+	if c.selectedIndex == -1 {
+		return nil
+	}
+	return c.items[c.selectedIndex]
+}
+
 func (c *Choices) itemTitle(idx int) string {
 	if idx == c.selectedIndex {
 		return c.SelectedPrefix + c.items[idx].Title()

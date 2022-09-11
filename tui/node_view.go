@@ -37,7 +37,11 @@ func NewNodeView(model *Model) *NodeView {
 	nodeTypeChoices.ShowMorePlaceHold = false
 
 	// Confirm button
-	confirmButton := form.NewButton("[ Confirm ] ")
+	confirmButton := form.NewButton("[ Confirm ]")
+	confirmButton.OnClick = func() {
+		log.Debug(fmt.Sprintf("name %s, desc %s, url %s, choice %s",
+			nameTextInput.Value(), descTextInput.Value(), urlTextInput.Value(), nodeTypeChoices.SelectedItem()))
+	}
 
 	nodeForm := &NodeView{
 		model:         model,
@@ -69,15 +73,13 @@ func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
 	case tea.WindowSizeMsg:
-		_, cmd = v.Form.Update(msg)
 		log.Debug(fmt.Sprintf("node view w %d h %d", m.Width, m.Height))
 	case tea.KeyMsg:
 		if v.model.state == nodeViewState {
-			_, cmd = v.Form.Update(msg)
-		} else {
-			return nil, nil
+			return v.Form.Update(msg)
 		}
 	}
+	_, cmd = v.Form.Update(msg)
 	cmds = append(cmds, cmd)
 	return v, tea.Batch(cmds...)
 }
