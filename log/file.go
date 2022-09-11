@@ -3,6 +3,7 @@ package log
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"os"
+	"time"
 )
 
 var logFile *os.File
@@ -13,18 +14,23 @@ func New(file string) error {
 	if err != nil {
 		return err
 	}
-	Debug("==============")
+	Debug(">>> Start logging at " + nowStr())
 	return nil
 }
 
 func Debug(msg string) {
-	if _, err := logFile.WriteString("[DEBUG] " + msg + "\n"); err != nil {
+	if _, err := logFile.WriteString("[DEBUG " + nowStr() + "] " + msg + "\n"); err != nil {
 		panic(err)
 	}
 }
 
 func Error(err error) {
-	if _, err := logFile.WriteString("[ERROR] " + err.Error()); err != nil {
+
+	if _, err := logFile.WriteString("[ERROR" + nowStr() + "] " + err.Error()); err != nil {
 		panic(err)
 	}
+}
+
+func nowStr() string {
+	return time.Now().Format(time.RFC3339)
 }
