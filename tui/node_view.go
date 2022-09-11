@@ -4,18 +4,16 @@ import (
 	"fmt"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"gohost/log"
 	"gohost/tui/form"
 	"gohost/tui/keys"
+	"gohost/tui/styles"
 )
-
-var _ form.Form = (*NodeView)(nil)
 
 type NodeView struct {
 	model *Model
-	*form.BaseForm
-	nodeTypes *form.Choices
+	*form.Form
+	//nodeTypeChoices *form.Choices
 }
 
 func NewNodeView(model *Model) *NodeView {
@@ -31,20 +29,23 @@ func NewNodeView(model *Model) *NodeView {
 	urlTextInput.Prompt = "Url: "
 
 	// Node type choices
-	nodeTypes := form.NewChoice([]list.DefaultItem{GroupNode, LocalHost, RemoteHost})
+	nodeTypeChoices := form.NewChoice([]list.DefaultItem{GroupNode, LocalHost, RemoteHost})
+	nodeTypeChoices.Spacing = 1
 
-	nodeView := &NodeView{
-		model:     model,
-		BaseForm:  form.New(),
-		nodeTypes: nodeTypes,
+	nodeForm := &NodeView{
+		model: model,
+		Form:  form.New(),
+		//nodeTypeChoices: nodeTypeChoices,
 	}
-	nodeView.WidgetStyle = lipgloss.NewStyle().PaddingBottom(1)
-	nodeView.AddWidget(nodeNameTextInput)
-	nodeView.AddWidget(descTextInput)
-	nodeView.AddWidget(urlTextInput)
-	nodeView.AddWidget(nodeTypes)
+	nodeForm.Spacing = 1
+	nodeForm.SetItemFocusedStyle(styles.FocusedFormItem)
+	nodeForm.SetItemUnfocusedStyle(styles.UnfocusedFormItem)
+	nodeForm.AddItem(nodeNameTextInput)
+	nodeForm.AddItem(descTextInput)
+	nodeForm.AddItem(urlTextInput)
+	nodeForm.AddItem(nodeTypeChoices)
 
-	return nodeView
+	return nodeForm
 }
 
 func (v *NodeView) Init() tea.Cmd {
@@ -61,7 +62,7 @@ func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		log.Debug(fmt.Sprintf("node view w %d h %d", m.Width, m.Height))
 	case tea.KeyMsg:
 		if v.model.state == nodeViewState {
-			_, cmd = v.BaseForm.Update(msg)
+			_, cmd = v.Form.Update(msg)
 		} else {
 			return nil, nil
 		}
@@ -71,5 +72,5 @@ func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (v *NodeView) View() string {
-	return v.BaseForm.View()
+	return v.Form.View()
 }

@@ -2,6 +2,7 @@ package form
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"gohost/config"
 )
 
@@ -16,4 +17,6 @@ type Item interface {
 	Width() int
 	Height() int
 	InterceptKey(m tea.KeyMsg) bool
+	SetFocusedStyle(style lipgloss.Style)
+	SetUnfocusedStyle(style lipgloss.Style)
 }

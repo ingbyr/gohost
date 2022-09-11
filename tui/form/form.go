@@ -8,41 +8,36 @@ import (
 	"gohost/log"
 	"gohost/tui/keys"
 	"gohost/tui/styles"
+	"strings"
 )
 
-type Form interface {
-	tea.Model
-	AddWidget(widget Item)
-	FocusNextWidget() []tea.Cmd
-	FocusPreWidget() []tea.Cmd
-	SetSize(width, height int)
-}
-
-var _ Form = (*BaseForm)(nil)
-
-func New() *BaseForm {
-	return &BaseForm{
-		Items:       make([]Item, 0),
-		WidgetStyle: styles.None,
-		preFocus:    0,
-		focus:       0,
+func New() *Form {
+	return &Form{
+		Items:              make([]Item, 0),
+		ItemFocusedStyle:   styles.None,
+		ItemUnfocusedStyle: styles.None,
+		Spacing:            0,
+		preFocus:           0,
+		focus:              0,
 	}
 }
 
-type BaseForm struct {
-	Items       []Item
-	WidgetStyle lipgloss.Style
-	preFocus    int
-	focus       int
-	width       int
-	height      int
+type Form struct {
+	Items              []Item
+	ItemFocusedStyle   lipgloss.Style
+	ItemUnfocusedStyle lipgloss.Style
+	Spacing            int
+	preFocus           int
+	focus              int
+	width              int
+	height             int
 }
 
-func (v *BaseForm) Init() tea.Cmd {
+func (v *Form) Init() tea.Cmd {
 	return nil
 }
 
-func (v *BaseForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (v *Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
@@ -55,26 +50,26 @@ func (v *BaseForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(m, keys.Up):
 			intercepted := focusedItem.InterceptKey(m)
 			_, cmd = focusedItem.Update(msg)
-			if intercepted  {
+			if intercepted {
 				return v, cmd
 			}
-			cmds = append(cmds, v.FocusPreWidget()...)
+			cmds = append(cmds, v.focusPreItem()...)
 			return v, cmd
 		case key.Matches(m, keys.Down):
 			intercepted := focusedItem.InterceptKey(m)
 			_, cmd = focusedItem.Update(msg)
-			if intercepted  {
+			if intercepted {
 				return v, cmd
 			}
-			cmds = append(cmds, v.FocusNextWidget()...)
+			cmds = append(cmds, v.focusNextItem()...)
 			return v, cmd
 		case key.Matches(m, keys.Enter):
 			intercepted := focusedItem.InterceptKey(m)
 			_, cmd = focusedItem.Update(msg)
-			if intercepted  {
+			if intercepted {
 				return v, cmd
 			}
-			cmds = append(cmds, v.FocusNextWidget()...)
+			cmds = append(cmds, v.focusNextItem()...)
 			return v, cmd
 		}
 	}
@@ -86,26 +81,37 @@ func (v *BaseForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return v, tea.Batch(cmds...)
 }
 
-func (v *BaseForm) View() string {
-	var str string
-	for i := 0; i < len(v.Items); i++ {
+func (v *Form) View() string {
+	if len(v.Items) == 0 {
+		return ""
+	}
+	h := v.Items[0].Height()
+	if h > v.height {
+		return ""
+	}
+	str := lipgloss.JoinVertical(lipgloss.Left, v.Items[0].View())
+
+	for i := 1; i < len(v.Items); i++ {
 		w := v.Items[i]
-		if w.Height()+lipgloss.Height(str) > v.height {
+		if i == len(v.Items) - 1 {
+			h += w.Height()
+		} else {
+			h += w.Height() + v.Spacing
+		}
+		if h >= v.height {
 			return str
 		}
-		if i == 0 {
-			str = lipgloss.JoinVertical(lipgloss.Left, w.View())
-			continue
-		}
+		str += strings.Repeat(cfg.LineBreak, v.Spacing)
 		str = lipgloss.JoinVertical(lipgloss.Left, str, v.Items[i].View())
 		//log.Debug(fmt.Sprintf("cur h %d, view h %d", lipgloss.Height(str), v.height))
 	}
 	return str
 }
-func (v *BaseForm) SetSize(width, height int) {
+
+func (v *Form) SetSize(width, height int) {
 	v.width = width
 	v.height = height
-	remain := v.height
+	remain := v.height - len(v.Items) * v.Spacing + 1
 	height = v.height / len(v.Items)
 	for i := 0; i < len(v.Items); i++ {
 		w := v.Items[i]
@@ -121,30 +127,46 @@ func (v *BaseForm) SetSize(width, height int) {
 	}
 }
 
-func (v *BaseForm) AddWidget(widget Item) {
+func (v *Form) AddItem(widget Item) {
 	if widget == nil {
 		return
 	}
+	widget.SetFocusedStyle(v.ItemFocusedStyle)
+	widget.SetUnfocusedStyle(v.ItemUnfocusedStyle)
 	v.Items = append(v.Items, widget)
 }
 
-func (v *BaseForm) FocusNextWidget() []tea.Cmd {
-	nextFocus := v.idxAfterFocusWidget()
+func (v *Form) SetItemFocusedStyle(style lipgloss.Style) {
+	v.ItemFocusedStyle = style
+	for i := range v.Items {
+		v.Items[i].SetFocusedStyle(style)
+	}
+}
+
+func (v *Form) SetItemUnfocusedStyle(style lipgloss.Style) {
+	v.ItemUnfocusedStyle = style
+	for i := range v.Items {
+		v.Items[i].SetUnfocusedStyle(style)
+	}
+}
+
+func (v *Form) focusNextItem() []tea.Cmd {
+	nextFocus := v.idxAfterFocusItem()
 	if nextFocus == v.focus {
 		return nil
 	}
-	return v.setFocusWidget(nextFocus, FocusFirstMode)
+	return v.setFocusItem(nextFocus, FocusFirstMode)
 }
 
-func (v *BaseForm) FocusPreWidget() []tea.Cmd {
-	nextFocus := v.idxBeforeFocusWidget()
+func (v *Form) focusPreItem() []tea.Cmd {
+	nextFocus := v.idxBeforeFocusItem()
 	if nextFocus == v.focus {
 		return nil
 	}
-	return v.setFocusWidget(v.idxBeforeFocusWidget(), FocusLastMode)
+	return v.setFocusItem(v.idxBeforeFocusItem(), FocusLastMode)
 }
 
-func (v *BaseForm) idxAfterFocusWidget() int {
+func (v *Form) idxAfterFocusItem() int {
 	idx := v.focus + 1
 	if idx >= len(v.Items) {
 		idx = 0
@@ -152,7 +174,7 @@ func (v *BaseForm) idxAfterFocusWidget() int {
 	return idx
 }
 
-func (v *BaseForm) idxBeforeFocusWidget() int {
+func (v *Form) idxBeforeFocusItem() int {
 	idx := v.focus - 1
 	if idx < 0 {
 		idx = len(v.Items) - 1
@@ -160,7 +182,7 @@ func (v *BaseForm) idxBeforeFocusWidget() int {
 	return idx
 }
 
-func (v *BaseForm) setFocusWidget(idx int, mode FocusMode) []tea.Cmd {
+func (v *Form) setFocusItem(idx int, mode FocusMode) []tea.Cmd {
 	v.preFocus = v.focus
 	v.focus = idx
 	return []tea.Cmd{

@@ -26,9 +26,9 @@ func NewChoice(items []list.DefaultItem) *Choices {
 		SelectedPrefix:   "[v]",
 		UnselectedPrefix: "[ ]",
 		MorePlaceHold:    "...",
-		CursorStyle:      lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "#EE6FF8", Dark: "#EE6FF8"}),
 		width:            0,
 		height:           0,
+		Spacing:          1,
 		focused:          false,
 		cursorIndex:      -1,
 		selectedIndex:    -1,
@@ -40,11 +40,21 @@ type Choices struct {
 	SelectedPrefix   string
 	UnselectedPrefix string
 	MorePlaceHold    string
-	CursorStyle      lipgloss.Style
-	width, height    int
 	focused          bool
+	focusedStyle     lipgloss.Style
+	unfocusedStyle   lipgloss.Style
+	width, height    int
+	Spacing          int
 	cursorIndex      int
 	selectedIndex    int
+}
+
+func (c *Choices) SetFocusedStyle(style lipgloss.Style) {
+	c.focusedStyle = style
+}
+
+func (c *Choices) SetUnfocusedStyle(style lipgloss.Style) {
+	c.unfocusedStyle = style
 }
 
 func (c *Choices) Items() []list.DefaultItem {
@@ -52,27 +62,34 @@ func (c *Choices) Items() []list.DefaultItem {
 }
 
 func (c *Choices) View() string {
-	if c.width <= 0 || c.height <= 0 {
+	if c.height <= 0 {
 		return ""
 	}
+	h := 0
 	var b strings.Builder
 	for i := 0; i < len(c.items); i++ {
-		item := c.items[i]
-		if i == c.height-1 {
+		var ph int
+		if i == len(c.items)-1 {
+			ph = h + 1
+		} else {
+			ph = h + 1 + c.Spacing
+		}
+		if ph > c.height {
+			b.WriteString(c.MorePlaceHold)
+			break
+		} else if ph == c.height && i != len(c.items)-1 {
 			b.WriteString(c.MorePlaceHold)
 			break
 		}
-		if i == c.selectedIndex {
-			b.WriteString(c.SelectedPrefix)
-		} else {
-			b.WriteString(c.UnselectedPrefix)
-		}
+
 		if i == c.cursorIndex {
-			b.WriteString(c.CursorStyle.Render(item.Title()))
+			b.WriteString(c.focusedStyle.Render(c.itemTitle(i)))
 		} else {
-			b.WriteString(item.Title())
+			b.WriteString(c.unfocusedStyle.Render(c.itemTitle(i)))
 		}
 		b.WriteString(cfg.LineBreak)
+		b.WriteString(strings.Repeat(cfg.LineBreak, c.Spacing))
+		h += ph
 	}
 	return b.String()
 }
@@ -154,4 +171,11 @@ func (c *Choices) SetWidth(width int) {
 
 func (c *Choices) SetHeight(height int) {
 	c.height = height
+}
+
+func (c *Choices) itemTitle(idx int) string {
+	if idx == c.selectedIndex {
+		return c.SelectedPrefix + c.items[idx].Title()
+	}
+	return c.UnselectedPrefix + c.items[idx].Title()
 }
