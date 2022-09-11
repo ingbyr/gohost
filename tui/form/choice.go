@@ -23,12 +23,10 @@ var _ Item = (*Choices)(nil)
 func NewChoice(items []list.DefaultItem) *Choices {
 	return &Choices{
 		items:             items,
-		SelectedPrefix:    "[v]",
-		UnselectedPrefix:  "[ ]",
+		SelectedPrefix:    "(v) ",
+		UnselectedPrefix:  "( ) ",
 		MorePlaceHold:     "...",
 		ShowMorePlaceHold: true,
-		width:             0,
-		height:            0,
 		Spacing:           1,
 		focused:           false,
 		cursorIndex:       -1,
@@ -45,7 +43,6 @@ type Choices struct {
 	focused           bool
 	focusedStyle      lipgloss.Style
 	unfocusedStyle    lipgloss.Style
-	width, height     int
 	Spacing           int
 	cursorIndex       int
 	selectedIndex     int
@@ -78,14 +75,6 @@ func (c *Choices) View() string {
 	return b.String()
 }
 
-func (c *Choices) Width() int {
-	return c.width
-}
-
-func (c *Choices) Height() int {
-	return c.height
-}
-
 func (c *Choices) Init() tea.Cmd {
 	return nil
 }
@@ -94,9 +83,6 @@ func (c *Choices) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
-	case tea.WindowSizeMsg:
-		c.SetHeight(m.Height)
-		c.SetWidth(m.Width)
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(m, keys.Up):
@@ -147,20 +133,6 @@ func (c *Choices) InterceptKey(keyMsg tea.KeyMsg) bool {
 		return true
 	}
 	return false
-}
-
-func (c *Choices) SetWidth(width int) {
-	c.width = width
-}
-
-func (c *Choices) SetHeight(height int) {
-	c.height = height
-	ah := len(c.items) + len(c.items)*c.Spacing - 1
-	if ah < height {
-		c.height = ah
-	} else {
-		c.height = height
-	}
 }
 
 func (c *Choices) itemTitle(idx int) string {

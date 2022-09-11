@@ -12,8 +12,6 @@ var _ Item = (*TextInput)(nil)
 func NewTextInput() *TextInput {
 	t := &TextInput{
 		Model:          textinput.New(),
-		width:          0,
-		height:         1,
 		focusedStyle:   styles.None,
 		unfocusedStyle: styles.None,
 	}
@@ -23,7 +21,6 @@ func NewTextInput() *TextInput {
 
 type TextInput struct {
 	textinput.Model
-	width, height  int
 	focused        bool
 	focusedStyle   lipgloss.Style
 	unfocusedStyle lipgloss.Style
@@ -35,30 +32,6 @@ func (t *TextInput) SetFocusedStyle(style lipgloss.Style) {
 
 func (t *TextInput) SetUnfocusedStyle(style lipgloss.Style) {
 	t.unfocusedStyle = style
-}
-
-func (t *TextInput) Width() int {
-	return t.Model.Width
-}
-
-func (t *TextInput) Height() int {
-	if t.focused {
-		return 1 + t.focusedStyle.GetHeight()
-	}
-	return 1 + t.unfocusedStyle.GetHeight()
-}
-
-func (t *TextInput) SetWidth(width int) {
-	t.Model.Width = width - len(t.Prompt) - 1
-	t.width = width
-}
-
-func (t *TextInput) SetHeight(height int) {
-	if height > 0 {
-		t.height = 1
-	} else {
-		t.height = 0
-	}
 }
 
 func (t *TextInput) Init() tea.Cmd {
@@ -91,9 +64,6 @@ func (t *TextInput) InterceptKey(keyMsg tea.KeyMsg) bool {
 }
 
 func (t *TextInput) View() string {
-	if t.height <= 0 {
-		return ""
-	}
 	if t.focused {
 		return t.focusedStyle.Render(t.Model.View())
 	}

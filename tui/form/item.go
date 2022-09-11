@@ -12,10 +12,6 @@ type Item interface {
 	tea.Model
 	Focus(mode FocusMode) tea.Cmd
 	Unfocus() tea.Cmd
-	SetWidth(width int)
-	SetHeight(height int)
-	Width() int
-	Height() int
 	InterceptKey(m tea.KeyMsg) bool
 	SetFocusedStyle(style lipgloss.Style)
 	SetUnfocusedStyle(style lipgloss.Style)

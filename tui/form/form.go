@@ -11,15 +11,18 @@ import (
 )
 
 func New() *Form {
+	vp := viewport.New(0, 0)
 	return &Form{
 		Items:              make([]Item, 0),
 		ItemFocusedStyle:   styles.None,
 		ItemUnfocusedStyle: styles.None,
 		MorePlaceHold:      "...",
 		Spacing:            0,
-		viewport:           viewport.New(0, 0),
+		viewport:           vp,
 		preFocus:           0,
 		focus:              0,
+		width:              0,
+		height:             0,
 	}
 }
 
@@ -32,8 +35,7 @@ type Form struct {
 	viewport           viewport.Model
 	preFocus           int
 	focus              int
-	width              int
-	height             int
+	width, height      int
 }
 
 func (v *Form) Init() tea.Cmd {
@@ -45,7 +47,10 @@ func (v *Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
 	case tea.WindowSizeMsg:
-		v.SetSize(m.Width, m.Height)
+		v.width = m.Width
+		v.height = m.Height
+		v.viewport.Width = v.width
+		v.viewport.Height = v.height - 1
 		return v, nil
 	case tea.KeyMsg:
 		focusedItem := v.Items[v.focus]
@@ -93,17 +98,21 @@ func (v *Form) View() string {
 		}
 	}
 	v.viewport.SetContent(b.String())
-	return v.viewport.View()
-}
 
-func (v *Form) SetSize(width, height int) {
-	v.width = width
-	v.height = height
-	for _, item := range v.Items {
-		item.SetWidth(width)
-		v.viewport.Width = width
-		v.viewport.Height = height
+	b = strings.Builder{}
+	if !v.viewport.AtBottom() {
+		b.WriteString(lipgloss.NewStyle().Width(v.width).Height(v.height - 1).Render(v.viewport.View()))
+		b.WriteString(cfg.LineBreak)
+		if len(v.MorePlaceHold) > v.width {
+			b.WriteString(v.MorePlaceHold[:v.width])
+		} else {
+			b.WriteString(v.MorePlaceHold)
+			b.WriteString(strings.Repeat(" ", v.width-len(v.MorePlaceHold)))
+		}
+	} else {
+		b.WriteString(lipgloss.NewStyle().Width(v.width).Height(v.height).Render(v.viewport.View()))
 	}
+	return b.String()
 }
 
 func (v *Form) AddItem(widget Item) {

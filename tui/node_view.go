@@ -13,14 +13,17 @@ import (
 type NodeView struct {
 	model *Model
 	*form.Form
-	//nodeTypeChoices *form.Choices
+	nameTextInput *form.TextInput
+	descTextInput *form.TextInput
+	urlTextInput  *form.TextInput
+	typeChoices   *form.Choices
 }
 
 func NewNodeView(model *Model) *NodeView {
 	// Text inputs
-	nodeNameTextInput := form.NewTextInput()
-	nodeNameTextInput.Prompt = "Name: "
-	nodeNameTextInput.Focus(form.FocusFirstMode)
+	nameTextInput := form.NewTextInput()
+	nameTextInput.Prompt = "Name: "
+	nameTextInput.Focus(form.FocusFirstMode)
 
 	descTextInput := form.NewTextInput()
 	descTextInput.Prompt = "Description: "
@@ -33,18 +36,25 @@ func NewNodeView(model *Model) *NodeView {
 	nodeTypeChoices.Spacing = 1
 	nodeTypeChoices.ShowMorePlaceHold = false
 
+	// Confirm button
+	confirmButton := form.NewButton("[ Confirm ] ")
+
 	nodeForm := &NodeView{
-		model: model,
-		Form:  form.New(),
-		//nodeTypeChoices: nodeTypeChoices,
+		model:         model,
+		Form:          form.New(),
+		nameTextInput: nameTextInput,
+		descTextInput: descTextInput,
+		urlTextInput:  urlTextInput,
+		typeChoices:   nodeTypeChoices,
 	}
 	nodeForm.Spacing = 1
 	nodeForm.SetItemFocusedStyle(styles.FocusedFormItem)
 	nodeForm.SetItemUnfocusedStyle(styles.UnfocusedFormItem)
-	nodeForm.AddItem(nodeNameTextInput)
+	nodeForm.AddItem(nameTextInput)
 	nodeForm.AddItem(descTextInput)
 	nodeForm.AddItem(urlTextInput)
 	nodeForm.AddItem(nodeTypeChoices)
+	nodeForm.AddItem(confirmButton)
 
 	return nodeForm
 }
@@ -59,7 +69,7 @@ func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
 	case tea.WindowSizeMsg:
-		v.SetSize(m.Width, m.Height)
+		_, cmd = v.Form.Update(msg)
 		log.Debug(fmt.Sprintf("node view w %d h %d", m.Width, m.Height))
 	case tea.KeyMsg:
 		if v.model.state == nodeViewState {
