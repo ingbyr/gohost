@@ -1,18 +1,18 @@
 package gohost
 
 import (
-	"errors"
 	"github.com/timshannon/bolthold"
+	"gohost/db"
 )
 
 var (
-	ErrGroupExist      = errors.New("group is already existed")
-	_             Node = (*Group)(nil)
+	//ErrGroupExist      = errors.New("group is already existed")
+	_ Node = (*Group)(nil)
 )
 
 type Group struct {
-	ID       string `boltholdKey:"ID"`
-	ParentID string
+	ID       db.ID `boltholdKey:"ID"`
+	ParentID db.ID
 	Name     string
 	Desc     string
 }
@@ -27,11 +27,11 @@ func (g *Group) FilterValue() string {
 	return g.Name
 }
 
-func (g *Group) GetID() string {
+func (g *Group) GetID() db.ID {
 	return g.ID
 }
 
-func (g *Group) GetParentID() string {
+func (g *Group) GetParentID() db.ID {
 	return g.ParentID
 }
 
@@ -53,10 +53,13 @@ func (s *Service) loadGroupNodes() []*TreeNode {
 }
 
 func (s *Service) SaveGroup(group *Group) error {
-	if _, exist := s.nodes[group.ID]; exist {
-		return ErrGroupExist
+	var ID any
+	if group.ID == 0 {
+		ID = s.store.NextID()
+	} else {
+		ID = group.ID
 	}
-	err := s.store.Insert(group.ID, group)
+	err := s.store.Insert(ID, group)
 	if err != nil {
 		return err
 	}

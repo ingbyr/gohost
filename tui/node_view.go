@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"gohost/db"
+	"gohost/gohost"
 	"gohost/log"
 	"gohost/tui/form"
 	"gohost/tui/keys"
@@ -41,10 +43,28 @@ func NewNodeView(model *Model) *NodeView {
 	confirmButton.OnClick = func() {
 		log.Debug(fmt.Sprintf("name %s, desc %s, url %s, choice %s",
 			nameTextInput.Value(), descTextInput.Value(), urlTextInput.Value(), nodeTypeChoices.SelectedItem()))
-		if model.treeView.selectedNode.Parent() == nil {
-			log.Debug(fmt.Sprintf("parent is root"))
+		selectedNode := model.treeView.selectedNode
+		parent := selectedNode.Parent()
+		var parentID db.ID = 0
+		if parent != nil {
+			parentID = parent.GetID()
+			log.Debug(fmt.Sprintf("parent is %s", parent.Title()))
 		} else {
-			log.Debug(fmt.Sprintf("parent is %s", model.treeView.selectedNode.Parent().Title()))
+			log.Debug(fmt.Sprintf("parent is root"))
+		}
+		switch selectedNode.Node.(type) {
+		case *gohost.Group:
+			err := svc.SaveGroup(&gohost.Group{
+				ParentID: parentID,
+				Name:     nameTextInput.Value(),
+				Desc:     descTextInput.Value(),
+			})
+			if err != nil {
+				// TODO display error in tui
+				log.Error(err)
+			}
+		case gohost.Host:
+
 		}
 	}
 

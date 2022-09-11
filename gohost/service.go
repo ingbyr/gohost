@@ -24,7 +24,7 @@ func GetService() *Service {
 func NewService() *Service {
 	return &Service{
 		store:       db.Instance(),
-		nodes:       make(map[string]*TreeNode, 0),
+		nodes:       make(map[db.ID]*TreeNode, 0),
 		tree:        make([]*TreeNode, 0),
 		SysHostNode: NewTreeNode(SysHost()),
 	}
@@ -32,7 +32,7 @@ func NewService() *Service {
 
 type Service struct {
 	store       *db.Store
-	nodes       map[string]*TreeNode
+	nodes       map[db.ID]*TreeNode
 	tree        []*TreeNode
 	SysHostNode *TreeNode
 }
@@ -74,13 +74,14 @@ func (s *Service) buildTree(nodes []*TreeNode) {
 }
 
 func (s *Service) Load() {
+	// TODO insert localhost item
 	nodes := []*TreeNode{s.SysHostNode}
 	nodes = append(nodes, s.loadGroupNodes()...)
 	s.cacheNodes(nodes)
 	s.buildTree(nodes)
 }
 
-func (s *Service) ChildNodes(nodeID string) []*TreeNode {
+func (s *Service) ChildNodes(nodeID db.ID) []*TreeNode {
 	return s.nodes[nodeID].children
 }
 

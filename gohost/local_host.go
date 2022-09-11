@@ -1,13 +1,15 @@
 package gohost
 
+import "gohost/db"
+
 var _ Host = (*LocalHost)(nil)
 
 type LocalHost struct {
-	ID      string `boltholdKey:"ID"`
+	ID      db.ID `boltholdKey:"ID"`
+	GroupID db.ID
 	Name    string
 	Content []byte
 	Desc    string
-	GroupID string
 	Enabled bool
 }
 
@@ -23,7 +25,7 @@ func (h *LocalHost) IsEditable() bool {
 	return true
 }
 
-func (h *LocalHost) GetID() string {
+func (h *LocalHost) GetID() db.ID {
 	return h.ID
 }
 
@@ -43,6 +45,6 @@ func (h *LocalHost) FilterValue() string {
 	return h.Name
 }
 
-func (h *LocalHost) GetParentID() string {
+func (h *LocalHost) GetParentID() db.ID {
 	return h.GroupID
 }

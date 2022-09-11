@@ -1,6 +1,7 @@
 package gohost
 
 import (
+	"gohost/db"
 	"os"
 	"sync"
 )
@@ -42,12 +43,12 @@ func (s *sysHost) FilterValue() string {
 	return s.name
 }
 
-func (s *sysHost) GetParentID() string {
-	return ""
+func (s *sysHost) GetParentID() db.ID {
+	return 0
 }
 
-func (s *sysHost) GetID() string {
-	return "-1"
+func (s *sysHost) GetID() db.ID {
+	return 1
 }
 
 func (s *sysHost) GetName() string {

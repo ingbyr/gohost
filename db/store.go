@@ -9,6 +9,8 @@ import (
 	"sync"
 )
 
+type ID = uint64
+
 var (
 	instance *Store
 	once     sync.Once
@@ -53,4 +55,8 @@ func (s *Store) FindNullable(result interface{}, query *bolthold.Query) error {
 		return err
 	}
 	return nil
+}
+
+func (s *Store) NextID() any {
+	return bolthold.NextSequence()
 }

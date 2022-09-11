@@ -2,13 +2,14 @@ package gohost
 
 import (
 	"github.com/charmbracelet/bubbles/list"
+	"gohost/db"
 	"strings"
 )
 
 type Node interface {
 	list.DefaultItem
-	GetID() string
-	GetParentID() string
+	GetID() db.ID
+	GetParentID() db.ID
 }
 
 type TreeNode struct {
@@ -43,7 +44,7 @@ func (n *TreeNode) FilterValue() string {
 	return n.Node.FilterValue()
 }
 
-func (n *TreeNode) GetID() string {
+func (n *TreeNode) GetID() db.ID {
 	return n.Node.GetID()
 }
 

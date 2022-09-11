@@ -2,6 +2,7 @@ package gohost
 
 import (
 	"github.com/timshannon/bolthold"
+	"gohost/db"
 	"gohost/util"
 )
 
@@ -27,11 +28,11 @@ func (s *Service) UpdateHost(host Host) error {
 	return nil
 }
 
-func (s *Service) LoadHosts(groupID string) []Host {
+func (s *Service) LoadHosts(groupID db.ID) []Host {
 	return s.loadLocalHosts(groupID)
 }
 
-func (s *Service) LoadHostNodes(groupID string) []*TreeNode {
+func (s *Service) LoadHostNodes(groupID db.ID) []*TreeNode {
 	groupNode := s.nodes[groupID]
 	if groupNode == nil {
 		return nil
@@ -47,7 +48,7 @@ func (s *Service) LoadHostNodes(groupID string) []*TreeNode {
 	return hostNodes
 }
 
-func (s *Service) loadLocalHosts(groupID string) []Host {
+func (s *Service) loadLocalHosts(groupID db.ID) []Host {
 	var hosts []*LocalHost
 	if err := s.store.FindNullable(&hosts, bolthold.Where("GroupID").Eq(groupID)); err != nil {
 		panic(err)
