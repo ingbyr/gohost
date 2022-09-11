@@ -22,11 +22,13 @@ func GetService() *Service {
 }
 
 func NewService() *Service {
+
 	return &Service{
 		store:       db.Instance(),
 		nodes:       make(map[db.ID]*TreeNode, 0),
 		tree:        make([]*TreeNode, 0),
-		SysHostNode: NewTreeNode(SysHost()),
+		SysHost:     SysHostInstance(),
+		SysHostNode: NewTreeNode(SysHostInstance()),
 	}
 }
 
@@ -34,6 +36,7 @@ type Service struct {
 	store       *db.Store
 	nodes       map[db.ID]*TreeNode
 	tree        []*TreeNode
+	SysHost     Host
 	SysHostNode *TreeNode
 }
 
@@ -74,7 +77,6 @@ func (s *Service) buildTree(nodes []*TreeNode) {
 }
 
 func (s *Service) Load() {
-	// TODO insert localhost item
 	nodes := []*TreeNode{s.SysHostNode}
 	nodes = append(nodes, s.loadGroupNodes()...)
 	s.cacheNodes(nodes)
@@ -103,4 +105,11 @@ func (s *Service) ApplyHost(hosts []byte) {
 func (s *Service) CombineHost(hosts ...[]byte) []byte {
 	// TODO combine host
 	return nil
+}
+
+func (s *Service) extractID(node Node) db.ID {
+	if node.GetID() == 0 {
+		return s.store.NextID()
+	}
+	return node.GetID()
 }

@@ -15,7 +15,7 @@ type Host interface {
 }
 
 func (s *Service) SaveHost(host Host) error {
-	if err := s.store.Insert(host.GetID(), host); err != nil {
+	if err := s.store.Insert(s.extractID(host), host); err != nil {
 		return err
 	}
 	return nil

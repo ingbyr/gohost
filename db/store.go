@@ -7,9 +7,10 @@ import (
 	"gohost/config"
 	"os"
 	"sync"
+	"time"
 )
 
-type ID = uint64
+type ID = int64
 
 var (
 	instance *Store
@@ -57,6 +58,6 @@ func (s *Store) FindNullable(result interface{}, query *bolthold.Query) error {
 	return nil
 }
 
-func (s *Store) NextID() any {
-	return bolthold.NextSequence()
+func (s *Store) NextID() ID {
+	return time.Now().Unix()
 }

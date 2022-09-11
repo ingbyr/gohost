@@ -53,13 +53,7 @@ func (s *Service) loadGroupNodes() []*TreeNode {
 }
 
 func (s *Service) SaveGroup(group *Group) error {
-	var ID any
-	if group.ID == 0 {
-		ID = s.store.NextID()
-	} else {
-		ID = group.ID
-	}
-	err := s.store.Insert(ID, group)
+	err := s.store.Insert(s.extractID(group), group)
 	if err != nil {
 		return err
 	}

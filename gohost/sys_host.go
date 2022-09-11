@@ -7,55 +7,56 @@ import (
 )
 
 var (
-	_               Host = (*sysHost)(nil)
+	_               Host = (*SysHost)(nil)
 	sysHostOnce     sync.Once
-	sysHostInstance *sysHost
+	sysHostInstance *SysHost
 )
 
-func SysHost() Host {
+func SysHostInstance() Host {
 	sysHostOnce.Do(func() {
-		sysHostInstance = &sysHost{
-			name: "System Host               wrf                 asdfasdf",
-			desc: cfg.SysHostFile,
+		sysHostInstance = &SysHost{
+			Name: "System Host",
+			Desc: cfg.SysHostFile,
 		}
 	})
 	return sysHostInstance
 }
 
-type sysHost struct {
-	name string
-	desc string
+type SysHost struct {
+	ID   db.ID `boltholdKey:"ID"`
+	Name string
+	Desc string
 }
 
-func (s *sysHost) Title() string {
-	return s.name
+func (s *SysHost) Title() string {
+	return s.Name
 }
 
-func (s *sysHost) Description() string {
-	return s.desc
+func (s *SysHost) Description() string {
+	return s.Desc
 }
 
-func (s *sysHost) IsEditable() bool {
+func (s *SysHost) IsEditable() bool {
 	return false
 }
 
-func (s *sysHost) FilterValue() string {
-	return s.name
+func (s *SysHost) FilterValue() string {
+	return s.Name
 }
 
-func (s *sysHost) GetParentID() db.ID {
+func (s *SysHost) GetParentID() db.ID {
 	return 0
 }
 
-func (s *sysHost) GetID() db.ID {
+func (s *SysHost) GetID() db.ID {
 	return 1
 }
 
-func (s *sysHost) GetName() string {
-	return s.name
+func (s *SysHost) GetName() string {
+	return s.Name
 }
 
-func (s *sysHost) GetContent() []byte {
+func (s *SysHost) GetContent() []byte {
 	hosts, err := os.ReadFile(cfg.SysHostFile)
 	if err != nil {
 		return []byte("Can not open system hosts file: \n" + err.Error())
@@ -63,14 +64,14 @@ func (s *sysHost) GetContent() []byte {
 	return hosts
 }
 
-func (s *sysHost) SetContent(content []byte) {
+func (s *SysHost) SetContent(content []byte) {
 	panic("implement me")
 }
 
-func (s *sysHost) GetDesc() string {
-	return s.desc
+func (s *SysHost) GetDesc() string {
+	return s.Desc
 }
 
-func (s *sysHost) IsEnabled() bool {
+func (s *SysHost) IsEnabled() bool {
 	return true
 }

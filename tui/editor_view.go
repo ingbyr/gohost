@@ -49,7 +49,7 @@ func (v *EditorView) Init() tea.Cmd {
 	})
 	return func() tea.Msg {
 		// Display system host on start up
-		v.SetHost(gohost.SysHost())
+		v.SetHost(gohost.SysHostInstance())
 		return nil
 	}
 }
