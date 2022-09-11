@@ -1,11 +1,10 @@
 package form
 
 import (
-	"fmt"
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"gohost/log"
 	"gohost/tui/keys"
 	"gohost/tui/styles"
 	"strings"
@@ -16,7 +15,9 @@ func New() *Form {
 		Items:              make([]Item, 0),
 		ItemFocusedStyle:   styles.None,
 		ItemUnfocusedStyle: styles.None,
+		MorePlaceHold:      "...",
 		Spacing:            0,
+		viewport:           viewport.New(0, 0),
 		preFocus:           0,
 		focus:              0,
 	}
@@ -26,7 +27,9 @@ type Form struct {
 	Items              []Item
 	ItemFocusedStyle   lipgloss.Style
 	ItemUnfocusedStyle lipgloss.Style
+	MorePlaceHold      string
 	Spacing            int
+	viewport           viewport.Model
 	preFocus           int
 	focus              int
 	width              int
@@ -34,7 +37,7 @@ type Form struct {
 }
 
 func (v *Form) Init() tea.Cmd {
-	return nil
+	return v.viewport.Init()
 }
 
 func (v *Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -82,48 +85,24 @@ func (v *Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (v *Form) View() string {
-	if len(v.Items) == 0 {
-		return ""
-	}
-	h := v.Items[0].Height()
-	if h > v.height {
-		return ""
-	}
-	str := lipgloss.JoinVertical(lipgloss.Left, v.Items[0].View())
-
-	for i := 1; i < len(v.Items); i++ {
-		w := v.Items[i]
-		if i == len(v.Items) - 1 {
-			h += w.Height()
-		} else {
-			h += w.Height() + v.Spacing
+	var b strings.Builder
+	for i := range v.Items {
+		b.WriteString(v.Items[i].View())
+		if i < len(v.Items)-1 {
+			b.WriteString(strings.Repeat(cfg.LineBreak, v.Spacing+1))
 		}
-		if h >= v.height {
-			return str
-		}
-		str += strings.Repeat(cfg.LineBreak, v.Spacing)
-		str = lipgloss.JoinVertical(lipgloss.Left, str, v.Items[i].View())
-		//log.Debug(fmt.Sprintf("cur h %d, view h %d", lipgloss.Height(str), v.height))
 	}
-	return str
+	v.viewport.SetContent(b.String())
+	return v.viewport.View()
 }
 
 func (v *Form) SetSize(width, height int) {
 	v.width = width
 	v.height = height
-	remain := v.height - len(v.Items) * v.Spacing + 1
-	height = v.height / len(v.Items)
-	for i := 0; i < len(v.Items); i++ {
-		w := v.Items[i]
-		w.SetWidth(width)
-		if i == len(v.Items)-1 {
-			w.SetHeight(remain)
-			log.Debug(fmt.Sprintf("base view w %d h %d", width, w.Height()))
-		} else {
-			w.SetHeight(height)
-			remain -= w.Height()
-			log.Debug(fmt.Sprintf("base view w %d h %d", width, w.Height()))
-		}
+	for _, item := range v.Items {
+		item.SetWidth(width)
+		v.viewport.Width = width
+		v.viewport.Height = height
 	}
 }
 

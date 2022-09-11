@@ -22,31 +22,33 @@ var _ Item = (*Choices)(nil)
 
 func NewChoice(items []list.DefaultItem) *Choices {
 	return &Choices{
-		items:            items,
-		SelectedPrefix:   "[v]",
-		UnselectedPrefix: "[ ]",
-		MorePlaceHold:    "...",
-		width:            0,
-		height:           0,
-		Spacing:          1,
-		focused:          false,
-		cursorIndex:      -1,
-		selectedIndex:    -1,
+		items:             items,
+		SelectedPrefix:    "[v]",
+		UnselectedPrefix:  "[ ]",
+		MorePlaceHold:     "...",
+		ShowMorePlaceHold: true,
+		width:             0,
+		height:            0,
+		Spacing:           1,
+		focused:           false,
+		cursorIndex:       -1,
+		selectedIndex:     -1,
 	}
 }
 
 type Choices struct {
-	items            []list.DefaultItem
-	SelectedPrefix   string
-	UnselectedPrefix string
-	MorePlaceHold    string
-	focused          bool
-	focusedStyle     lipgloss.Style
-	unfocusedStyle   lipgloss.Style
-	width, height    int
-	Spacing          int
-	cursorIndex      int
-	selectedIndex    int
+	items             []list.DefaultItem
+	SelectedPrefix    string
+	UnselectedPrefix  string
+	MorePlaceHold     string
+	ShowMorePlaceHold bool
+	focused           bool
+	focusedStyle      lipgloss.Style
+	unfocusedStyle    lipgloss.Style
+	width, height     int
+	Spacing           int
+	cursorIndex       int
+	selectedIndex     int
 }
 
 func (c *Choices) SetFocusedStyle(style lipgloss.Style) {
@@ -62,34 +64,16 @@ func (c *Choices) Items() []list.DefaultItem {
 }
 
 func (c *Choices) View() string {
-	if c.height <= 0 {
-		return ""
-	}
-	h := 0
 	var b strings.Builder
-	for i := 0; i < len(c.items); i++ {
-		var ph int
-		if i == len(c.items)-1 {
-			ph = h + 1
-		} else {
-			ph = h + 1 + c.Spacing
-		}
-		if ph > c.height {
-			b.WriteString(c.MorePlaceHold)
-			break
-		} else if ph == c.height && i != len(c.items)-1 {
-			b.WriteString(c.MorePlaceHold)
-			break
-		}
-
+	for i := range c.items {
 		if i == c.cursorIndex {
 			b.WriteString(c.focusedStyle.Render(c.itemTitle(i)))
 		} else {
 			b.WriteString(c.unfocusedStyle.Render(c.itemTitle(i)))
 		}
-		b.WriteString(cfg.LineBreak)
-		b.WriteString(strings.Repeat(cfg.LineBreak, c.Spacing))
-		h += ph
+		if i < len(c.items)-1 {
+			b.WriteString(strings.Repeat(cfg.LineBreak, c.Spacing+1))
+		}
 	}
 	return b.String()
 }
@@ -171,6 +155,12 @@ func (c *Choices) SetWidth(width int) {
 
 func (c *Choices) SetHeight(height int) {
 	c.height = height
+	ah := len(c.items) + len(c.items)*c.Spacing - 1
+	if ah < height {
+		c.height = ah
+	} else {
+		c.height = height
+	}
 }
 
 func (c *Choices) itemTitle(idx int) string {

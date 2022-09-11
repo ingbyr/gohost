@@ -19,7 +19,7 @@ type NodeView struct {
 func NewNodeView(model *Model) *NodeView {
 	// Text inputs
 	nodeNameTextInput := form.NewTextInput()
-	nodeNameTextInput.Prompt = "ID: "
+	nodeNameTextInput.Prompt = "Name: "
 	nodeNameTextInput.Focus(form.FocusFirstMode)
 
 	descTextInput := form.NewTextInput()
@@ -31,6 +31,7 @@ func NewNodeView(model *Model) *NodeView {
 	// Node type choices
 	nodeTypeChoices := form.NewChoice([]list.DefaultItem{GroupNode, LocalHost, RemoteHost})
 	nodeTypeChoices.Spacing = 1
+	nodeTypeChoices.ShowMorePlaceHold = false
 
 	nodeForm := &NodeView{
 		model: model,
