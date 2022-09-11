@@ -36,7 +36,7 @@ func (s *Service) LoadHostNodes(groupID string) []*TreeNode {
 	if groupNode == nil {
 		return nil
 	}
-	hostNodeDepth := groupNode.Depth + 1
+	hostNodeDepth := groupNode.depth + 1
 	hosts := s.LoadHosts(groupID)
 	hostNodes := make([]*TreeNode, 0, len(hosts))
 	for _, host := range hosts {

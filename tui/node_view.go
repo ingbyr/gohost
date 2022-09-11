@@ -41,6 +41,11 @@ func NewNodeView(model *Model) *NodeView {
 	confirmButton.OnClick = func() {
 		log.Debug(fmt.Sprintf("name %s, desc %s, url %s, choice %s",
 			nameTextInput.Value(), descTextInput.Value(), urlTextInput.Value(), nodeTypeChoices.SelectedItem()))
+		if model.treeView.selectedNode.Parent() == nil {
+			log.Debug(fmt.Sprintf("parent is root"))
+		} else {
+			log.Debug(fmt.Sprintf("parent is %s", model.treeView.selectedNode.Parent().Title()))
+		}
 	}
 
 	nodeForm := &NodeView{

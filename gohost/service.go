@@ -16,6 +16,7 @@ var (
 func GetService() *Service {
 	serviceOnce.Do(func() {
 		service = NewService()
+		service.Load()
 	})
 	return service
 }
@@ -55,16 +56,17 @@ func (s *Service) buildTree(nodes []*TreeNode) {
 			s.tree = append(s.tree, node)
 			continue
 		}
-		node.SetDepth(p.Depth + 1)
-		p.Children = append(p.Children, node)
+		node.SetDepth(p.depth + 1)
+		node.parent = p
+		p.children = append(p.children, node)
 	}
 	// Bfs to set depth
 	queue := s.tree
 	depth := 0
 	for len(queue) > 0 {
 		for _, treeNode := range queue {
-			treeNode.Depth = depth
-			queue = append(queue, treeNode.Children...)
+			treeNode.depth = depth
+			queue = append(queue, treeNode.children...)
 			queue = queue[1:]
 		}
 		depth++
@@ -79,7 +81,7 @@ func (s *Service) Load() {
 }
 
 func (s *Service) ChildNodes(nodeID string) []*TreeNode {
-	return s.nodes[nodeID].Children
+	return s.nodes[nodeID].children
 }
 
 // ApplyHost TODO apply host to system

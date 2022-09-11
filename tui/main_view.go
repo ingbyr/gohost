@@ -6,6 +6,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"gohost/config"
+	"gohost/gohost"
 	"gohost/log"
 	"gohost/tui/keys"
 	"gohost/tui/styles"
@@ -19,10 +20,15 @@ const (
 	editorViewState
 	nodeViewState
 	helpViewState
-	lastState
+	lastViewState
+
+	initViewState = treeViewState
 )
 
-var cfg = config.Instance()
+var (
+	cfg = config.Instance()
+	svc = gohost.GetService()
+)
 
 type Model struct {
 	preState                sessionState
@@ -43,8 +49,7 @@ type Model struct {
 func NewModel() (*Model, error) {
 	styleWidth, styleHeight := styles.DefaultView.GetFrameSize()
 	model := &Model{
-		//state:  treeViewState,
-		state:             nodeViewState,
+		state:             initViewState,
 		styleWidth:        styleWidth * 2,
 		styleHeight:       styleHeight,
 		shortHelperHeight: 1,
@@ -140,7 +145,7 @@ func (m *Model) updateView(msg tea.Msg, cmds *[]tea.Cmd, view tea.Model) {
 }
 
 func (m *Model) switchNextState() sessionState {
-	m.switchState((m.state + 1) % lastState)
+	m.switchState((m.state + 1) % lastViewState)
 	log.Debug("state:" + strconv.Itoa(int(m.state)))
 	return m.state
 }

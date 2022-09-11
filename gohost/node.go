@@ -13,20 +13,20 @@ type Node interface {
 
 type TreeNode struct {
 	Node
-	Children []*TreeNode
-	Depth    int
-	IsFolded bool
-
-	// depends on Depth
-	spaces string
+	parent   *TreeNode
+	children []*TreeNode
+	depth    int
+	isFolded bool
+	spaces   string // depends on depth
 }
 
 func NewTreeNode(node Node) *TreeNode {
 	return &TreeNode{
 		Node:     node,
-		Children: make([]*TreeNode, 0),
-		Depth:    0,
-		IsFolded: true,
+		parent:   nil,
+		children: make([]*TreeNode, 0),
+		depth:    0,
+		isFolded: true,
 		spaces:   "",
 	}
 }
@@ -47,11 +47,27 @@ func (n *TreeNode) GetID() string {
 	return n.Node.GetID()
 }
 
-func (n *TreeNode) GetParentID() string {
-	return n.Node.GetParentID()
+func (n *TreeNode) Parent() *TreeNode {
+	return n.parent
+}
+
+func (n *TreeNode) Children() []*TreeNode {
+	return n.children
+}
+
+func (n *TreeNode) Depth() int {
+	return n.depth
 }
 
 func (n *TreeNode) SetDepth(depth int) {
-	n.Depth = depth
+	n.depth = depth
 	n.spaces = strings.Repeat(" ", depth)
+}
+
+func (n *TreeNode) IsFolded() bool {
+	return n.isFolded
+}
+
+func (n *TreeNode) SetFolded(isFolded bool) {
+	n.isFolded = isFolded
 }
