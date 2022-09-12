@@ -92,6 +92,10 @@ func (v *Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (v *Form) View() string {
 	var b strings.Builder
 	for i := range v.Items {
+		item := v.Items[i]
+		if item.Hide() {
+			continue
+		}
 		b.WriteString(v.Items[i].View())
 		if i < len(v.Items)-1 {
 			b.WriteString(strings.Repeat(cfg.LineBreak, v.Spacing+1))

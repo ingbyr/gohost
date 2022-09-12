@@ -14,6 +14,7 @@ func NewTextInput() *TextInput {
 		Model:          textinput.New(),
 		focusedStyle:   styles.None,
 		unfocusedStyle: styles.None,
+		HideFunc:       nil,
 	}
 	t.Unfocus()
 	return t
@@ -21,9 +22,17 @@ func NewTextInput() *TextInput {
 
 type TextInput struct {
 	textinput.Model
+	HideFunc       HideCondition
 	focused        bool
 	focusedStyle   lipgloss.Style
 	unfocusedStyle lipgloss.Style
+}
+
+func (t *TextInput) Hide() bool {
+	if t.HideFunc == nil {
+		return false
+	}
+	return t.HideFunc()
 }
 
 func (t *TextInput) SetFocusedStyle(style lipgloss.Style) {

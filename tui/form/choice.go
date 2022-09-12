@@ -33,17 +33,25 @@ func NewChoice(items []list.DefaultItem) *Choices {
 }
 
 type Choices struct {
-	items             []list.DefaultItem
 	SelectedPrefix    string
 	UnselectedPrefix  string
 	MorePlaceHold     string
 	ShowMorePlaceHold bool
+	HideFunc          HideCondition
+	items             []list.DefaultItem
 	focused           bool
 	focusedStyle      lipgloss.Style
 	unfocusedStyle    lipgloss.Style
 	Spacing           int
 	cursorIndex       int
 	selectedIndex     int
+}
+
+func (c *Choices) Hide() bool {
+	if c.HideFunc == nil {
+		return false
+	}
+	return c.HideFunc()
 }
 
 func (c *Choices) SetFocusedStyle(style lipgloss.Style) {

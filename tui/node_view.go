@@ -29,13 +29,16 @@ func NewNodeView(model *Model) *NodeView {
 	descTextInput := form.NewTextInput()
 	descTextInput.Prompt = "Description: "
 
-	urlTextInput := form.NewTextInput()
-	urlTextInput.Prompt = "Url: "
-
 	// Node type choices
 	nodeTypeChoices := form.NewChoice([]list.DefaultItem{NodeGroup, NodeLocalHost, NodeRemoteHost})
 	nodeTypeChoices.Spacing = 1
 	nodeTypeChoices.ShowMorePlaceHold = false
+
+	urlTextInput := form.NewTextInput()
+	urlTextInput.Prompt = "Url: "
+	urlTextInput.HideFunc = func() bool {
+		return nodeTypeChoices.SelectedItem() != NodeRemoteHost
+	}
 
 	// Confirm button
 	confirmButton := form.NewButton("[ Confirm ]")
@@ -70,7 +73,7 @@ func NewNodeView(model *Model) *NodeView {
 			groupNode := gohost.NewTreeNode(node)
 			groupNode.SetParent(parent)
 			groupNode.SetDepth(parent.Depth() + 1)
-			if err := svc.SaveGroupNode(groupNode);err != nil {
+			if err := svc.SaveGroupNode(groupNode); err != nil {
 				panic(err)
 			}
 			cmd = model.treeView.RefreshTreeNodes()
@@ -94,8 +97,8 @@ func NewNodeView(model *Model) *NodeView {
 	nodeForm.SetItemUnfocusedStyle(styles.UnfocusedFormItem)
 	nodeForm.AddItem(nameTextInput)
 	nodeForm.AddItem(descTextInput)
-	nodeForm.AddItem(urlTextInput)
 	nodeForm.AddItem(nodeTypeChoices)
+	nodeForm.AddItem(urlTextInput)
 	nodeForm.AddItem(confirmButton)
 
 	return nodeForm

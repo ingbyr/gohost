@@ -9,6 +9,8 @@ import (
 	"gohost/tui/styles"
 )
 
+var _ Item = (*Button)(nil)
+
 func NewButton(text string) *Button {
 	return &Button{
 		Text:           text,
@@ -16,6 +18,7 @@ func NewButton(text string) *Button {
 		focused:        false,
 		focusedStyle:   styles.None,
 		unfocusedStyle: styles.None,
+		HideFunc:       nil,
 	}
 }
 
@@ -25,6 +28,14 @@ type Button struct {
 	focused        bool
 	focusedStyle   lipgloss.Style
 	unfocusedStyle lipgloss.Style
+	HideFunc       HideCondition
+}
+
+func (b *Button) Hide() bool {
+	if b.HideFunc == nil {
+		return false
+	}
+	return b.HideFunc()
 }
 
 func (b *Button) Init() tea.Cmd {

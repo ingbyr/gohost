@@ -15,4 +15,7 @@ type Item interface {
 	InterceptKey(m tea.KeyMsg) bool
 	SetFocusedStyle(style lipgloss.Style)
 	SetUnfocusedStyle(style lipgloss.Style)
+	Hide() bool
 }
+
+type HideCondition func() bool
