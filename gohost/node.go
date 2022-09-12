@@ -3,7 +3,6 @@ package gohost
 import (
 	"github.com/charmbracelet/bubbles/list"
 	"gohost/db"
-	"strings"
 )
 
 type Node interface {
@@ -18,7 +17,6 @@ type TreeNode struct {
 	children []*TreeNode
 	depth    int
 	isFolded bool
-	spaces   string // depends on depth
 }
 
 func NewTreeNode(node Node) *TreeNode {
@@ -28,23 +26,7 @@ func NewTreeNode(node Node) *TreeNode {
 		children: make([]*TreeNode, 0),
 		depth:    0,
 		isFolded: true,
-		spaces:   "",
 	}
-}
-
-func (n *TreeNode) Title() string {
-	return n.spaces + n.Node.Title()
-}
-
-func (n *TreeNode) Description() string {
-	return n.spaces + n.Node.Description()
-}
-
-func (n *TreeNode) FilterValue() string {
-	if n.Node == nil {
-		return ""
-	}
-	return n.Node.FilterValue()
 }
 
 func (n *TreeNode) GetID() db.ID {
@@ -72,7 +54,6 @@ func (n *TreeNode) Depth() int {
 
 func (n *TreeNode) SetDepth(depth int) {
 	n.depth = depth
-	n.spaces = strings.Repeat(" ", depth)
 }
 
 func (n *TreeNode) IsFolded() bool {

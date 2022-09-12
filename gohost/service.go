@@ -17,7 +17,7 @@ var (
 func GetService() *Service {
 	serviceOnce.Do(func() {
 		service = NewService()
-		service.LoadTree()
+		service.loadTree()
 	})
 	return service
 }
@@ -27,12 +27,18 @@ func NewService() *Service {
 		store: db.Instance(),
 		nodes: make(map[db.ID]*TreeNode, 0),
 		tree: &TreeNode{
-			Node:     nil,
+			Node:     &LocalHost{
+				ID:      0,
+				GroupID: 0,
+				Name:    "",
+				Content: nil,
+				Desc:    "",
+				Enabled: false,
+			},
 			parent:   nil,
 			children: make([]*TreeNode, 0),
 			depth:    -1,
 			isFolded: false,
-			spaces:   "",
 		},
 		SysHostNode: NewTreeNode(SysHostInstance()),
 	}
@@ -51,7 +57,6 @@ func (s *Service) Tree() *TreeNode {
 }
 
 func (s *Service) cacheNodes(nodes []*TreeNode) {
-	nodes[0] = s.tree
 	for _, node := range nodes {
 		s.nodes[node.GetID()] = node
 	}
@@ -60,13 +65,7 @@ func (s *Service) cacheNodes(nodes []*TreeNode) {
 func (s *Service) buildTree(nodes []*TreeNode) {
 	// Build tree
 	for _, node := range nodes {
-		if node == s.tree {
-			continue
-		}
-		p, exist := s.nodes[node.Node.GetParentID()]
-		if !exist {
-			p = s.tree
-		}
+		p := s.nodes[node.Node.GetParentID()]
 		node.SetParent(p)
 		p.children = append(p.children, node)
 	}
@@ -83,7 +82,8 @@ func (s *Service) buildTree(nodes []*TreeNode) {
 	}
 }
 
-func (s *Service) LoadTree() {
+func (s *Service) loadTree() {
+	s.nodes[0] = s.tree
 	nodes := []*TreeNode{s.SysHostNode}
 	nodes = append(nodes, s.loadGroupNodes()...)
 	s.cacheNodes(nodes)

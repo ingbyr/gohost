@@ -14,7 +14,7 @@ type LocalHost struct {
 }
 
 func (h *LocalHost) Title() string {
-	return "[L] " + h.Name
+	return h.Name
 }
 
 func (h *LocalHost) Description() string {

@@ -18,7 +18,7 @@ type Group struct {
 }
 
 func (g *Group) Title() string {
-	return "[G] " + g.Name
+	return g.Name
 }
 func (g *Group) Description() string {
 	return g.Desc

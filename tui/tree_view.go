@@ -5,47 +5,67 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"gohost/gohost"
 	"gohost/log"
 	"gohost/tui/keys"
+	"gohost/tui/styles"
 	"io"
 	"strings"
 )
 
-// groupItemDelegate is item delegate for groupItem
-type groupItemDelegate struct {
+// nodeItemDelegate is item delegate for groupItem
+type nodeItemDelegate struct {
+	selectedStyle lipgloss.Style
+	normalStyle   lipgloss.Style
 }
 
-func (d groupItemDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
+func newNodeItemDelegate() *nodeItemDelegate {
+	return &nodeItemDelegate{
+		selectedStyle: styles.FocusedFormItem,
+		normalStyle:   styles.UnfocusedFormItem,
+	}
+}
+
+func (d *nodeItemDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
 	node, ok := item.(*gohost.TreeNode)
 	if !ok {
 		return
 	}
 	var str string
-	if m.Index() == index {
-		str = "> "
-	} else {
-		str = "  "
-	}
-	spaces := strings.Repeat(" ", node.Depth())
-	switch node := node.Node.(type) {
+	switch node.Node.(type) {
 	case *gohost.Group:
-		str += fmt.Sprintf("%s[G] %d. %s", spaces, index, node.Name)
-	case gohost.Host:
-		str += fmt.Sprintf("%s[L] %d. %s", spaces, index, node.Title())
+		var icon string
+		if node.IsFolded() {
+			icon = "📁"
+		} else {
+			icon = "📂"
+		}
+		str = strings.Repeat(" ", node.Depth()) + icon + node.Title()
+	case *gohost.SysHost:
+		str = strings.Repeat(" ", node.Depth()) + "🐝" + node.Title()
+	case *gohost.LocalHost:
+		str = strings.Repeat(" ", node.Depth()) + "📑" + node.Title()
+	case *gohost.RemoteHost:
+		str = strings.Repeat(" ", node.Depth()) + "🌐" + node.Title()
+	}
+	if m.Index() == index {
+		str = d.selectedStyle.Render("> " + str)
+	} else {
+		str = d.normalStyle.Render("  " + str)
 	}
 	_, _ = fmt.Fprint(w, str)
 }
 
-func (d groupItemDelegate) Height() int {
+func (d *nodeItemDelegate) Height() int {
 	return 1
 }
 
-func (d groupItemDelegate) Spacing() int {
+func (d *nodeItemDelegate) Spacing() int {
 	return 0
 }
 
-func (d groupItemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
+func (d *nodeItemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
 	return nil
 }
 
@@ -61,11 +81,9 @@ type TreeView struct {
 
 func NewTreeView(model *Model) *TreeView {
 	// Create nodes list helpView
-	//nodeList := list.New(groups, groupItemDelegate{}, 0, 0)
-	delegate := list.NewDefaultDelegate()
-	delegate.SetSpacing(0)
-	nodeList := list.New(svc.TreeNodeItem(), delegate, 0, 0)
-	nodeList.Title = "Groups"
+	nodes := svc.TreeNodeItem()
+	nodeList := list.New(nodes, newNodeItemDelegate(), 0, 0)
+	nodeList.Title = "gohost"
 	nodeList.SetShowStatusBar(false)
 	nodeList.SetShowHelp(false)
 

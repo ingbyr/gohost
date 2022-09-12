@@ -10,12 +10,12 @@ var (
 			PaddingLeft(padding).
 			PaddingRight(padding).
 			BorderStyle(lipgloss.NormalBorder()).
-			BorderForeground(lipgloss.Color("70"))
+			BorderForeground(lipgloss.Color("243"))
 	FocusedView = lipgloss.NewStyle().
 			PaddingLeft(padding).
 			PaddingRight(padding).
 			BorderStyle(lipgloss.NormalBorder()).
-			BorderForeground(lipgloss.Color("69"))
+			BorderForeground(lipgloss.Color("73"))
 	UnfocusedFormItem = lipgloss.NewStyle()
-	FocusedFormItem   = lipgloss.NewStyle().Foreground(lipgloss.Color("69"))
+	FocusedFormItem   = lipgloss.NewStyle().Foreground(lipgloss.Color("73"))
 )

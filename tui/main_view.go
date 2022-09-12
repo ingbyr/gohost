@@ -19,8 +19,8 @@ const (
 	treeViewState = iota
 	editorViewState
 	nodeViewState
-	helpViewState
 	lastViewState
+	helpViewState
 
 	initViewState = nodeViewState
 )
