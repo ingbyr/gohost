@@ -42,10 +42,16 @@ func (n *TreeNode) Parent() *TreeNode {
 
 func (n *TreeNode) SetParent(parent *TreeNode) {
 	n.parent = parent
+	n.depth = parent.depth + 1
+	parent.children = append(parent.children, n)
 }
 
 func (n *TreeNode) Children() []*TreeNode {
 	return n.children
+}
+
+func (n *TreeNode) SetChildren(children []*TreeNode) {
+	n.children = children
 }
 
 func (n *TreeNode) Depth() int {
@@ -62,8 +68,4 @@ func (n *TreeNode) IsFolded() bool {
 
 func (n *TreeNode) SetFolded(isFolded bool) {
 	n.isFolded = isFolded
-}
-
-func (n *TreeNode) FlipFolded() {
-	n.isFolded = !n.isFolded
 }

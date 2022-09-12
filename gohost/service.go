@@ -17,31 +17,28 @@ var (
 func GetService() *Service {
 	serviceOnce.Do(func() {
 		service = NewService()
-		service.loadTree()
+		service.LoadRootNodes()
 	})
 	return service
 }
 
 func NewService() *Service {
-	return &Service{
+	s := &Service{
 		store: db.Instance(),
 		nodes: make(map[db.ID]*TreeNode, 0),
-		tree: &TreeNode{
-			Node:     &LocalHost{
-				ID:      0,
-				GroupID: 0,
-				Name:    "",
-				Content: nil,
-				Desc:    "",
-				Enabled: false,
-			},
-			parent:   nil,
-			children: make([]*TreeNode, 0),
-			depth:    -1,
-			isFolded: false,
-		},
-		SysHostNode: NewTreeNode(SysHostInstance()),
 	}
+	s.tree = &TreeNode{
+		parent:   nil,
+		children: make([]*TreeNode, 0),
+		depth:    -1,
+		isFolded: false,
+	}
+	sysHostNode := NewTreeNode(SysHostInstance())
+	sysHostNode.SetParent(s.tree)
+	s.SysHostNode = sysHostNode
+	s.nodes[0] = s.tree
+	s.nodes[1] = s.SysHostNode
+	return s
 }
 
 type Service struct {
@@ -67,7 +64,6 @@ func (s *Service) buildTree(nodes []*TreeNode) {
 	for _, node := range nodes {
 		p := s.nodes[node.Node.GetParentID()]
 		node.SetParent(p)
-		p.children = append(p.children, node)
 	}
 	// Bfs to set depth
 	queue := s.tree.children
@@ -85,18 +81,18 @@ func (s *Service) buildTree(nodes []*TreeNode) {
 func (s *Service) loadTree() {
 	s.nodes[0] = s.tree
 	nodes := []*TreeNode{s.SysHostNode}
-	nodes = append(nodes, s.loadGroupNodes()...)
+	nodes = append(nodes, s.LoadNodesByParentID(0)...)
 	s.cacheNodes(nodes)
 	s.buildTree(nodes)
 }
 
-func (s *Service) TreeNodeItem() []list.Item {
+func (s *Service) TreeNodesAsItem() []list.Item {
 	nodes := make([]list.Item, 0)
-	s.treeNodesItem([]*TreeNode{s.tree}, &nodes)
+	s.treeNodesAsItem([]*TreeNode{s.tree}, &nodes)
 	return nodes
 }
 
-func (s *Service) treeNodesItem(nodes []*TreeNode, res *[]list.Item) {
+func (s *Service) treeNodesAsItem(nodes []*TreeNode, res *[]list.Item) {
 	if len(nodes) == 0 {
 		return
 	}
@@ -105,21 +101,37 @@ func (s *Service) treeNodesItem(nodes []*TreeNode, res *[]list.Item) {
 			*res = append(*res, node)
 		}
 		if !node.IsFolded() {
-			s.treeNodesItem(node.Children(), res)
-			*res = append(*res, s.LoadHostNodesItem(node.GetID())...)
+			s.treeNodesAsItem(node.Children(), res)
 		}
 	}
 }
 
-func (s *Service) Node(nodeID db.ID) *TreeNode {
-	if nodeID <= 0 {
-		return s.tree
-	}
-	return s.nodes[nodeID]
+func (s *Service) LoadRootNodes() []*TreeNode {
+	return s.LoadNodesByParentID(0)
 }
 
-func (s *Service) ChildNodes(nodeID db.ID) []*TreeNode {
-	return s.nodes[nodeID].children
+func (s *Service) LoadNodesByParentID(parentID db.ID) []*TreeNode {
+	parent := s.nodes[parentID]
+	if parent == nil {
+		panic("Cache the parent node first before load nodes by parent id")
+	}
+	var nodes []*TreeNode
+	if parentID == 0 {
+		nodes = append(nodes, s.SysHostNode)
+	}
+	nodes = append(nodes, s.loadGroupNodesByParent(parent)...)
+	nodes = append(nodes, s.loadLocalHostNodesByParent(parent)...)
+	parent.SetChildren(nodes)
+	s.cacheNodes(nodes)
+	return nodes
+}
+
+func (s *Service) RemoveNodesByParentID(parentID db.ID) {
+	node := s.nodes[parentID]
+	if node == nil {
+		panic("node is not cached when trying to remove nodes by parent id")
+	}
+	node.SetChildren(nil)
 }
 
 // ApplyHost TODO apply host to system

@@ -44,8 +44,8 @@ var (
 		key.WithHelp("ctrl+s", "save"),
 	)
 	New = key.NewBinding(
-		key.WithKeys("ctrl+n"),
-		key.WithHelp("ctrl+n", "new"),
+		key.WithKeys("c"),
+		key.WithHelp("c", "new"),
 	)
 )
 

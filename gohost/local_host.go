@@ -1,6 +1,10 @@
 package gohost
 
-import "gohost/db"
+import (
+	"github.com/timshannon/bolthold"
+	"gohost/db"
+	"gohost/util"
+)
 
 var _ Host = (*LocalHost)(nil)
 
@@ -47,4 +51,26 @@ func (h *LocalHost) FilterValue() string {
 
 func (h *LocalHost) GetParentID() db.ID {
 	return h.GroupID
+}
+
+func (s *Service) loadLocalHosts(groupID db.ID) []Host {
+	var hosts []*LocalHost
+	if err := s.store.FindNullable(&hosts, bolthold.Where("GroupID").Eq(groupID)); err != nil {
+		panic(err)
+	}
+	return util.WrapSlice[Host](hosts)
+}
+
+func (s *Service) loadLocalHostNodesByParent(parent *TreeNode) []*TreeNode {
+	var localHosts []*LocalHost
+	if err := s.store.FindNullable(&localHosts, bolthold.Where("GroupID").Eq(parent.GetID())); err != nil {
+		panic(err)
+	}
+	nodes := make([]*TreeNode, len(localHosts))
+	for i := range localHosts {
+		node := NewTreeNode(localHosts[i])
+		node.SetParent(parent)
+		nodes[i] = node
+	}
+	return nodes
 }

@@ -43,13 +43,24 @@ func (s *Service) loadGroups() []*Group {
 	return groups
 }
 
-func (s *Service) loadGroupNodes() []*TreeNode {
-	groups := s.loadGroups()
-	groupNodes := make([]*TreeNode, 0, len(groups))
-	for _, group := range groups {
-		groupNodes = append(groupNodes, NewTreeNode(group))
+func (s *Service) loadGroupsByParenID(parentID db.ID) []*Group {
+	var groups []*Group
+	if err := s.store.FindNullable(&groups, bolthold.Where("ParentID").Eq(parentID)); err != nil {
+		panic(err)
 	}
-	return groupNodes
+	return groups
+}
+
+
+func (s *Service) loadGroupNodesByParent(parent *TreeNode) []*TreeNode {
+	groups := s.loadGroupsByParenID(parent.GetID())
+	nodes := make([]*TreeNode, len(groups))
+	for i := range groups {
+		node := NewTreeNode(groups[i])
+		node.SetParent(parent)
+		nodes[i] = node
+	}
+	return nodes
 }
 
 func (s *Service) SaveGroup(group *Group) error {
@@ -66,6 +77,5 @@ func (s *Service) SaveGroupNode(groupNode *TreeNode) error {
 		return err
 	}
 	s.nodes[groupNode.GetID()] = groupNode
-	groupNode.parent.children = append(groupNode.parent.children, groupNode)
 	return nil
 }

@@ -2,7 +2,7 @@ package styles
 
 import "github.com/charmbracelet/lipgloss"
 
-const padding = 2
+const padding = 1
 
 var (
 	None        = lipgloss.NewStyle()

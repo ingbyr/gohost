@@ -78,11 +78,13 @@ type TreeView struct {
 
 func NewTreeView(model *Model) *TreeView {
 	// Create nodes list helpView
-	nodes := svc.TreeNodeItem()
+	nodes := svc.TreeNodesAsItem()
 	nodeList := list.New(nodes, newNodeItemDelegate(), 0, 0)
 	nodeList.Title = "gohost"
 	nodeList.SetShowStatusBar(false)
 	nodeList.SetShowHelp(false)
+	// FIXME height is wrong when show pagination
+	nodeList.SetShowPagination(false)
 	nodeList.Select(0)
 
 	return &TreeView{
@@ -92,8 +94,8 @@ func NewTreeView(model *Model) *TreeView {
 }
 
 func (v *TreeView) Init() tea.Cmd {
-	v.model.setShortHelp(treeViewState, v.nodeList.ShortHelp())
-	v.model.setFullHelp(treeViewState, v.nodeList.FullHelp())
+	v.model.setShortHelp(treeViewState, append(v.nodeList.ShortHelp(), keys.New))
+	v.model.setFullHelp(treeViewState, append(v.nodeList.FullHelp(), []key.Binding{keys.New}))
 	return nil
 }
 
@@ -106,42 +108,39 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		v.SetHeight(m.Height)
 		log.Debug(fmt.Sprintf("tree view w %d h %d", v.nodeList.Width(), v.nodeList.Height()))
 	case tea.KeyMsg:
-		if v.model.state == treeViewState {
-			switch {
-			case key.Matches(m, keys.Enter):
-				selectedNode := v.SelectedNode()
-				switch node := selectedNode.Node.(type) {
-				case *gohost.Group:
-					selectedNode.FlipFolded()
-					cmd = v.RefreshTreeNodes()
-				case gohost.Host:
-					v.onHostNodeSelected(node, &cmds)
+		if v.model.state != treeViewState {
+			return v, nil
+		}
+		switch {
+		case key.Matches(m, keys.Enter):
+			selectedNode := v.SelectedNode()
+			switch node := selectedNode.Node.(type) {
+			case *gohost.Group:
+				if selectedNode.IsFolded() {
+					selectedNode.SetFolded(false)
+					svc.LoadNodesByParentID(selectedNode.GetID())
+				} else {
+					selectedNode.SetFolded(true)
+					svc.RemoveNodesByParentID(selectedNode.GetID())
 				}
-			case key.Matches(m, keys.New):
-				v.model.switchState(nodeViewState)
+				cmd = v.RefreshTreeNodes()
+				cmds = append(cmds, cmd)
+			case gohost.Host:
+				v.onHostNodeSelected(node, &cmds)
 			}
-		} else {
-			// Disable key
-			msg = nil
+		case key.Matches(m, keys.New):
+			v.model.switchState(nodeViewState)
 		}
 	}
 	v.nodeList, cmd = v.nodeList.Update(msg)
-	log.Debug(fmt.Sprintf("cursor at %d, selected item %v",
-		v.nodeList.Cursor(), v.nodeList.SelectedItem().FilterValue()))
+	//log.Debug(fmt.Sprintf("cursor at %d, selected item %v",
+	//	v.nodeList.Cursor(), v.nodeList.SelectedItem().FilterValue()))
 	cmds = append(cmds, cmd)
 	return v, tea.Batch(cmds...)
 }
 
 func (v *TreeView) View() string {
 	return v.nodeList.View()
-}
-
-func (v *TreeView) ShortHelp() []key.Binding {
-	return v.nodeList.ShortHelp()
-}
-
-func (v *TreeView) FullHelp() [][]key.Binding {
-	return v.nodeList.FullHelp()
 }
 
 func (v *TreeView) SetWidth(width int) {
@@ -155,7 +154,7 @@ func (v *TreeView) SetHeight(height int) {
 }
 
 func (v *TreeView) RefreshTreeNodes() tea.Cmd {
-	return v.nodeList.SetItems(svc.TreeNodeItem())
+	return v.nodeList.SetItems(svc.TreeNodesAsItem())
 }
 
 func (v *TreeView) SelectedNode() *gohost.TreeNode {

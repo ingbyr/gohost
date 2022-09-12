@@ -45,14 +45,16 @@ func NewNodeView(model *Model) *NodeView {
 	confirmButton := form.NewButton("[ Confirm ]")
 	confirmButton.OnClick = func() tea.Cmd {
 		log.Debug(fmt.Sprintf("name %s, desc %s, url %s, choice %s",
-			nameTextInput.Value(), descTextInput.Value(), urlTextInput.Value(), nodeTypeChoices.SelectedItem()))
+			nameTextInput.Value(), descTextInput.Value(), urlTextInput.Value(),
+			nodeTypeChoices.SelectedItem().FilterValue()))
+
 		// Check inputs
 		if nodeTypeChoices.SelectedItem() == nil {
-			log.Debug(fmt.Sprintf("no node type was selected"))
+			log.Debug(fmt.Sprintf("no group type was selected"))
 			return nil
 		}
 
-		// Get parent node
+		// Get parent group
 		selectedNode := model.treeView.SelectedNode()
 		selectedNode.SetFolded(false)
 		var parent *gohost.TreeNode
@@ -63,24 +65,38 @@ func NewNodeView(model *Model) *NodeView {
 			parent = selectedNode.Parent()
 		}
 
+		// Save node
 		var cmd tea.Cmd
 		switch nodeTypeChoices.SelectedItem() {
 		case NodeGroup:
-			node := &gohost.Group{
+			group := &gohost.Group{
 				ParentID: parent.GetID(),
 				Name:     nameTextInput.Value(),
 				Desc:     descTextInput.Value(),
 			}
-			groupNode := gohost.NewTreeNode(node)
+			groupNode := gohost.NewTreeNode(group)
 			groupNode.SetParent(parent)
-			groupNode.SetDepth(parent.Depth() + 1)
 			if err := svc.SaveGroupNode(groupNode); err != nil {
 				panic(err)
 			}
-			cmd = model.treeView.RefreshTreeNodes()
 		case NodeLocalHost:
+			localHost := &gohost.LocalHost{
+				GroupID: parent.GetID(),
+				Name:    nameTextInput.Value(),
+				Content: nil,
+				Desc:    descTextInput.Value(),
+				Enabled: false,
+			}
+			localHostNode := gohost.NewTreeNode(localHost)
+			localHostNode.SetParent(parent)
+			if err := svc.SaveHostNode(localHostNode); err != nil {
+				panic(err)
+			}
 		case NodeRemoteHost:
 		}
+		cmd = model.treeView.RefreshTreeNodes()
+
+		// Go back to tree view state
 		model.switchState(treeViewState)
 		return cmd
 	}
@@ -111,13 +127,13 @@ func (v *NodeView) Init() tea.Cmd {
 }
 
 func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if v.model.state != nodeViewState {
-		return v, nil
-	}
 	switch m := msg.(type) {
 	case tea.WindowSizeMsg:
 		log.Debug(fmt.Sprintf("node view w %d h %d", m.Width, m.Height))
 	case tea.KeyMsg:
+		if v.model.state != nodeViewState {
+			return v, nil
+		}
 		if key.Matches(m, keys.Esc) {
 			v.model.switchState(treeViewState)
 		}
