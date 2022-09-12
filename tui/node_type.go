@@ -1,9 +1,10 @@
 package tui
 
 var (
-	GroupNode  = &NodeType{"Group", "Group contains some hosts"}
-	LocalHost  = &NodeType{"Local Host", "Host stored in local database"}
-	RemoteHost = &NodeType{"Remote Host", "Host from internet"}
+	NodeGroup      = &NodeType{"Group", "Group contains some hosts"}
+	NodeSysHost    = &NodeType{"System Host", "Current system host"}
+	NodeLocalHost  = &NodeType{"Local Host", "Host stored in local database"}
+	NodeRemoteHost = &NodeType{"Remote Host", "Host from internet"}
 )
 
 type NodeType struct {

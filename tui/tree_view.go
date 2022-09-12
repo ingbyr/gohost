@@ -8,7 +8,6 @@ import (
 	"gohost/gohost"
 	"gohost/log"
 	"gohost/tui/keys"
-	"gohost/util"
 	"io"
 	"strings"
 )
@@ -52,30 +51,29 @@ func (d groupItemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
 
 // TreeView is tui helpView for nodes tree
 type TreeView struct {
-	model         *Model
-	nodeList      list.Model
-	selectedNode  *gohost.TreeNode
-	selectedIndex int
-	width, height int
+	model            *Model
+	nodeList         list.Model
+	selectedNode     *gohost.TreeNode
+	selectedNodeType *NodeType
+	selectedIndex    int
+	width, height    int
 }
 
 func NewTreeView(model *Model) *TreeView {
-	treeNodes := svc.Tree()
-	groups := util.WrapSlice[list.Item](treeNodes)
-
 	// Create nodes list helpView
 	//nodeList := list.New(groups, groupItemDelegate{}, 0, 0)
 	delegate := list.NewDefaultDelegate()
 	delegate.SetSpacing(0)
-	nodeList := list.New(groups, delegate, 0, 0)
+	nodeList := list.New(svc.TreeNodeItem(), delegate, 0, 0)
 	nodeList.Title = "Groups"
 	nodeList.SetShowStatusBar(false)
 	nodeList.SetShowHelp(false)
 
 	return &TreeView{
-		model:        model,
-		nodeList:     nodeList,
-		selectedNode: treeNodes[0],
+		model:            model,
+		nodeList:         nodeList,
+		selectedNode:     svc.SysHostNode,
+		selectedNodeType: NodeSysHost,
 	}
 }
 
@@ -103,8 +101,17 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					v.selectedIndex = v.nodeList.Index()
 					switch v.selectedNode.Node.(type) {
 					case *gohost.Group:
-						v.onGroupNodeSelected(&cmds)
-					case gohost.Host:
+						v.selectedNodeType = NodeGroup
+						v.selectedNode.FlipFolded()
+						cmd = v.RefreshTreeNodes()
+					case *gohost.SysHost:
+						v.selectedNodeType = NodeSysHost
+						v.onHostNodeSelected(&cmds)
+					case *gohost.LocalHost:
+						v.selectedNodeType = NodeLocalHost
+						v.onHostNodeSelected(&cmds)
+					case *gohost.RemoteHost:
+						v.selectedNodeType = NodeRemoteHost
 						v.onHostNodeSelected(&cmds)
 					}
 				}
@@ -141,45 +148,8 @@ func (v *TreeView) SetHeight(height int) {
 	v.height = height
 }
 
-func (v *TreeView) unfoldSelectedGroup(cmds *[]tea.Cmd) {
-	subGroups := svc.ChildNodes(v.selectedNode.GetID())
-	idx := v.selectedIndex
-	for i := range subGroups {
-		idx++
-		*cmds = append(*cmds, v.nodeList.InsertItem(idx, subGroups[i]))
-	}
-	subHosts := svc.LoadHostNodes(v.selectedNode.GetID())
-	for i := range subHosts {
-		idx++
-		*cmds = append(*cmds, v.nodeList.InsertItem(idx, subHosts[i]))
-	}
-}
-
-func (v *TreeView) foldSelectedGroup() {
-	items := v.nodeList.Items()
-	next := v.selectedIndex + 1
-	for i := next; i < len(items); i++ {
-		if items[next] == nil {
-			break
-		}
-		node := items[next].(*gohost.TreeNode)
-		if node.Depth() > v.selectedNode.Depth() {
-			node.SetFolded(true)
-			v.nodeList.RemoveItem(next)
-		} else {
-			break
-		}
-	}
-}
-
-func (v *TreeView) onGroupNodeSelected(cmds *[]tea.Cmd) {
-	folded := v.selectedNode.IsFolded()
-	if folded {
-		v.unfoldSelectedGroup(cmds)
-	} else {
-		v.foldSelectedGroup()
-	}
-	v.selectedNode.SetFolded(!folded)
+func (v *TreeView) RefreshTreeNodes() tea.Cmd {
+	return v.nodeList.SetItems(svc.TreeNodeItem())
 }
 
 func (v *TreeView) onHostNodeSelected(cmds *[]tea.Cmd) {

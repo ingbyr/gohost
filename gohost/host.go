@@ -1,6 +1,7 @@
 package gohost
 
 import (
+	"github.com/charmbracelet/bubbles/list"
 	"github.com/timshannon/bolthold"
 	"gohost/db"
 	"gohost/util"
@@ -32,14 +33,14 @@ func (s *Service) LoadHosts(groupID db.ID) []Host {
 	return s.loadLocalHosts(groupID)
 }
 
-func (s *Service) LoadHostNodes(groupID db.ID) []*TreeNode {
+func (s *Service) LoadHostNodesItem(groupID db.ID) []list.Item{
 	groupNode := s.nodes[groupID]
 	if groupNode == nil {
 		return nil
 	}
 	hostNodeDepth := groupNode.depth + 1
 	hosts := s.LoadHosts(groupID)
-	hostNodes := make([]*TreeNode, 0, len(hosts))
+	hostNodes := make([]list.Item, 0, len(hosts))
 	for _, host := range hosts {
 		node := NewTreeNode(host)
 		node.SetDepth(hostNodeDepth)

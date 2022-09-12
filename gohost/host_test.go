@@ -18,6 +18,13 @@ func TestService_SaveHost(t *testing.T) {
 			Desc:    "host1000",
 			GroupID: 3,
 		},
+		&LocalHost{
+			ID:      1001,
+			Name:    "host-1",
+			Content: []byte("127.0.0.2 localhost"),
+			Desc:    "host1000",
+			GroupID: 0,
+		},
 	}
 
 	for _, host := range hosts {
@@ -28,7 +35,7 @@ func TestService_SaveHost(t *testing.T) {
 }
 
 func TestService_LoadHost(t *testing.T) {
-	hosts := GetService().loadLocalHosts(3)
+	hosts := GetService().loadLocalHosts(0)
 	for _, host := range hosts {
 		fmt.Printf("%+v\n", host)
 	}

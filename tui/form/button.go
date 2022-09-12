@@ -12,7 +12,7 @@ import (
 func NewButton(text string) *Button {
 	return &Button{
 		Text:           text,
-		OnClick:        func() {},
+		OnClick:        func() tea.Cmd { return nil },
 		focused:        false,
 		focusedStyle:   styles.None,
 		unfocusedStyle: styles.None,
@@ -21,7 +21,7 @@ func NewButton(text string) *Button {
 
 type Button struct {
 	Text           string
-	OnClick        func()
+	OnClick        func() tea.Cmd
 	focused        bool
 	focusedStyle   lipgloss.Style
 	unfocusedStyle lipgloss.Style
@@ -36,7 +36,7 @@ func (b *Button) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		if key.Matches(m, keys.Enter) {
 			log.Debug("hit he button by enter")
-			b.OnClick()
+			return b, b.OnClick()
 		}
 	}
 	return b, nil

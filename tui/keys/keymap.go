@@ -36,8 +36,8 @@ var (
 		key.WithHelp("enter", "select or confirm"),
 	)
 	Switch = key.NewBinding(
-		key.WithKeys("ctrl+e"),
-		key.WithHelp("ctrl+e", "switch helpView"),
+		key.WithKeys("tab"),
+		key.WithHelp("tab", "switch helpView"),
 	)
 	Save = key.NewBinding(
 		key.WithKeys("ctrl+s"),

@@ -57,7 +57,15 @@ func (s *Service) SaveGroup(group *Group) error {
 	if err != nil {
 		return err
 	}
-	// FIXME set correct depth
-	s.nodes[group.ID] = NewTreeNode(group)
+	return nil
+}
+
+func (s *Service) SaveGroupNode(groupNode *TreeNode) error {
+	group := groupNode.Node.(*Group)
+	if err := s.SaveGroup(group); err != nil {
+		return err
+	}
+	s.nodes[groupNode.GetID()] = groupNode
+	groupNode.parent.children = append(groupNode.parent.children, groupNode)
 	return nil
 }

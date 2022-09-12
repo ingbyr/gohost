@@ -41,15 +41,25 @@ func (n *TreeNode) Description() string {
 }
 
 func (n *TreeNode) FilterValue() string {
+	if n.Node == nil {
+		return ""
+	}
 	return n.Node.FilterValue()
 }
 
 func (n *TreeNode) GetID() db.ID {
+	if n.Node == nil {
+		return 0
+	}
 	return n.Node.GetID()
 }
 
 func (n *TreeNode) Parent() *TreeNode {
 	return n.parent
+}
+
+func (n *TreeNode) SetParent(parent *TreeNode) {
+	n.parent = parent
 }
 
 func (n *TreeNode) Children() []*TreeNode {
@@ -71,4 +81,8 @@ func (n *TreeNode) IsFolded() bool {
 
 func (n *TreeNode) SetFolded(isFolded bool) {
 	n.isFolded = isFolded
+}
+
+func (n *TreeNode) FlipFolded() {
+	n.isFolded = !n.isFolded
 }

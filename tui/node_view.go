@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"gohost/db"
 	"gohost/gohost"
 	"gohost/log"
 	"gohost/tui/form"
@@ -34,38 +33,54 @@ func NewNodeView(model *Model) *NodeView {
 	urlTextInput.Prompt = "Url: "
 
 	// Node type choices
-	nodeTypeChoices := form.NewChoice([]list.DefaultItem{GroupNode, LocalHost, RemoteHost})
+	nodeTypeChoices := form.NewChoice([]list.DefaultItem{NodeGroup, NodeLocalHost, NodeRemoteHost})
 	nodeTypeChoices.Spacing = 1
 	nodeTypeChoices.ShowMorePlaceHold = false
 
 	// Confirm button
 	confirmButton := form.NewButton("[ Confirm ]")
-	confirmButton.OnClick = func() {
+	confirmButton.OnClick = func() tea.Cmd {
 		log.Debug(fmt.Sprintf("name %s, desc %s, url %s, choice %s",
 			nameTextInput.Value(), descTextInput.Value(), urlTextInput.Value(), nodeTypeChoices.SelectedItem()))
+		var cmd tea.Cmd
 		selectedNode := model.treeView.selectedNode
-		parent := selectedNode.Parent()
-		var parentID db.ID = 0
-		if parent != nil {
-			parentID = parent.GetID()
-			log.Debug(fmt.Sprintf("parent is %s", parent.Title()))
-		} else {
-			log.Debug(fmt.Sprintf("parent is root"))
+		selectedNodeType := model.treeView.selectedNodeType
+
+		// Get parent node
+		var parent *gohost.TreeNode
+		switch selectedNodeType {
+		case NodeSysHost, NodeLocalHost, NodeRemoteHost:
+			parent = selectedNode.Parent()
+		case NodeGroup:
+			parent = selectedNode
 		}
-		switch selectedNode.Node.(type) {
-		case *gohost.Group:
-			err := svc.SaveGroup(&gohost.Group{
-				ParentID: parentID,
+
+		if nodeTypeChoices.SelectedItem() == nil {
+			log.Debug(fmt.Sprintf("no node type was selected"))
+			return nil
+		}
+
+		switch nodeTypeChoices.SelectedItem() {
+		case NodeGroup:
+			node := &gohost.Group{
+				ParentID: parent.GetID(),
 				Name:     nameTextInput.Value(),
 				Desc:     descTextInput.Value(),
-			})
+			}
+			groupNode := gohost.NewTreeNode(node)
+			groupNode.SetParent(parent)
+			groupNode.SetDepth(parent.Depth() + 1)
+			err := svc.SaveGroupNode(groupNode)
 			if err != nil {
 				// TODO display error in tui
 				log.Error(err)
 			}
-		case gohost.Host:
-
+			cmd = model.treeView.RefreshTreeNodes()
+		case NodeLocalHost:
+		case NodeRemoteHost:
 		}
+		model.switchState(treeViewState)
+		return cmd
 	}
 
 	nodeForm := &NodeView{
@@ -94,19 +109,17 @@ func (v *NodeView) Init() tea.Cmd {
 }
 
 func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
-	var cmds []tea.Cmd
+	if v.model.state != nodeViewState {
+		return v, nil
+	}
 	switch m := msg.(type) {
 	case tea.WindowSizeMsg:
 		log.Debug(fmt.Sprintf("node view w %d h %d", m.Width, m.Height))
 	case tea.KeyMsg:
-		if v.model.state == nodeViewState {
-			return v.Form.Update(msg)
-		}
+		return v.Form.Update(msg)
 	}
-	_, cmd = v.Form.Update(msg)
-	cmds = append(cmds, cmd)
-	return v, tea.Batch(cmds...)
+	_, cmd := v.Form.Update(msg)
+	return v, cmd
 }
 
 func (v *NodeView) View() string {

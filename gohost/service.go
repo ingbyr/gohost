@@ -1,6 +1,7 @@
 package gohost
 
 import (
+	"github.com/charmbracelet/bubbles/list"
 	"gohost/config"
 	"gohost/db"
 	"os"
@@ -16,18 +17,23 @@ var (
 func GetService() *Service {
 	serviceOnce.Do(func() {
 		service = NewService()
-		service.Load()
+		service.LoadTree()
 	})
 	return service
 }
 
 func NewService() *Service {
-
 	return &Service{
-		store:       db.Instance(),
-		nodes:       make(map[db.ID]*TreeNode, 0),
-		tree:        make([]*TreeNode, 0),
-		SysHost:     SysHostInstance(),
+		store: db.Instance(),
+		nodes: make(map[db.ID]*TreeNode, 0),
+		tree: &TreeNode{
+			Node:     nil,
+			parent:   nil,
+			children: make([]*TreeNode, 0),
+			depth:    -1,
+			isFolded: false,
+			spaces:   "",
+		},
 		SysHostNode: NewTreeNode(SysHostInstance()),
 	}
 }
@@ -35,17 +41,17 @@ func NewService() *Service {
 type Service struct {
 	store       *db.Store
 	nodes       map[db.ID]*TreeNode
-	tree        []*TreeNode
-	SysHost     Host
+	tree        *TreeNode
 	SysHostNode *TreeNode
 }
 
 // Tree the system host tree node is always first
-func (s *Service) Tree() []*TreeNode {
+func (s *Service) Tree() *TreeNode {
 	return s.tree
 }
 
 func (s *Service) cacheNodes(nodes []*TreeNode) {
+	nodes[0] = s.tree
 	for _, node := range nodes {
 		s.nodes[node.GetID()] = node
 	}
@@ -54,21 +60,22 @@ func (s *Service) cacheNodes(nodes []*TreeNode) {
 func (s *Service) buildTree(nodes []*TreeNode) {
 	// Build tree
 	for _, node := range nodes {
-		p, exist := s.nodes[node.Node.GetParentID()]
-		if !exist {
-			s.tree = append(s.tree, node)
+		if node == s.tree {
 			continue
 		}
-		node.SetDepth(p.depth + 1)
-		node.parent = p
+		p, exist := s.nodes[node.Node.GetParentID()]
+		if !exist {
+			p = s.tree
+		}
+		node.SetParent(p)
 		p.children = append(p.children, node)
 	}
 	// Bfs to set depth
-	queue := s.tree
+	queue := s.tree.children
 	depth := 0
 	for len(queue) > 0 {
 		for _, treeNode := range queue {
-			treeNode.depth = depth
+			treeNode.SetDepth(depth)
 			queue = append(queue, treeNode.children...)
 			queue = queue[1:]
 		}
@@ -76,11 +83,39 @@ func (s *Service) buildTree(nodes []*TreeNode) {
 	}
 }
 
-func (s *Service) Load() {
+func (s *Service) LoadTree() {
 	nodes := []*TreeNode{s.SysHostNode}
 	nodes = append(nodes, s.loadGroupNodes()...)
 	s.cacheNodes(nodes)
 	s.buildTree(nodes)
+}
+
+func (s *Service) TreeNodeItem() []list.Item {
+	nodes := make([]list.Item, 0)
+	s.treeNodesItem([]*TreeNode{s.tree}, &nodes)
+	return nodes
+}
+
+func (s *Service) treeNodesItem(nodes []*TreeNode, res *[]list.Item) {
+	if len(nodes) == 0 {
+		return
+	}
+	for _, node := range nodes {
+		if node != s.tree {
+			*res = append(*res, node)
+		}
+		if !node.IsFolded() {
+			s.treeNodesItem(node.Children(), res)
+			*res = append(*res, s.LoadHostNodesItem(node.GetID())...)
+		}
+	}
+}
+
+func (s *Service) Node(nodeID db.ID) *TreeNode {
+	if nodeID <= 0 {
+		return s.tree
+	}
+	return s.nodes[nodeID]
 }
 
 func (s *Service) ChildNodes(nodeID db.ID) []*TreeNode {

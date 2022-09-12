@@ -1,12 +1,10 @@
 package form
 
 import (
-	"fmt"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"gohost/log"
 	"gohost/tui/keys"
 	"strings"
 )
@@ -80,8 +78,6 @@ func (c *Choices) Init() tea.Cmd {
 }
 
 func (c *Choices) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
-	var cmds []tea.Cmd
 	switch m := msg.(type) {
 	case tea.KeyMsg:
 		switch {
@@ -99,9 +95,8 @@ func (c *Choices) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	}
-	log.Debug(fmt.Sprintf("choice cursor %d selected %d", c.cursorIndex, c.selectedIndex))
-	cmds = append(cmds, cmd)
-	return c, tea.Batch(cmds...)
+	//log.Debug(fmt.Sprintf("choice cursor %d selected %d", c.cursorIndex, c.selectedIndex))
+	return c, nil
 }
 
 func (c *Choices) Focus(mode FocusMode) tea.Cmd {

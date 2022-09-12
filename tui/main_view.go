@@ -22,7 +22,7 @@ const (
 	helpViewState
 	lastViewState
 
-	initViewState = treeViewState
+	initViewState = nodeViewState
 )
 
 var (
