@@ -47,6 +47,10 @@ var (
 		key.WithKeys("c"),
 		key.WithHelp("c", "new"),
 	)
+	Delete = key.NewBinding(
+		key.WithKeys("x", "delete"),
+		key.WithHelp("c/delete", "delete"),
+	)
 )
 
 func Arrows() []key.Binding {

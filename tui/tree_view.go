@@ -113,25 +113,38 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		switch {
 		case key.Matches(m, keys.Enter):
+			// Click the node
 			selectedNode := v.SelectedNode()
 			switch node := selectedNode.Node.(type) {
 			case *gohost.Group:
 				if selectedNode.IsFolded() {
 					selectedNode.SetFolded(false)
-					svc.LoadNodesByParentID(selectedNode.GetID())
+					svc.LoadNodesByParent(selectedNode)
 				} else {
 					selectedNode.SetFolded(true)
 					svc.RemoveNodesByParentID(selectedNode.GetID())
 				}
 				cmd = v.RefreshTreeNodes()
-				cmds = append(cmds, cmd)
 			case gohost.Host:
 				v.onHostNodeSelected(node, &cmds)
 			}
+
 		case key.Matches(m, keys.New):
+			// Create new node
 			v.model.switchState(nodeViewState)
+
+		case key.Matches(m, keys.Delete):
+			// Delete node
+			selectedNode := v.SelectedNode()
+			switch selectedNode.Node.(type) {
+			case *gohost.Group:
+				svc.DeleteGroupNode(selectedNode)
+			case gohost.Host:
+			}
+			cmd = v.RefreshTreeNodes()
 		}
 	}
+	cmds = append(cmds, cmd)
 	v.nodeList, cmd = v.nodeList.Update(msg)
 	//log.Debug(fmt.Sprintf("cursor at %d, selected item %v",
 	//	v.nodeList.Cursor(), v.nodeList.SelectedItem().FilterValue()))

@@ -54,6 +54,15 @@ func (n *TreeNode) SetChildren(children []*TreeNode) {
 	n.children = children
 }
 
+func (n *TreeNode) RemoveChild(child *TreeNode) {
+	for i := range n.children {
+		if n.children[i] == child {
+			n.SetChildren(append(n.children[:i], n.children[i+1:]...))
+			return
+		}
+	}
+}
+
 func (n *TreeNode) Depth() int {
 	return n.depth
 }

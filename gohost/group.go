@@ -43,7 +43,7 @@ func (s *Service) loadGroups() []*Group {
 	return groups
 }
 
-func (s *Service) loadGroupsByParenID(parentID db.ID) []*Group {
+func (s *Service) loadGroupsByParentID(parentID db.ID) []*Group {
 	var groups []*Group
 	if err := s.store.FindNullable(&groups, bolthold.Where("ParentID").Eq(parentID)); err != nil {
 		panic(err)
@@ -51,9 +51,8 @@ func (s *Service) loadGroupsByParenID(parentID db.ID) []*Group {
 	return groups
 }
 
-
 func (s *Service) loadGroupNodesByParent(parent *TreeNode) []*TreeNode {
-	groups := s.loadGroupsByParenID(parent.GetID())
+	groups := s.loadGroupsByParentID(parent.GetID())
 	nodes := make([]*TreeNode, len(groups))
 	for i := range groups {
 		node := NewTreeNode(groups[i])
@@ -78,4 +77,23 @@ func (s *Service) SaveGroupNode(groupNode *TreeNode) error {
 	}
 	s.nodes[groupNode.GetID()] = groupNode
 	return nil
+}
+
+func (s *Service) DeleteGroup(groupID db.ID) {
+	err := s.store.DeleteMatching(&Group{}, bolthold.Where("ID").Eq(groupID))
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s *Service) DeleteGroupNode(group *TreeNode) {
+	s.DeleteGroup(group.GetID())
+	// Delete from parent
+	group.Parent().RemoveChild(group)
+	children := s.LoadNodesByParent(group)
+	for i := range children {
+		s.DeleteGroupNode(children[i])
+	}
+	// Delete node cache
+	s.nodes[group.GetID()] = nil
 }

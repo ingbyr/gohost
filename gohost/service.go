@@ -78,14 +78,6 @@ func (s *Service) buildTree(nodes []*TreeNode) {
 	}
 }
 
-func (s *Service) loadTree() {
-	s.nodes[0] = s.tree
-	nodes := []*TreeNode{s.SysHostNode}
-	nodes = append(nodes, s.LoadNodesByParentID(0)...)
-	s.cacheNodes(nodes)
-	s.buildTree(nodes)
-}
-
 func (s *Service) TreeNodesAsItem() []list.Item {
 	nodes := make([]list.Item, 0)
 	s.treeNodesAsItem([]*TreeNode{s.tree}, &nodes)
@@ -107,16 +99,12 @@ func (s *Service) treeNodesAsItem(nodes []*TreeNode, res *[]list.Item) {
 }
 
 func (s *Service) LoadRootNodes() []*TreeNode {
-	return s.LoadNodesByParentID(0)
+	return s.LoadNodesByParent(s.tree)
 }
 
-func (s *Service) LoadNodesByParentID(parentID db.ID) []*TreeNode {
-	parent := s.nodes[parentID]
-	if parent == nil {
-		panic("Cache the parent node first before load nodes by parent id")
-	}
+func (s *Service) LoadNodesByParent(parent *TreeNode) []*TreeNode {
 	var nodes []*TreeNode
-	if parentID == 0 {
+	if parent == s.tree {
 		nodes = append(nodes, s.SysHostNode)
 	}
 	nodes = append(nodes, s.loadGroupNodesByParent(parent)...)
