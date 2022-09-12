@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"gohost/gohost"
@@ -117,6 +118,9 @@ func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		log.Debug(fmt.Sprintf("node view w %d h %d", m.Width, m.Height))
 	case tea.KeyMsg:
+		if key.Matches(m, keys.Esc) {
+			v.model.switchState(treeViewState)
+		}
 		return v.Form.Update(msg)
 	}
 	_, cmd := v.Form.Update(msg)

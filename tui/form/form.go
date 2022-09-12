@@ -159,19 +159,35 @@ func (v *Form) focusPreItem() []tea.Cmd {
 }
 
 func (v *Form) idxAfterFocusItem() int {
-	idx := v.focus + 1
-	if idx >= len(v.Items) {
-		idx = 0
+	idx := v.focus
+	for {
+		idx++
+		if idx >= len(v.Items) {
+			idx = 0
+		}
+		if !v.Items[idx].Hide() {
+			return idx
+		}
+		if idx == v.focus {
+			return v.focus
+		}
 	}
-	return idx
 }
 
 func (v *Form) idxBeforeFocusItem() int {
-	idx := v.focus - 1
-	if idx < 0 {
-		idx = len(v.Items) - 1
+	idx := v.focus
+	for {
+		idx--
+		if idx < 0 {
+			idx = len(v.Items) - 1
+		}
+		if !v.Items[idx].Hide() {
+			return idx
+		}
+		if idx == v.focus {
+			return v.focus
+		}
 	}
-	return idx
 }
 
 func (v *Form) setFocusItem(idx int, mode FocusMode) []tea.Cmd {
