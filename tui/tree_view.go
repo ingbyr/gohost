@@ -71,12 +71,9 @@ func (d *nodeItemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
 
 // TreeView is tui helpView for nodes tree
 type TreeView struct {
-	model            *Model
-	nodeList         list.Model
-	selectedNode     *gohost.TreeNode
-	selectedNodeType *NodeType
-	selectedIndex    int
-	width, height    int
+	model         *Model
+	nodeList      list.Model
+	width, height int
 }
 
 func NewTreeView(model *Model) *TreeView {
@@ -86,12 +83,11 @@ func NewTreeView(model *Model) *TreeView {
 	nodeList.Title = "gohost"
 	nodeList.SetShowStatusBar(false)
 	nodeList.SetShowHelp(false)
+	nodeList.Select(0)
 
 	return &TreeView{
-		model:            model,
-		nodeList:         nodeList,
-		selectedNode:     svc.SysHostNode,
-		selectedNodeType: NodeSysHost,
+		model:    model,
+		nodeList: nodeList,
 	}
 }
 
@@ -113,26 +109,16 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if v.model.state == treeViewState {
 			switch {
 			case key.Matches(m, keys.Enter):
-				selectedItem := v.nodeList.SelectedItem()
-				if selectedItem != nil {
-					v.selectedNode = selectedItem.(*gohost.TreeNode)
-					v.selectedIndex = v.nodeList.Index()
-					switch v.selectedNode.Node.(type) {
-					case *gohost.Group:
-						v.selectedNodeType = NodeGroup
-						v.selectedNode.FlipFolded()
-						cmd = v.RefreshTreeNodes()
-					case *gohost.SysHost:
-						v.selectedNodeType = NodeSysHost
-						v.onHostNodeSelected(&cmds)
-					case *gohost.LocalHost:
-						v.selectedNodeType = NodeLocalHost
-						v.onHostNodeSelected(&cmds)
-					case *gohost.RemoteHost:
-						v.selectedNodeType = NodeRemoteHost
-						v.onHostNodeSelected(&cmds)
-					}
+				selectedNode := v.SelectedNode()
+				switch node := selectedNode.Node.(type) {
+				case *gohost.Group:
+					selectedNode.FlipFolded()
+					cmd = v.RefreshTreeNodes()
+				case gohost.Host:
+					v.onHostNodeSelected(node, &cmds)
 				}
+			case key.Matches(m, keys.New):
+				v.model.switchState(nodeViewState)
 			}
 		} else {
 			// Disable key
@@ -140,6 +126,8 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 	v.nodeList, cmd = v.nodeList.Update(msg)
+	log.Debug(fmt.Sprintf("cursor at %d, selected item %v",
+		v.nodeList.Cursor(), v.nodeList.SelectedItem().FilterValue()))
 	cmds = append(cmds, cmd)
 	return v, tea.Batch(cmds...)
 }
@@ -170,9 +158,12 @@ func (v *TreeView) RefreshTreeNodes() tea.Cmd {
 	return v.nodeList.SetItems(svc.TreeNodeItem())
 }
 
-func (v *TreeView) onHostNodeSelected(cmds *[]tea.Cmd) {
-	selectedHost := v.selectedNode.Node.(gohost.Host)
-	log.Debug("select host: " + selectedHost.Title())
+func (v *TreeView) SelectedNode() *gohost.TreeNode {
+	return v.nodeList.SelectedItem().(*gohost.TreeNode)
+}
+
+func (v *TreeView) onHostNodeSelected(host gohost.Host, cmds *[]tea.Cmd) {
+	log.Debug("select host: " + host.Title())
 	v.model.switchState(editorViewState)
-	v.model.editorView.SetHost(selectedHost)
+	v.model.editorView.SetHost(host)
 }

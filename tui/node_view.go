@@ -42,24 +42,24 @@ func NewNodeView(model *Model) *NodeView {
 	confirmButton.OnClick = func() tea.Cmd {
 		log.Debug(fmt.Sprintf("name %s, desc %s, url %s, choice %s",
 			nameTextInput.Value(), descTextInput.Value(), urlTextInput.Value(), nodeTypeChoices.SelectedItem()))
-		var cmd tea.Cmd
-		selectedNode := model.treeView.selectedNode
-		selectedNodeType := model.treeView.selectedNodeType
-
-		// Get parent node
-		var parent *gohost.TreeNode
-		switch selectedNodeType {
-		case NodeSysHost, NodeLocalHost, NodeRemoteHost:
-			parent = selectedNode.Parent()
-		case NodeGroup:
-			parent = selectedNode
-		}
-
+		// Check inputs
 		if nodeTypeChoices.SelectedItem() == nil {
 			log.Debug(fmt.Sprintf("no node type was selected"))
 			return nil
 		}
 
+		// Get parent node
+		selectedNode := model.treeView.SelectedNode()
+		selectedNode.SetFolded(false)
+		var parent *gohost.TreeNode
+		switch selectedNode.Node.(type) {
+		case *gohost.Group:
+			parent = selectedNode
+		case gohost.Host:
+			parent = selectedNode.Parent()
+		}
+
+		var cmd tea.Cmd
 		switch nodeTypeChoices.SelectedItem() {
 		case NodeGroup:
 			node := &gohost.Group{
@@ -70,10 +70,8 @@ func NewNodeView(model *Model) *NodeView {
 			groupNode := gohost.NewTreeNode(node)
 			groupNode.SetParent(parent)
 			groupNode.SetDepth(parent.Depth() + 1)
-			err := svc.SaveGroupNode(groupNode)
-			if err != nil {
-				// TODO display error in tui
-				log.Error(err)
+			if err := svc.SaveGroupNode(groupNode);err != nil {
+				panic(err)
 			}
 			cmd = model.treeView.RefreshTreeNodes()
 		case NodeLocalHost:
