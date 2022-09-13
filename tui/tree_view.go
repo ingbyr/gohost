@@ -30,33 +30,41 @@ func newNodeItemDelegate() *nodeItemDelegate {
 }
 
 func (d *nodeItemDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
-
 	node, ok := item.(*gohost.TreeNode)
 	if !ok {
 		return
 	}
+
 	var str string
+	if node.IsEnabled() {
+		str = "+" + str
+	} else {
+		str = "-" + str
+	}
+
 	switch node.Node.(type) {
 	case *gohost.Group:
 		var icon string
 		if node.IsFolded() {
-			icon = "/ "
-		} else {
 			icon = "| "
+		} else {
+			icon = "/ "
 		}
-		str = strings.Repeat(" ", node.Depth()) + icon + node.Title()
+		str = strings.Repeat(" ", node.Depth()) + str + icon + node.Title()
 	case *gohost.SysHost:
-		str = strings.Repeat(" ", node.Depth()) + "* " + node.Title()
+		str = strings.Repeat(" ", node.Depth()) + str + "* " + node.Title()
 	case *gohost.LocalHost:
-		str = strings.Repeat(" ", node.Depth()) + "# " + node.Title()
+		str = strings.Repeat(" ", node.Depth()) + str + "# " + node.Title()
 	case *gohost.RemoteHost:
-		str = strings.Repeat(" ", node.Depth()) + "@" + node.Title()
+		str = strings.Repeat(" ", node.Depth()) + str + "@" + node.Title()
 	}
+
 	if m.Index() == index {
 		str = d.selectedStyle.Render("> " + str)
 	} else {
 		str = d.normalStyle.Render("  " + str)
 	}
+
 	if len(str) > d.width {
 		if d.width <= 3 {
 			str = strings.Repeat(" ", d.width)
@@ -135,11 +143,11 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if v.model.state != treeViewState {
 			return v, nil
 		}
+		selectedNode := v.SelectedNode()
 		switch {
 		case key.Matches(m, keys.Esc):
 			return v, nil
 		case key.Matches(m, keys.Enter):
-			selectedNode := v.SelectedNode()
 			switch node := selectedNode.Node.(type) {
 			case *gohost.Group:
 				cmd = func() tea.Msg {
@@ -168,10 +176,12 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case key.Matches(m, keys.Delete):
 			cmd = func() tea.Msg {
-				selectedNode := v.SelectedNode()
 				svc.DeleteNode(selectedNode)
 				return RefreshTreeViewItems{}
 			}
+		case key.Matches(m, keys.Apply):
+			selectedNode.SetEnabled(!selectedNode.IsEnabled())
+			svc.UpdateNode(selectedNode)
 		}
 	}
 

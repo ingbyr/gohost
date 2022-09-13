@@ -17,6 +17,7 @@ func SysHostInstance() Host {
 		sysHostInstance = &SysHost{
 			Name: "System Host",
 			Desc: cfg.SysHostFile,
+			Flag: MaskEnable,
 		}
 	})
 	return sysHostInstance

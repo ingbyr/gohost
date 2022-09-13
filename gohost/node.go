@@ -16,7 +16,6 @@ type Node interface {
 const (
 	MaskFold = 1 << iota
 	MaskEnable
-	MaskEditable
 )
 
 type TreeNode struct {

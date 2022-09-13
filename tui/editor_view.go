@@ -80,7 +80,7 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(m, keys.Save):
 			if v.host.IsEditable() {
 				v.host.SetContent([]byte(v.hostEditor.Value()))
-				err := gohost.GetService().UpdateHost(v.host)
+				err := svc.UpdateHost(v.host)
 				if err != nil {
 					log.Debug(err.Error())
 				} else {

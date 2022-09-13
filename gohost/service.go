@@ -157,6 +157,12 @@ func (s *Service) DeleteNode(node *TreeNode) {
 	}
 }
 
+func (s *Service) UpdateNode(node *TreeNode) {
+	if err := s.store.Update(node.GetID(), node.Node); err != nil {
+		panic(err)
+	}
+}
+
 func (s *Service) ApplyHost(hosts []byte) {
 	// Truncate system host file
 	sysHostFile, err := os.Create(cfg.SysHostFile)
