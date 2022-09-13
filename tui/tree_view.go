@@ -135,12 +135,7 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case key.Matches(m, keys.Delete):
 			selectedNode := v.SelectedNode()
-			switch selectedNode.Node.(type) {
-			case *gohost.Group:
-				svc.DeleteGroupNode(selectedNode)
-			case gohost.Host:
-				svc.DeleteLocalHostNode(selectedNode)
-			}
+			svc.DeleteNode(selectedNode)
 			cmd = v.RefreshTreeNodes()
 		}
 	}

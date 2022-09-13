@@ -78,13 +78,13 @@ func (s *Service) DeleteLocalHost(id db.ID) error {
 	return s.store.Delete(id, &LocalHost{})
 }
 
-func (s *Service) DeleteLocalHostNode(hostNode *TreeNode) {
-	// Delete from db
-	if err := s.DeleteLocalHost(hostNode.GetID()); err != nil {
-		panic(err)
-	}
-	// Delete from cache
-	s.nodes[hostNode.GetID()] = nil
-	// Delete from parent node
-	hostNode.Parent().RemoveChild(hostNode)
-}
+//func (s *Service) DeleteLocalHostNode(hostNode *TreeNode) {
+//	// Delete from db
+//	if err := s.DeleteLocalHost(hostNode.GetID()); err != nil {
+//		panic(err)
+//	}
+//	// Delete from cache
+//	s.nodes[hostNode.GetID()] = nil
+//	// Delete from parent node
+//	hostNode.Parent().RemoveChild(hostNode)
+//}

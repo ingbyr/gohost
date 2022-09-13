@@ -17,7 +17,7 @@ var (
 func GetService() *Service {
 	serviceOnce.Do(func() {
 		service = NewService()
-		service.LoadRootNodes()
+		service.loadRootNodes()
 	})
 	return service
 }
@@ -98,7 +98,7 @@ func (s *Service) treeNodesAsItem(nodes []*TreeNode, res *[]list.Item) {
 	}
 }
 
-func (s *Service) LoadRootNodes() []*TreeNode {
+func (s *Service) loadRootNodes() []*TreeNode {
 	return s.LoadNodesByParent(s.tree)
 }
 
@@ -147,4 +147,30 @@ func (s *Service) extractID(node Node) db.ID {
 		return s.store.NextID()
 	}
 	return node.GetID()
+}
+
+func (s *Service) DeleteNode(node *TreeNode) {
+	if node == nil || node.Node == nil || node == s.SysHostNode {
+		return
+	}
+	if node == s.tree {
+		panic("Can not delete dummy root node")
+	}
+	node.Parent().RemoveChild(node)
+	s.nodes[node.GetID()] = nil
+	switch node.Node.(type) {
+	case *Group:
+		if err := s.DeleteGroup(node.GetID()); err != nil {
+			panic(err)
+		}
+		for _, childNode := range node.Children() {
+			s.DeleteNode(childNode)
+		}
+	case *LocalHost:
+		if err := s.DeleteLocalHost(node.GetID()); err != nil {
+			panic(err)
+		}
+	case *RemoteHost:
+
+	}
 }
