@@ -180,8 +180,13 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return RefreshTreeViewItems{}
 			}
 		case key.Matches(m, keys.Apply):
-			selectedNode.SetEnabled(!selectedNode.IsEnabled())
-			svc.UpdateNode(selectedNode)
+			cmd = func() tea.Msg {
+				selectedNode.SetEnabled(!selectedNode.IsEnabled())
+				svc.UpdateNode(selectedNode)
+				svc.EnableNode(selectedNode)
+				// TODO
+				return RefreshTreeViewItems{}
+			}
 		}
 	}
 

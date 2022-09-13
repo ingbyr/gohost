@@ -180,3 +180,7 @@ func (s *Service) EnableHost() {
 	// TODO enable as group node
 	// TODO enable as localhost node
 }
+
+func (s *Service) EnableNode(node *TreeNode) {
+	// TODO Load all enable nodes
+}
