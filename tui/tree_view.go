@@ -18,42 +18,55 @@ import (
 type nodeItemDelegate struct {
 	selectedStyle lipgloss.Style
 	normalStyle   lipgloss.Style
+	width         int
 }
 
 func newNodeItemDelegate() *nodeItemDelegate {
 	return &nodeItemDelegate{
 		selectedStyle: styles.FocusedFormItem,
 		normalStyle:   styles.UnfocusedFormItem,
+		width:         0,
 	}
 }
 
 func (d *nodeItemDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
+
 	node, ok := item.(*gohost.TreeNode)
 	if !ok {
 		return
 	}
 	var str string
-	switch node.Node.(type) {
-	case *gohost.Group:
-		var icon string
-		if node.IsFolded() {
-			icon = "📁"
-		} else {
-			icon = "📂"
-		}
-		str = strings.Repeat(" ", node.Depth()) + icon + node.Title()
-	case *gohost.SysHost:
-		str = strings.Repeat(" ", node.Depth()) + "🐝" + node.Title()
-	case *gohost.LocalHost:
-		str = strings.Repeat(" ", node.Depth()) + "📑" + node.Title()
-	case *gohost.RemoteHost:
-		str = strings.Repeat(" ", node.Depth()) + "🌐" + node.Title()
-	}
-	if m.Index() == index {
-		str = d.selectedStyle.Render("> " + str)
+	if d.width <= 3 {
+		str = strings.Repeat(".", d.width)
 	} else {
-		str = d.normalStyle.Render("  " + str)
+		switch node.Node.(type) {
+		case *gohost.Group:
+			var icon string
+			if node.IsFolded() {
+				icon = "📁"
+			} else {
+				icon = "📂"
+			}
+			str = strings.Repeat(" ", node.Depth()) + icon + node.Title()
+		case *gohost.SysHost:
+			str = strings.Repeat(" ", node.Depth()) + "🐝" + node.Title()
+		case *gohost.LocalHost:
+			str = strings.Repeat(" ", node.Depth()) + "📑" + node.Title()
+		case *gohost.RemoteHost:
+			str = strings.Repeat(" ", node.Depth()) + "🌐" + node.Title()
+		}
+		if m.Index() == index {
+			str = d.selectedStyle.Render("> " + str)
+		} else {
+			str = d.normalStyle.Render("  " + str)
+		}
+		if len(str) > d.width {
+			str = str[:d.width-3] + "..."
+		} else if len(str) < d.width {
+			str = str + strings.Repeat(" ", d.width-len(str))
+		}
 	}
+
 	_, _ = fmt.Fprint(w, str)
 }
 
@@ -69,17 +82,23 @@ func (d *nodeItemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
 	return nil
 }
 
+func (d *nodeItemDelegate) SetWidth(width int) {
+	d.width = width
+}
+
 // TreeView is tui helpView for nodes tree
 type TreeView struct {
-	model         *Model
-	nodeList      list.Model
-	width, height int
+	model            *Model
+	nodeList         list.Model
+	nodeItemDelegate *nodeItemDelegate
+	width, height    int
 }
 
 func NewTreeView(model *Model) *TreeView {
 	// Create nodes list helpView
 	nodes := svc.TreeNodesAsItem()
-	nodeList := list.New(nodes, newNodeItemDelegate(), 0, 0)
+	delegate := newNodeItemDelegate()
+	nodeList := list.New(nodes, delegate, 0, 0)
 	nodeList.Title = "gohost"
 	nodeList.SetShowStatusBar(false)
 	nodeList.SetShowHelp(false)
@@ -90,8 +109,9 @@ func NewTreeView(model *Model) *TreeView {
 	nodeList.Select(0)
 
 	return &TreeView{
-		model:    model,
-		nodeList: nodeList,
+		model:            model,
+		nodeList:         nodeList,
+		nodeItemDelegate: delegate,
 	}
 }
 
@@ -168,6 +188,7 @@ func (v *TreeView) View() string {
 
 func (v *TreeView) SetWidth(width int) {
 	v.nodeList.SetWidth(width)
+	v.nodeItemDelegate.SetWidth(width)
 	v.width = width
 }
 

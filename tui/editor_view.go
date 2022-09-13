@@ -5,18 +5,21 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"gohost/gohost"
 	"gohost/log"
 	"gohost/tui/keys"
 )
 
 type EditorView struct {
-	model      *Model
-	hostEditor textarea.Model
-	host       gohost.Host
-	statusLine string
-	saved      bool
-	prevLen    int
+	model         *Model
+	hostEditor    textarea.Model
+	host          gohost.Host
+	statusLine    string
+	statusMsg     string
+	saved         bool
+	prevLen       int
+	width, height int
 }
 
 func NewTextView(model *Model) *EditorView {
@@ -28,8 +31,11 @@ func NewTextView(model *Model) *EditorView {
 		hostEditor: hostEditor,
 		host:       nil,
 		statusLine: "",
+		statusMsg:  "",
 		saved:      true,
 		prevLen:    0,
+		width:      0,
+		height:     0,
 	}
 }
 
@@ -59,7 +65,8 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
 	case tea.WindowSizeMsg:
-		v.hostEditor.SetHeight(m.Height)
+		v.width, v.height = m.Width, m.Height
+		v.hostEditor.SetHeight(m.Height - 2)
 		v.hostEditor.SetWidth(m.Width)
 		log.Debug(fmt.Sprintf("editor view w %d h %d", m.Width, m.Height))
 	case tea.KeyMsg:
@@ -79,10 +86,9 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					v.SetSaved()
 				}
 			} else {
-				log.Debug("Can not edit this")
+				v.statusMsg = "Can not edit this"
 			}
 		}
-		v.statusLine = "hit key: " + m.String()
 	}
 	v.RefreshStatusLine()
 	v.hostEditor, cmd = v.hostEditor.Update(msg)
@@ -91,9 +97,13 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (v *EditorView) View() string {
-	// TODO add status line for editor view
-	//return lipgloss.JoinVertical(lipgloss.Top, v.hostEditor.View(), v.statusLine)
-	return v.hostEditor.View()
+	var statusLine string
+	if len(v.statusLine) > v.width {
+		statusLine = v.statusLine[:v.width-3] + "..."
+	} else {
+		statusLine = v.statusLine
+	}
+	return lipgloss.JoinVertical(lipgloss.Right, v.hostEditor.View(), "", statusLine)
 }
 
 func (v *EditorView) Focus() {
@@ -112,7 +122,11 @@ func (v *EditorView) SetHost(host gohost.Host) {
 }
 
 func (v *EditorView) RefreshStatusLine() {
-	//v.statusLine = fmt.Sprintf("file: %s, saved: %t\n", v.host.Title(), v.IsSaved())
+	if v.statusMsg == "" {
+		v.statusLine = fmt.Sprintf("[file: %s] [saved: %t]", v.host.Title(), v.IsSaved())
+	} else {
+		v.statusLine = fmt.Sprintf("[file: %s] [saved: %t] [info: %s]", v.host.Title(), v.IsSaved(), v.statusMsg)
+	}
 }
 
 func (v *EditorView) IsSaved() bool {

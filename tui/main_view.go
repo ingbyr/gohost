@@ -115,6 +115,7 @@ func (m *Model) View() string {
 	case treeViewState:
 		v = lipgloss.JoinVertical(lipgloss.Left,
 			lipgloss.JoinHorizontal(lipgloss.Top,
+				//styles.FocusedView.Width(m.leftViewWidth).Render(m.treeView.View()),
 				styles.FocusedView.Render(m.treeView.View()),
 				styles.DefaultView.Render(m.editorView.View()),
 			),

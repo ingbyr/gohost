@@ -18,4 +18,6 @@ var (
 			BorderForeground(lipgloss.Color("73"))
 	UnfocusedFormItem = lipgloss.NewStyle()
 	FocusedFormItem   = lipgloss.NewStyle().Foreground(lipgloss.Color("73"))
+
+	StatusLine = lipgloss.NewStyle()
 )
