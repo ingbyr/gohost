@@ -15,7 +15,7 @@ func TestService_SaveHost(t *testing.T) {
 			Name:    "host-1000",
 			Content: []byte("127.0.0.1 localhost"),
 			Desc:    "host1000",
-			GroupID: 3,
+			GroupID: 4,
 		},
 		&LocalHost{
 			ID:      1001,

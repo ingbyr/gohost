@@ -175,7 +175,7 @@ func (m *Model) setFullHelp(state sessionState, kb [][]key.Binding) {
 
 func (m *Model) resizeViews(sizeMsg tea.WindowSizeMsg, cmds *[]tea.Cmd) {
 	log.Debug(fmt.Sprintf("window w %d h %d", sizeMsg.Width, sizeMsg.Height))
-	m.leftViewWidth = (sizeMsg.Width - m.styleWidth) / 3
+	m.leftViewWidth = (sizeMsg.Width - m.styleWidth) / 4
 	m.rightViewWidth = (sizeMsg.Width - m.styleWidth) - m.leftViewWidth
 	height := sizeMsg.Height - m.styleHeight - m.shortHelperHeight
 	log.Debug(fmt.Sprintf("left w %d right w %d h %d", m.leftViewWidth, m.rightViewWidth, height))

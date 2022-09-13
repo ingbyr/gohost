@@ -9,6 +9,7 @@ import (
 	"gohost/gohost"
 	"gohost/log"
 	"gohost/tui/keys"
+	"strings"
 )
 
 type EditorView struct {
@@ -99,7 +100,11 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (v *EditorView) View() string {
 	var statusLine string
 	if len(v.statusLine) > v.width {
-		statusLine = v.statusLine[:v.width-3] + "..."
+		if v.width <= 3 {
+			v.statusLine = strings.Repeat(" ", v.width)
+		} else {
+			statusLine = v.statusLine[:v.width-3] + "..."
+		}
 	} else {
 		statusLine = v.statusLine
 	}

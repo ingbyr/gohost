@@ -36,35 +36,35 @@ func (d *nodeItemDelegate) Render(w io.Writer, m list.Model, index int, item lis
 		return
 	}
 	var str string
-	if d.width <= 3 {
-		str = strings.Repeat(".", d.width)
-	} else {
-		switch node.Node.(type) {
-		case *gohost.Group:
-			var icon string
-			if node.IsFolded() {
-				icon = "📁"
-			} else {
-				icon = "📂"
-			}
-			str = strings.Repeat(" ", node.Depth()) + icon + node.Title()
-		case *gohost.SysHost:
-			str = strings.Repeat(" ", node.Depth()) + "🐝" + node.Title()
-		case *gohost.LocalHost:
-			str = strings.Repeat(" ", node.Depth()) + "📑" + node.Title()
-		case *gohost.RemoteHost:
-			str = strings.Repeat(" ", node.Depth()) + "🌐" + node.Title()
-		}
-		if m.Index() == index {
-			str = d.selectedStyle.Render("> " + str)
+	switch node.Node.(type) {
+	case *gohost.Group:
+		var icon string
+		if node.IsFolded() {
+			icon = "/ "
 		} else {
-			str = d.normalStyle.Render("  " + str)
+			icon = "| "
 		}
-		if len(str) > d.width {
+		str = strings.Repeat(" ", node.Depth()) + icon + node.Title()
+	case *gohost.SysHost:
+		str = strings.Repeat(" ", node.Depth()) + "* " + node.Title()
+	case *gohost.LocalHost:
+		str = strings.Repeat(" ", node.Depth()) + "# " + node.Title()
+	case *gohost.RemoteHost:
+		str = strings.Repeat(" ", node.Depth()) + "@" + node.Title()
+	}
+	if m.Index() == index {
+		str = d.selectedStyle.Render("> " + str)
+	} else {
+		str = d.normalStyle.Render("  " + str)
+	}
+	if len(str) > d.width {
+		if d.width <= 3 {
+			str = strings.Repeat(" ", d.width)
+		} else {
 			str = str[:d.width-3] + "..."
-		} else if len(str) < d.width {
-			str = str + strings.Repeat(" ", d.width-len(str))
 		}
+	} else if len(str) < d.width {
+		str = str + strings.Repeat(" ", d.width-len(str))
 	}
 
 	_, _ = fmt.Fprint(w, str)
