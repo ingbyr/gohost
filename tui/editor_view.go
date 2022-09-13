@@ -63,7 +63,7 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		v.hostEditor.SetWidth(m.Width)
 		log.Debug(fmt.Sprintf("editor view w %d h %d", m.Width, m.Height))
 	case tea.KeyMsg:
-		if v.model.state != treeViewState {
+		if v.model.state != editorViewState {
 			return v, nil
 		}
 		switch {
@@ -81,9 +81,7 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				log.Debug("Can not edit this")
 			}
-
 		}
-
 		v.statusLine = "hit key: " + m.String()
 	}
 	v.RefreshStatusLine()
