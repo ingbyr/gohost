@@ -43,7 +43,6 @@ type Model struct {
 	shortHelperHeight       int
 	leftViewWidth           int
 	rightViewWidth          int
-	quitting                bool
 }
 
 func NewModel() (*Model, error) {
@@ -85,9 +84,14 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, keys.Switch):
 			m.switchNextState()
-		case key.Matches(msg, keys.Quit):
-			m.quitting = true
+		case key.Matches(msg, keys.ForceQuit):
 			cmds = append(cmds, tea.Quit)
+		case key.Matches(msg, keys.Esc):
+			if m.state != initViewState {
+				m.switchState(initViewState)
+			} else {
+				cmds = append(cmds, tea.Quit)
+			}
 		case key.Matches(msg, keys.Help):
 			if m.state != helpViewState {
 				m.switchState(helpViewState)

@@ -96,7 +96,7 @@ func NewTreeView(model *Model) *TreeView {
 }
 
 func (v *TreeView) Init() tea.Cmd {
-	v.model.setShortHelp(treeViewState, []key.Binding{keys.Create, keys.Delete, keys.Apply, keys.Save, keys.Quit})
+	v.model.setShortHelp(treeViewState, []key.Binding{keys.Create, keys.Delete, keys.Apply, keys.Save, keys.ForceQuit})
 	v.model.setFullHelp(treeViewState, append(v.nodeList.FullHelp(), []key.Binding{keys.Create}))
 	return nil
 }
@@ -109,34 +109,48 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		v.SetWidth(m.Width)
 		v.SetHeight(m.Height)
 		log.Debug(fmt.Sprintf("tree view w %d h %d", v.nodeList.Width(), v.nodeList.Height()))
+	case RefreshTreeViewItems:
+		v.RefreshTreeNodes()
 	case tea.KeyMsg:
 		if v.model.state != treeViewState {
 			return v, nil
 		}
 		switch {
+		case key.Matches(m, keys.Esc):
+			return v, nil
 		case key.Matches(m, keys.Enter):
 			selectedNode := v.SelectedNode()
 			switch node := selectedNode.Node.(type) {
 			case *gohost.Group:
-				if selectedNode.IsFolded() {
-					selectedNode.SetFolded(false)
-					svc.LoadNodesByParent(selectedNode)
-				} else {
-					selectedNode.SetFolded(true)
-					svc.RemoveNodesByParentID(selectedNode.GetID())
+				cmd = func() tea.Msg {
+					if selectedNode.IsFolded() {
+						selectedNode.SetFolded(false)
+						svc.LoadNodesByParent(selectedNode)
+					} else {
+						selectedNode.SetFolded(true)
+						svc.RemoveNodesByParentID(selectedNode.GetID())
+					}
+					return RefreshTreeViewItems{}
 				}
-				cmd = v.RefreshTreeNodes()
 			case gohost.Host:
-				v.onHostNodeSelected(node, &cmds)
+				cmd = func() tea.Msg {
+					log.Debug("select host: " + node.Title())
+					v.model.switchState(editorViewState)
+					v.model.editorView.SetHost(node)
+					return nil
+				}
 			}
-
 		case key.Matches(m, keys.Create):
-			v.model.switchState(nodeViewState)
-
+			cmd = func() tea.Msg {
+				v.model.switchState(nodeViewState)
+				return nil
+			}
 		case key.Matches(m, keys.Delete):
-			selectedNode := v.SelectedNode()
-			svc.DeleteNode(selectedNode)
-			cmd = v.RefreshTreeNodes()
+			cmd = func() tea.Msg {
+				selectedNode := v.SelectedNode()
+				svc.DeleteNode(selectedNode)
+				return RefreshTreeViewItems{}
+			}
 		}
 	}
 
@@ -171,7 +185,5 @@ func (v *TreeView) SelectedNode() *gohost.TreeNode {
 }
 
 func (v *TreeView) onHostNodeSelected(host gohost.Host, cmds *[]tea.Cmd) {
-	log.Debug("select host: " + host.Title())
-	v.model.switchState(editorViewState)
-	v.model.editorView.SetHost(host)
+
 }

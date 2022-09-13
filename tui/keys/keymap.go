@@ -23,7 +23,7 @@ var (
 		key.WithKeys("?"),
 		key.WithHelp("?", "toggle help"),
 	)
-	Quit = key.NewBinding(
+	ForceQuit = key.NewBinding(
 		key.WithKeys("ctrl+c"),
 		key.WithHelp("ctrl+c", "quit"),
 	)

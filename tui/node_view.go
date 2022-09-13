@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"gohost/gohost"
@@ -56,7 +55,6 @@ func NewNodeView(model *Model) *NodeView {
 
 		// Get parent group
 		selectedNode := model.treeView.SelectedNode()
-		selectedNode.SetFolded(false)
 		var parent *gohost.TreeNode
 		switch selectedNode.Node.(type) {
 		case *gohost.Group:
@@ -64,9 +62,13 @@ func NewNodeView(model *Model) *NodeView {
 		case gohost.Host:
 			parent = selectedNode.Parent()
 		}
+		// Unfold parent first
+		if parent.IsFolded() {
+			svc.LoadNodesByParent(parent)
+			parent.SetFolded(false)
+		}
 
 		// Save node
-		var cmd tea.Cmd
 		switch nodeTypeChoices.SelectedItem() {
 		case NodeGroup:
 			group := &gohost.Group{
@@ -94,11 +96,12 @@ func NewNodeView(model *Model) *NodeView {
 			}
 		case NodeRemoteHost:
 		}
-		cmd = model.treeView.RefreshTreeNodes()
 
 		// Go back to tree view state
-		model.switchState(treeViewState)
-		return cmd
+		return func() tea.Msg {
+			model.switchState(treeViewState)
+			return RefreshTreeViewItems{}
+		}
 	}
 
 	nodeForm := &NodeView{
@@ -133,9 +136,6 @@ func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		if v.model.state != nodeViewState {
 			return v, nil
-		}
-		if key.Matches(m, keys.Esc) {
-			v.model.switchState(treeViewState)
 		}
 		return v.Form.Update(msg)
 	}

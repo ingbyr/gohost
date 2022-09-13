@@ -93,7 +93,7 @@ func (s *Service) treeNodesAsItem(nodes []*TreeNode, res *[]list.Item) {
 			*res = append(*res, node)
 		}
 		if !node.IsFolded() {
-			s.treeNodesAsItem(node.Children(), res)
+			s.treeNodesAsItem(node.children, res)
 		}
 	}
 }

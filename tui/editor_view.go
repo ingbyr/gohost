@@ -63,27 +63,27 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		v.hostEditor.SetWidth(m.Width)
 		log.Debug(fmt.Sprintf("editor view w %d h %d", m.Width, m.Height))
 	case tea.KeyMsg:
-		if v.model.state == editorViewState {
-			switch {
-			case key.Matches(m, keys.Save):
-				if v.host.IsEditable() {
-					v.host.SetContent([]byte(v.hostEditor.Value()))
-					err := gohost.GetService().UpdateHost(v.host)
-					if err != nil {
-						log.Debug(err.Error())
-					} else {
-						v.SetSaved()
-					}
-				} else {
-					log.Debug("Can not edit this")
-				}
-			case key.Matches(m, keys.Esc):
-				v.model.switchState(treeViewState)
-			}
-		} else {
-			// Disable key
-			msg = nil
+		if v.model.state != treeViewState {
+			return v, nil
 		}
+		switch {
+		case key.Matches(m, keys.Esc):
+			return v, nil
+		case key.Matches(m, keys.Save):
+			if v.host.IsEditable() {
+				v.host.SetContent([]byte(v.hostEditor.Value()))
+				err := gohost.GetService().UpdateHost(v.host)
+				if err != nil {
+					log.Debug(err.Error())
+				} else {
+					v.SetSaved()
+				}
+			} else {
+				log.Debug("Can not edit this")
+			}
+
+		}
+
 		v.statusLine = "hit key: " + m.String()
 	}
 	v.RefreshStatusLine()

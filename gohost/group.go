@@ -82,20 +82,3 @@ func (s *Service) SaveGroupNode(groupNode *TreeNode) error {
 func (s *Service) DeleteGroup(id db.ID) error {
 	return s.store.Delete(id, &Group{})
 }
-
-//func (s *Service) DeleteGroupNode(groupNode *TreeNode) {
-//	// Delete from db
-//	if err := s.DeleteGroup(groupNode.GetID()); err != nil {
-//		panic(err)
-//	}
-//	// Delete from parent
-//	groupNode.Parent().RemoveChild(groupNode)
-//	// Delete all children
-//	children := s.LoadNodesByParent(groupNode)
-//	for i := range children {
-//		// FIXME delete host in children
-//		s.DeleteGroupNode(children[i])
-//	}
-//	// Delete node cache
-//	s.nodes[groupNode.GetID()] = nil
-//}
