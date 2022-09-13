@@ -30,4 +30,3 @@ func (s *Service) UpdateHost(host Host) error {
 	}
 	return nil
 }
-

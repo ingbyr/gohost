@@ -85,6 +85,8 @@ func NewTreeView(model *Model) *TreeView {
 	nodeList.SetShowHelp(false)
 	// FIXME height is wrong when show pagination
 	nodeList.SetShowPagination(false)
+	// TODO Filter mode is not completable yet
+	nodeList.SetFilteringEnabled(false)
 	nodeList.Select(0)
 
 	return &TreeView{
@@ -94,8 +96,8 @@ func NewTreeView(model *Model) *TreeView {
 }
 
 func (v *TreeView) Init() tea.Cmd {
-	v.model.setShortHelp(treeViewState, append(v.nodeList.ShortHelp(), keys.New))
-	v.model.setFullHelp(treeViewState, append(v.nodeList.FullHelp(), []key.Binding{keys.New}))
+	v.model.setShortHelp(treeViewState, []key.Binding{keys.Create, keys.Delete, keys.Apply, keys.Save, keys.Quit})
+	v.model.setFullHelp(treeViewState, append(v.nodeList.FullHelp(), []key.Binding{keys.Create}))
 	return nil
 }
 
@@ -113,7 +115,6 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		switch {
 		case key.Matches(m, keys.Enter):
-			// Click the node
 			selectedNode := v.SelectedNode()
 			switch node := selectedNode.Node.(type) {
 			case *gohost.Group:
@@ -129,21 +130,21 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				v.onHostNodeSelected(node, &cmds)
 			}
 
-		case key.Matches(m, keys.New):
-			// Create new node
+		case key.Matches(m, keys.Create):
 			v.model.switchState(nodeViewState)
 
 		case key.Matches(m, keys.Delete):
-			// Delete node
 			selectedNode := v.SelectedNode()
 			switch selectedNode.Node.(type) {
 			case *gohost.Group:
 				svc.DeleteGroupNode(selectedNode)
 			case gohost.Host:
+				svc.DeleteLocalHostNode(selectedNode)
 			}
 			cmd = v.RefreshTreeNodes()
 		}
 	}
+
 	cmds = append(cmds, cmd)
 	v.nodeList, cmd = v.nodeList.Update(msg)
 	//log.Debug(fmt.Sprintf("cursor at %d, selected item %v",

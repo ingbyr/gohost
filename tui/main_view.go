@@ -98,9 +98,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	}
-	m.updateView(msg, &cmds, m.treeView)
 	m.updateView(msg, &cmds, m.editorView)
 	m.updateView(msg, &cmds, m.nodeView)
+	m.updateView(msg, &cmds, m.treeView)
 	m.updateView(msg, &cmds, m.helpView)
 	return m, tea.Batch(cmds...)
 }

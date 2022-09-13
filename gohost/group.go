@@ -79,21 +79,22 @@ func (s *Service) SaveGroupNode(groupNode *TreeNode) error {
 	return nil
 }
 
-func (s *Service) DeleteGroup(groupID db.ID) {
-	err := s.store.DeleteMatching(&Group{}, bolthold.Where("ID").Eq(groupID))
-	if err != nil {
-		panic(err)
-	}
+func (s *Service) DeleteGroup(id db.ID) error {
+	return s.store.Delete(id, &Group{})
 }
 
-func (s *Service) DeleteGroupNode(group *TreeNode) {
-	s.DeleteGroup(group.GetID())
+func (s *Service) DeleteGroupNode(groupNode *TreeNode) {
+	// Delete from db
+	if err := s.DeleteGroup(groupNode.GetID()); err != nil {
+		panic(err)
+	}
 	// Delete from parent
-	group.Parent().RemoveChild(group)
-	children := s.LoadNodesByParent(group)
+	groupNode.Parent().RemoveChild(groupNode)
+	// Delete all children
+	children := s.LoadNodesByParent(groupNode)
 	for i := range children {
 		s.DeleteGroupNode(children[i])
 	}
 	// Delete node cache
-	s.nodes[group.GetID()] = nil
+	s.nodes[groupNode.GetID()] = nil
 }

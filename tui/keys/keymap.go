@@ -43,13 +43,17 @@ var (
 		key.WithKeys("ctrl+s"),
 		key.WithHelp("ctrl+s", "save"),
 	)
-	New = key.NewBinding(
+	Create = key.NewBinding(
 		key.WithKeys("c"),
 		key.WithHelp("c", "new"),
 	)
 	Delete = key.NewBinding(
-		key.WithKeys("x", "delete"),
-		key.WithHelp("c/delete", "delete"),
+		key.WithKeys("x"),
+		key.WithHelp("x", "delete"),
+	)
+	Apply = key.NewBinding(
+		key.WithKeys("a"),
+		key.WithHelp("a", "apply"),
 	)
 )
 
