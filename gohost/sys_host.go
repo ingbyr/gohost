@@ -26,6 +26,15 @@ type SysHost struct {
 	ID   db.ID `boltholdKey:"ID"`
 	Name string
 	Desc string
+	Flag int
+}
+
+func (s *SysHost) SetFlag(flag int) {
+	s.Flag = flag
+}
+
+func (s *SysHost) GetFlag() int {
+	return s.Flag
 }
 
 func (s *SysHost) Title() string {

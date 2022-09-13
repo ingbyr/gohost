@@ -4,7 +4,6 @@ type Host interface {
 	Node
 	GetContent() []byte
 	SetContent([]byte)
-	IsEnabled() bool
 	IsEditable() bool
 }
 

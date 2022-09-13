@@ -150,6 +150,7 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						selectedNode.SetFolded(true)
 						svc.RemoveNodesByParentID(selectedNode.GetID())
 					}
+					svc.UpdateGroupNode(selectedNode)
 					return RefreshTreeViewItems{}
 				}
 			case gohost.Host:

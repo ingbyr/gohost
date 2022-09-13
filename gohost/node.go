@@ -9,14 +9,21 @@ type Node interface {
 	list.DefaultItem
 	GetID() db.ID
 	GetParentID() db.ID
+	GetFlag() int
+	SetFlag(flag int)
 }
+
+const (
+	MaskFold = 1 << iota
+	MaskEnable
+	MaskEditable
+)
 
 type TreeNode struct {
 	Node
 	parent   *TreeNode
 	children []*TreeNode
 	depth    int
-	isFolded bool
 }
 
 func NewTreeNode(node Node) *TreeNode {
@@ -25,7 +32,6 @@ func NewTreeNode(node Node) *TreeNode {
 		parent:   nil,
 		children: make([]*TreeNode, 0),
 		depth:    0,
-		isFolded: true,
 	}
 }
 
@@ -72,9 +78,27 @@ func (n *TreeNode) SetDepth(depth int) {
 }
 
 func (n *TreeNode) IsFolded() bool {
-	return n.isFolded
+	return n.Node.GetFlag()&MaskFold == MaskFold
 }
 
-func (n *TreeNode) SetFolded(isFolded bool) {
-	n.isFolded = isFolded
+func (n *TreeNode) SetFolded(folded bool) {
+	flag := n.Node.GetFlag()
+	if folded {
+		n.Node.SetFlag(flag | MaskFold)
+	} else {
+		n.Node.SetFlag(flag & (^MaskFold))
+	}
+}
+
+func (n *TreeNode) IsEnabled() bool {
+	return n.Node.GetFlag()&MaskEnable == MaskEnable
+}
+
+func (n *TreeNode) SetEnabled(enabled bool) {
+	flag := n.Node.GetFlag()
+	if enabled {
+		n.Node.SetFlag(flag | MaskEnable)
+	} else {
+		n.Node.SetFlag(flag & (^MaskEnable))
+	}
 }

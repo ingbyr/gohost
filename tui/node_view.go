@@ -78,16 +78,13 @@ func NewNodeView(model *Model) *NodeView {
 			}
 			groupNode := gohost.NewTreeNode(group)
 			groupNode.SetParent(parent)
-			if err := svc.SaveGroupNode(groupNode); err != nil {
-				panic(err)
-			}
+			svc.SaveGroupNode(groupNode)
 		case NodeLocalHost:
 			localHost := &gohost.LocalHost{
 				GroupID: parent.GetID(),
 				Name:    nameTextInput.Value(),
 				Content: nil,
 				Desc:    descTextInput.Value(),
-				Enabled: false,
 			}
 			localHostNode := gohost.NewTreeNode(localHost)
 			localHostNode.SetParent(parent)

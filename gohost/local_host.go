@@ -14,7 +14,15 @@ type LocalHost struct {
 	Name    string
 	Content []byte
 	Desc    string
-	Enabled bool
+	Flag    int
+}
+
+func (h *LocalHost) SetFlag(flag int) {
+	h.Flag = flag
+}
+
+func (h *LocalHost) GetFlag() int {
+	return h.Flag
 }
 
 func (h *LocalHost) Title() string {
@@ -39,10 +47,6 @@ func (h *LocalHost) GetContent() []byte {
 
 func (h *LocalHost) SetContent(content []byte) {
 	h.Content = content
-}
-
-func (h *LocalHost) IsEnabled() bool {
-	return h.Enabled
 }
 
 func (h *LocalHost) FilterValue() string {

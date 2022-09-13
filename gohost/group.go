@@ -15,6 +15,15 @@ type Group struct {
 	ParentID db.ID
 	Name     string
 	Desc     string
+	Flag     int
+}
+
+func (g *Group) SetFlag(flag int) {
+	g.Flag = flag
+}
+
+func (g *Group) GetFlag() int {
+	return g.Flag
 }
 
 func (g *Group) Title() string {
@@ -63,20 +72,26 @@ func (s *Service) loadGroupNodesByParent(parent *TreeNode) []*TreeNode {
 }
 
 func (s *Service) SaveGroup(group *Group) error {
-	err := s.store.Insert(s.extractID(group), group)
-	if err != nil {
-		return err
-	}
-	return nil
+	return s.store.Insert(s.extractID(group), group)
 }
 
-func (s *Service) SaveGroupNode(groupNode *TreeNode) error {
+func (s *Service) SaveGroupNode(groupNode *TreeNode) {
 	group := groupNode.Node.(*Group)
 	if err := s.SaveGroup(group); err != nil {
-		return err
+		panic(err)
 	}
 	s.nodes[groupNode.GetID()] = groupNode
-	return nil
+}
+
+func (s *Service) UpdateGroup(group *Group) error {
+	return s.store.Update(group.GetID(), group)
+}
+
+func (s *Service) UpdateGroupNode(groupNode *TreeNode) {
+	group := groupNode.Node.(*Group)
+	if err := s.UpdateGroup(group); err != nil {
+		panic(err)
+	}
 }
 
 func (s *Service) DeleteGroup(id db.ID) error {

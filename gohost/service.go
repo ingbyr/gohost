@@ -17,7 +17,7 @@ var (
 func GetService() *Service {
 	serviceOnce.Do(func() {
 		service = NewService()
-		service.loadRootNodes()
+		service.LoadNodesByParent(service.tree)
 	})
 	return service
 }
@@ -28,10 +28,10 @@ func NewService() *Service {
 		nodes: make(map[db.ID]*TreeNode, 0),
 	}
 	s.tree = &TreeNode{
+		Node:     &Group{ID: 0},
 		parent:   nil,
 		children: make([]*TreeNode, 0),
 		depth:    -1,
-		isFolded: false,
 	}
 	sysHostNode := NewTreeNode(SysHostInstance())
 	sysHostNode.SetParent(s.tree)
@@ -98,19 +98,21 @@ func (s *Service) treeNodesAsItem(nodes []*TreeNode, res *[]list.Item) {
 	}
 }
 
-func (s *Service) loadRootNodes() []*TreeNode {
-	return s.LoadNodesByParent(s.tree)
-}
-
 func (s *Service) LoadNodesByParent(parent *TreeNode) []*TreeNode {
-	var nodes []*TreeNode
+	var children []*TreeNode
 	if parent == s.tree {
-		nodes = append(nodes, s.SysHostNode)
+		children = append(children, s.SysHostNode)
 	}
-	nodes = append(nodes, s.loadGroupNodesByParent(parent)...)
-	nodes = append(nodes, s.loadLocalHostNodesByParent(parent)...)
-	parent.SetChildren(nodes)
-	s.cacheNodes(nodes)
+	children = append(children, s.loadGroupNodesByParent(parent)...)
+	children = append(children, s.loadLocalHostNodesByParent(parent)...)
+	parent.SetChildren(children)
+	s.cacheNodes(children)
+	nodes := append([]*TreeNode{}, children...)
+	for _, node := range children {
+		if !node.IsFolded() {
+			nodes = append(nodes, s.LoadNodesByParent(node)...)
+		}
+	}
 	return nodes
 }
 
@@ -120,26 +122,6 @@ func (s *Service) RemoveNodesByParentID(parentID db.ID) {
 		panic("node is not cached when trying to remove nodes by parent id")
 	}
 	node.SetChildren(nil)
-}
-
-// ApplyHost TODO apply host to system
-func (s *Service) ApplyHost(hosts []byte) {
-	// open system host file
-	sysHostFile, err := os.Create(cfg.SysHostFile)
-	if err != nil {
-		panic(err)
-	}
-	defer sysHostFile.Close()
-
-	// write hosts to system host file
-	if _, err = sysHostFile.Write(hosts); err != nil {
-		panic(err)
-	}
-}
-
-func (s *Service) CombineHost(hosts ...[]byte) []byte {
-	// TODO combine host
-	return nil
 }
 
 func (s *Service) extractID(node Node) db.ID {
@@ -173,4 +155,22 @@ func (s *Service) DeleteNode(node *TreeNode) {
 	case *RemoteHost:
 
 	}
+}
+
+func (s *Service) ApplyHost(hosts []byte) {
+	// Truncate system host file
+	sysHostFile, err := os.Create(cfg.SysHostFile)
+	if err != nil {
+		panic(err)
+	}
+	defer sysHostFile.Close()
+	// Write hosts to system host file
+	if _, err = sysHostFile.Write(hosts); err != nil {
+		panic(err)
+	}
+}
+
+func (s *Service) EnableHost() {
+	// TODO enable as group node
+	// TODO enable as localhost node
 }
