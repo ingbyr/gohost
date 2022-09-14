@@ -62,11 +62,6 @@ func NewNodeView(model *Model) *NodeView {
 		case gohost.Host:
 			parent = selectedNode.Parent()
 		}
-		// Unfold parent first
-		if parent.IsFolded() {
-			svc.LoadNodesByParent(parent)
-			parent.SetFolded(false)
-		}
 
 		// Save node
 		switch nodeTypeChoices.SelectedItem() {

@@ -36,34 +36,36 @@ func (d *nodeItemDelegate) Render(w io.Writer, m list.Model, index int, item lis
 	}
 
 	var str string
+	var enableIcon string
 	if node.IsEnabled() {
-		str = "+" + str
+		enableIcon = "✅"
 	} else {
-		str = "-" + str
+		enableIcon = ""
 	}
 
+	var nodeIcon string
 	switch node.Node.(type) {
 	case *gohost.Group:
-		var icon string
 		if node.IsFolded() {
-			icon = "| "
+			nodeIcon = "📁 "
 		} else {
-			icon = "/ "
+			nodeIcon = "📂 "
 		}
-		str = strings.Repeat(" ", node.Depth()) + str + icon + node.Title()
 	case *gohost.SysHost:
-		str = strings.Repeat(" ", node.Depth()) + str + "* " + node.Title()
+		nodeIcon = "👻 "
 	case *gohost.LocalHost:
-		str = strings.Repeat(" ", node.Depth()) + str + "# " + node.Title()
+		nodeIcon = "📝 "
 	case *gohost.RemoteHost:
-		str = strings.Repeat(" ", node.Depth()) + str + "@" + node.Title()
+		nodeIcon = "🌐 "
 	}
 
+	var cursor string
 	if m.Index() == index {
-		str = "> " + str
+		cursor = "> "
 	} else {
-		str = "  " + str
+		cursor = "  "
 	}
+	str = cursor + strings.Repeat(" ", node.Depth()) + nodeIcon + node.Title() + enableIcon
 
 	strLen := lipgloss.Width(str)
 	if strLen > d.width {
