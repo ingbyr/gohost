@@ -1,6 +1,7 @@
 package gohost
 
 import (
+	"bytes"
 	"github.com/charmbracelet/bubbles/list"
 	"gohost/config"
 	"gohost/db"
@@ -160,7 +161,7 @@ func (s *Service) UpdateNode(node *TreeNode) {
 	}
 }
 
-func (s *Service) ApplyHost(hosts []byte) {
+func (s *Service) ApplyHost(hostContent []byte) {
 	// Truncate system host file
 	sysHostFile, err := os.Create(cfg.SysHostFile)
 	if err != nil {
@@ -168,52 +169,55 @@ func (s *Service) ApplyHost(hosts []byte) {
 	}
 	defer sysHostFile.Close()
 	// Write hosts to system host file
-	if _, err = sysHostFile.Write(hosts); err != nil {
+	if _, err = sysHostFile.Write(hostContent); err != nil {
 		panic(err)
 	}
 }
 
-func (s *Service) EnableHost() {
-	// TODO enable as group node
-	// TODO enable as localhost node
-}
-
-func (s *Service) UnfoldNode(treeNode *TreeNode) {
-	if !s.isFoldableNode(treeNode) {
-		return
-	}
-	treeNode.SetFolded(false)
-	s.LoadNodesByParent(treeNode, true)
-	s.UpdateGroupNode(treeNode)
-}
-
-func (s *Service) FoldNode(treeNode *TreeNode) {
-	if !s.isFoldableNode(treeNode) {
-		return
-	}
-	treeNode.SetFolded(true)
-	s.RemoveNodesByParent(treeNode)
-	s.UpdateGroupNode(treeNode)
-}
-
-func (s *Service) isFoldableNode(treeNode *TreeNode) bool {
+func (s *Service) UpdateFoldOfNode(treeNode *TreeNode, folded bool) {
 	if treeNode == nil || treeNode == s.SysHostNode {
-		return false
+		return
 	}
-	_, ok := treeNode.Node.(*Group)
-	return ok
+	treeNode.SetFolded(folded)
+	if folded {
+		s.RemoveNodesByParent(treeNode)
+	} else {
+		s.LoadNodesByParent(treeNode, true)
+	}
+	s.UpdateNode(treeNode)
 }
 
-func (s *Service) EnableNode(node *TreeNode) {
+func (s *Service) UpdateEnabledOfNode(node *TreeNode, enabled bool) {
 	if node == nil || node == s.SysHostNode {
 		return
 	}
-	node.SetEnabled(true)
+	node.SetEnabled(enabled)
 	s.UpdateNode(node)
-	if s.isFoldableNode(node) {
-		s.LoadNodesByParent(node, false)
-		for _, child := range node.Children() {
-			s.EnableNode(child)
-		}
+	s.LoadNodesByParent(node, false)
+	for _, child := range node.Children() {
+		s.UpdateEnabledOfNode(child, enabled)
 	}
+}
+
+func (s *Service) CombineEnabledHosts() []byte {
+	hosts := s.loadLocalHostsByFlag(MaskEnable)
+	// TODO load all enabled remote hosts
+	combinedHost := bytes.NewBuffer(nil)
+	for _, host := range hosts {
+		combinedHost.WriteString("# Content from ")
+		combinedHost.WriteString(host.Title())
+		if host.Description() != "" {
+			combinedHost.WriteString("( ")
+			combinedHost.WriteString(host.Description())
+			combinedHost.WriteString(" )")
+		}
+		combinedHost.WriteString(cfg.LineBreak)
+		combinedHost.Write(host.GetContent())
+		combinedHost.WriteString(cfg.LineBreak)
+		combinedHost.WriteString("# End of ")
+		combinedHost.WriteString(host.Title())
+		combinedHost.WriteString(cfg.LineBreak)
+		combinedHost.WriteString(cfg.LineBreak)
+	}
+	return combinedHost.Bytes()
 }

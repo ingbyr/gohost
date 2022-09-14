@@ -57,7 +57,7 @@ func (h *LocalHost) GetParentID() db.ID {
 	return h.GroupID
 }
 
-func (s *Service) loadLocalHosts(groupID db.ID) []Host {
+func (s *Service) loadLocalHostsByGroupID(groupID db.ID) []Host {
 	var hosts []*LocalHost
 	if err := s.store.FindNullable(&hosts, bolthold.Where("GroupID").Eq(groupID)); err != nil {
 		panic(err)
@@ -78,6 +78,21 @@ func (s *Service) loadLocalHostNodesByParent(parent *TreeNode) []*TreeNode {
 	}
 	return nodes
 }
+
+func (s *Service) loadLocalHostsByFlag(flag int) []Host {
+	var allHosts []*LocalHost
+	if err := s.store.FindNullable(&allHosts, &bolthold.Query{}); err != nil {
+		panic(err)
+	}
+	hosts := make([]Host, 0)
+	for _, host := range allHosts {
+		if host.GetFlag()&flag == flag {
+			hosts = append(hosts, host)
+		}
+	}
+	return hosts
+}
+
 func (s *Service) DeleteLocalHost(id db.ID) error {
 	return s.store.Delete(id, &LocalHost{})
 }

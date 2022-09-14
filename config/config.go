@@ -1,6 +1,7 @@
 package config
 
 import (
+	"os"
 	"sync"
 )
 
@@ -16,13 +17,17 @@ const (
 )
 
 var (
-	cfg  *config
-	once sync.Once
+	cfg   *config
+	once  sync.Once
+	debug = os.Getenv("GOHOST_DEBUG") == "true"
 )
 
 func Instance() *config {
 	once.Do(func() {
 		cfg = New()
+		if debug {
+			cfg.SysHostFile = "hosts"
+		}
 	})
 	return cfg
 }

@@ -15,7 +15,7 @@ import (
 type EditorView struct {
 	model         *Model
 	hostEditor    textarea.Model
-	host          gohost.Host
+	hostNode      *gohost.TreeNode
 	statusLine    string
 	statusMsg     string
 	saved         bool
@@ -30,7 +30,7 @@ func NewTextView(model *Model) *EditorView {
 	return &EditorView{
 		model:      model,
 		hostEditor: hostEditor,
-		host:       nil,
+		hostNode:   nil,
 		statusLine: "",
 		statusMsg:  "",
 		saved:      true,
@@ -56,7 +56,7 @@ func (v *EditorView) Init() tea.Cmd {
 	})
 	return func() tea.Msg {
 		// Display system host on start up
-		v.SetHost(gohost.SysHostInstance())
+		v.SetHostNode(svc.SysHostNode)
 		return nil
 	}
 }
@@ -78,14 +78,10 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(m, keys.Esc):
 			return v, nil
 		case key.Matches(m, keys.Save):
-			if v.host.IsEditable() {
-				v.host.SetContent([]byte(v.hostEditor.Value()))
-				err := svc.UpdateHost(v.host)
-				if err != nil {
-					log.Debug(err.Error())
-				} else {
-					v.SetSaved()
-				}
+			if v.hostNode.Node.(gohost.Host).IsEditable() {
+				v.hostNode.Node.(gohost.Host).SetContent([]byte(v.hostEditor.Value()))
+				svc.UpdateNode(v.hostNode)
+				v.SetSaved()
 			} else {
 				v.statusMsg = "Can not edit this"
 			}
@@ -119,18 +115,18 @@ func (v *EditorView) Blur() {
 	v.hostEditor.Blur()
 }
 
-func (v *EditorView) SetHost(host gohost.Host) {
-	v.host = host
+func (v *EditorView) SetHostNode(hostNode *gohost.TreeNode) {
+	v.hostNode = hostNode
 	v.hostEditor.Reset()
-	v.hostEditor.SetValue(string(host.GetContent()))
+	v.hostEditor.SetValue(string(hostNode.Node.(gohost.Host).GetContent()))
 	v.prevLen = v.hostEditor.Length()
 }
 
 func (v *EditorView) RefreshStatusLine() {
 	if v.statusMsg == "" {
-		v.statusLine = fmt.Sprintf("[file: %s] [saved: %t]", v.host.Title(), v.IsSaved())
+		v.statusLine = fmt.Sprintf("[file: %s] [saved: %t]", v.hostNode.Title(), v.IsSaved())
 	} else {
-		v.statusLine = fmt.Sprintf("[%s] [file: %s] [saved: %t]", v.statusMsg, v.host.Title(), v.IsSaved())
+		v.statusLine = fmt.Sprintf("[%s] [file: %s] [saved: %t]", v.statusMsg, v.hostNode.Title(), v.IsSaved())
 	}
 }
 

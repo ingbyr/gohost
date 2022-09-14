@@ -9,8 +9,8 @@ type Node interface {
 	list.DefaultItem
 	GetID() db.ID
 	GetParentID() db.ID
-	GetFlag() int
 	SetFlag(flag int)
+	GetFlag() int
 }
 
 const (
