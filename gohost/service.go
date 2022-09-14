@@ -178,7 +178,7 @@ func (s *Service) EnableHost() {
 }
 
 func (s *Service) UnfoldNode(treeNode *TreeNode) {
-	if !s.foldableNode(treeNode) {
+	if !s.isFoldableNode(treeNode) {
 		return
 	}
 	treeNode.SetFolded(false)
@@ -187,7 +187,7 @@ func (s *Service) UnfoldNode(treeNode *TreeNode) {
 }
 
 func (s *Service) FoldNode(treeNode *TreeNode) {
-	if !s.foldableNode(treeNode) {
+	if !s.isFoldableNode(treeNode) {
 		return
 	}
 	treeNode.SetFolded(true)
@@ -195,18 +195,7 @@ func (s *Service) FoldNode(treeNode *TreeNode) {
 	s.UpdateGroupNode(treeNode)
 }
 
-func (s *Service) FlipFoldNode(treeNode *TreeNode) {
-	if !s.foldableNode(treeNode) {
-		return
-	}
-	if treeNode.IsFolded() {
-		s.UnfoldNode(treeNode)
-	} else {
-		s.FoldNode(treeNode)
-	}
-}
-
-func (s *Service) foldableNode(treeNode *TreeNode) bool {
+func (s *Service) isFoldableNode(treeNode *TreeNode) bool {
 	if treeNode == nil || treeNode == s.SysHostNode {
 		return false
 	}
@@ -218,8 +207,11 @@ func (s *Service) EnableNode(node *TreeNode) {
 	if node == nil || node == s.SysHostNode {
 		return
 	}
-	node.SetEnabled(!node.IsEnabled())
+	node.SetEnabled(true)
 	s.UpdateNode(node)
-	// TODO Load all enable nodes
-
+	if s.isFoldableNode(node) {
+		for _, child := range node.Children() {
+			s.EnableNode(child)
+		}
+	}
 }

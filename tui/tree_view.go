@@ -60,19 +60,26 @@ func (d *nodeItemDelegate) Render(w io.Writer, m list.Model, index int, item lis
 	}
 
 	if m.Index() == index {
-		str = d.selectedStyle.Render("> " + str)
+		str = "> " + str
 	} else {
-		str = d.normalStyle.Render("  " + str)
+		str = "  " + str
 	}
 
-	if len(str) > d.width {
+	strLen := lipgloss.Width(str)
+	if strLen > d.width {
 		if d.width <= 3 {
-			str = strings.Repeat(" ", d.width)
+			str = strings.Repeat(".", d.width)
 		} else {
 			str = str[:d.width-3] + "..."
 		}
-	} else if len(str) < d.width {
-		str = str + strings.Repeat(" ", d.width-len(str))
+	} else {
+		str = str + strings.Repeat(" ", d.width-strLen)
+	}
+
+	if m.Index() == index {
+		str = d.selectedStyle.Render(str)
+	} else {
+		str = d.normalStyle.Render(str)
 	}
 
 	_, _ = fmt.Fprint(w, str)
@@ -149,7 +156,11 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return v, nil
 		case key.Matches(m, keys.Enter):
 			cmd = func() tea.Msg {
-				svc.FlipFoldNode(selectedNode)
+				if selectedNode.IsFolded() {
+					svc.UnfoldNode(selectedNode)
+				} else {
+					svc.FoldNode(selectedNode)
+				}
 				// Switch to editor view if selected host node
 				host, ok := selectedNode.Node.(gohost.Host)
 				if !ok {
@@ -163,7 +174,7 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(m, keys.Create):
 			cmd = func() tea.Msg {
 				v.model.switchState(nodeViewState)
-				svc.FlipFoldNode(selectedNode)
+				svc.UnfoldNode(selectedNode)
 				return RefreshTreeViewItems{}
 			}
 		case key.Matches(m, keys.Delete):
@@ -192,9 +203,9 @@ func (v *TreeView) View() string {
 }
 
 func (v *TreeView) SetWidth(width int) {
-	v.nodeList.SetWidth(width)
-	v.nodeItemDelegate.SetWidth(width)
 	v.width = width
+	v.nodeList.SetWidth(v.width)
+	v.nodeItemDelegate.SetWidth(v.width)
 }
 
 func (v *TreeView) SetHeight(height int) {
