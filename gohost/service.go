@@ -116,12 +116,8 @@ func (s *Service) LoadNodesByParent(parent *TreeNode) []*TreeNode {
 	return nodes
 }
 
-func (s *Service) RemoveNodesByParentID(parentID db.ID) {
-	node := s.nodes[parentID]
-	if node == nil {
-		panic("node is not cached when trying to remove nodes by parent id")
-	}
-	node.SetChildren(nil)
+func (s *Service) RemoveNodesByParent(parent *TreeNode) {
+	parent.SetChildren(nil)
 }
 
 func (s *Service) extractID(node Node) db.ID {
@@ -181,6 +177,49 @@ func (s *Service) EnableHost() {
 	// TODO enable as localhost node
 }
 
+func (s *Service) UnfoldNode(treeNode *TreeNode) {
+	if !s.foldableNode(treeNode) {
+		return
+	}
+	treeNode.SetFolded(false)
+	s.LoadNodesByParent(treeNode)
+	s.UpdateGroupNode(treeNode)
+}
+
+func (s *Service) FoldNode(treeNode *TreeNode) {
+	if !s.foldableNode(treeNode) {
+		return
+	}
+	treeNode.SetFolded(true)
+	s.RemoveNodesByParent(treeNode)
+	s.UpdateGroupNode(treeNode)
+}
+
+func (s *Service) FlipFoldNode(treeNode *TreeNode) {
+	if !s.foldableNode(treeNode) {
+		return
+	}
+	if treeNode.IsFolded() {
+		s.UnfoldNode(treeNode)
+	} else {
+		s.FoldNode(treeNode)
+	}
+}
+
+func (s *Service) foldableNode(treeNode *TreeNode) bool {
+	if treeNode == nil || treeNode == s.SysHostNode {
+		return false
+	}
+	_, ok := treeNode.Node.(*Group)
+	return ok
+}
+
 func (s *Service) EnableNode(node *TreeNode) {
+	if node == nil || node == s.SysHostNode {
+		return
+	}
+	node.SetEnabled(!node.IsEnabled())
+	s.UpdateNode(node)
 	// TODO Load all enable nodes
+
 }

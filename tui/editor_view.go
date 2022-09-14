@@ -130,7 +130,7 @@ func (v *EditorView) RefreshStatusLine() {
 	if v.statusMsg == "" {
 		v.statusLine = fmt.Sprintf("[file: %s] [saved: %t]", v.host.Title(), v.IsSaved())
 	} else {
-		v.statusLine = fmt.Sprintf("[file: %s] [saved: %t] [info: %s]", v.host.Title(), v.IsSaved(), v.statusMsg)
+		v.statusLine = fmt.Sprintf("[%s] [file: %s] [saved: %t]", v.statusMsg, v.host.Title(), v.IsSaved())
 	}
 }
 

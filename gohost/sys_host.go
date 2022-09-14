@@ -81,7 +81,3 @@ func (s *SysHost) SetContent(content []byte) {
 func (s *SysHost) GetDesc() string {
 	return s.Desc
 }
-
-func (s *SysHost) IsEnabled() bool {
-	return true
-}

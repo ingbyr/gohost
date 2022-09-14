@@ -148,31 +148,23 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(m, keys.Esc):
 			return v, nil
 		case key.Matches(m, keys.Enter):
-			switch node := selectedNode.Node.(type) {
-			case *gohost.Group:
-				cmd = func() tea.Msg {
-					if selectedNode.IsFolded() {
-						selectedNode.SetFolded(false)
-						svc.LoadNodesByParent(selectedNode)
-					} else {
-						selectedNode.SetFolded(true)
-						svc.RemoveNodesByParentID(selectedNode.GetID())
-					}
-					svc.UpdateGroupNode(selectedNode)
+			cmd = func() tea.Msg {
+				svc.FlipFoldNode(selectedNode)
+				// Switch to editor view if selected host node
+				host, ok := selectedNode.Node.(gohost.Host)
+				if !ok {
 					return RefreshTreeViewItems{}
 				}
-			case gohost.Host:
-				cmd = func() tea.Msg {
-					log.Debug("select host: " + node.Title())
-					v.model.switchState(editorViewState)
-					v.model.editorView.SetHost(node)
-					return nil
-				}
+				log.Debug("select host: " + host.Title())
+				v.model.switchState(editorViewState)
+				v.model.editorView.SetHost(host)
+				return RefreshTreeViewItems{}
 			}
 		case key.Matches(m, keys.Create):
 			cmd = func() tea.Msg {
 				v.model.switchState(nodeViewState)
-				return nil
+				svc.FlipFoldNode(selectedNode)
+				return RefreshTreeViewItems{}
 			}
 		case key.Matches(m, keys.Delete):
 			cmd = func() tea.Msg {
@@ -181,10 +173,7 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case key.Matches(m, keys.Apply):
 			cmd = func() tea.Msg {
-				selectedNode.SetEnabled(!selectedNode.IsEnabled())
-				svc.UpdateNode(selectedNode)
 				svc.EnableNode(selectedNode)
-				// TODO
 				return RefreshTreeViewItems{}
 			}
 		}
@@ -219,8 +208,4 @@ func (v *TreeView) RefreshTreeNodes() tea.Cmd {
 
 func (v *TreeView) SelectedNode() *gohost.TreeNode {
 	return v.nodeList.SelectedItem().(*gohost.TreeNode)
-}
-
-func (v *TreeView) onHostNodeSelected(host gohost.Host, cmds *[]tea.Cmd) {
-
 }
