@@ -17,7 +17,7 @@ var (
 func GetService() *Service {
 	serviceOnce.Do(func() {
 		service = NewService()
-		service.LoadNodesByParent(service.tree)
+		service.LoadNodesByParent(service.tree, true)
 	})
 	return service
 }
@@ -98,7 +98,7 @@ func (s *Service) treeNodesAsItem(nodes []*TreeNode, res *[]list.Item) {
 	}
 }
 
-func (s *Service) LoadNodesByParent(parent *TreeNode) []*TreeNode {
+func (s *Service) LoadNodesByParent(parent *TreeNode, considerFold bool) []*TreeNode {
 	var children []*TreeNode
 	if parent == s.tree {
 		children = append(children, s.SysHostNode)
@@ -109,9 +109,10 @@ func (s *Service) LoadNodesByParent(parent *TreeNode) []*TreeNode {
 	s.cacheNodes(children)
 	nodes := append([]*TreeNode{}, children...)
 	for _, node := range children {
-		if !node.IsFolded() {
-			nodes = append(nodes, s.LoadNodesByParent(node)...)
+		if considerFold && node.IsFolded() {
+			continue
 		}
+		nodes = append(nodes, s.LoadNodesByParent(node, considerFold)...)
 	}
 	return nodes
 }
@@ -182,7 +183,7 @@ func (s *Service) UnfoldNode(treeNode *TreeNode) {
 		return
 	}
 	treeNode.SetFolded(false)
-	s.LoadNodesByParent(treeNode)
+	s.LoadNodesByParent(treeNode, true)
 	s.UpdateGroupNode(treeNode)
 }
 
@@ -210,9 +211,9 @@ func (s *Service) EnableNode(node *TreeNode) {
 	node.SetEnabled(true)
 	s.UpdateNode(node)
 	if s.isFoldableNode(node) {
+		s.LoadNodesByParent(node, false)
 		for _, child := range node.Children() {
 			s.EnableNode(child)
 		}
 	}
-
 }

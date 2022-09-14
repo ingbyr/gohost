@@ -38,7 +38,7 @@ func (d *nodeItemDelegate) Render(w io.Writer, m list.Model, index int, item lis
 	var str string
 	var enableIcon string
 	if node.IsEnabled() {
-		enableIcon = "✅"
+		enableIcon = " ✔"
 	} else {
 		enableIcon = ""
 	}
