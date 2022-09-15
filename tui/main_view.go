@@ -23,7 +23,7 @@ const (
 	helpViewState
 	confirmViewState
 
-	initViewState = confirmViewState
+	initViewState = treeViewState
 )
 
 var (

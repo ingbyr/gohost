@@ -70,6 +70,8 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		v.hostEditor.SetHeight(m.Height - 2)
 		v.hostEditor.SetWidth(m.Width)
 		log.Debug(fmt.Sprintf("editor view w %d h %d", m.Width, m.Height))
+	case AppliedNewHostContent:
+		v.SetHostNode(v.hostNode)
 	case tea.KeyMsg:
 		if v.model.state != editorViewState {
 			return v, nil

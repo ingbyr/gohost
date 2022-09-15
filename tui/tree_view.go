@@ -146,13 +146,8 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		v.SetWidth(m.Width)
 		v.SetHeight(m.Height)
 		log.Debug(fmt.Sprintf("tree view w %d h %d", v.nodeList.Width(), v.nodeList.Height()))
-	case RefreshTreeViewItems:
+	case RefreshTreeViewItems, AppliedNewHostContent:
 		v.RefreshTreeNodes()
-	case AppliedNewHostContent:
-		// Refresh system host node if editor view is showing it
-		if v.model.editorView.hostNode == svc.SysHostNode {
-			v.model.editorView.SetHostNode(svc.SysHostNode)
-		}
 	case tea.KeyMsg:
 		if v.model.state != treeViewState {
 			return v, nil
@@ -194,8 +189,8 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	}
-
 	cmds = append(cmds, cmd)
+
 	v.nodeList, cmd = v.nodeList.Update(msg)
 	//log.Debug(fmt.Sprintf("cursor at %d, selected item %v",
 	//	v.nodeList.Cursor(), v.nodeList.SelectedItem().FilterValue()))
