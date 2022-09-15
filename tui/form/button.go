@@ -13,7 +13,7 @@ var _ Item = (*Button)(nil)
 
 func NewButton(text string) *Button {
 	return &Button{
-		Text:           text,
+		Text:           "[ " + text + " ]",
 		OnClick:        func() tea.Cmd { return nil },
 		focused:        false,
 		focusedStyle:   styles.None,
@@ -29,6 +29,10 @@ type Button struct {
 	focusedStyle   lipgloss.Style
 	unfocusedStyle lipgloss.Style
 	HideFunc       HideCondition
+}
+
+func (b *Button) Focusable() bool {
+	return true
 }
 
 func (b *Button) Hide() bool {

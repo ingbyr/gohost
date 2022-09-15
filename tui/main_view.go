@@ -21,8 +21,9 @@ const (
 	nodeViewState
 	lastViewState
 	helpViewState
+	confirmViewState
 
-	initViewState = treeViewState
+	initViewState = confirmViewState
 )
 
 var (
@@ -33,8 +34,8 @@ var (
 type Model struct {
 	preState                sessionState
 	state                   sessionState
-	logView                 *LogView
 	helpView                *HelpView
+	confirmView             *ConfirmView
 	treeView                *TreeView
 	editorView              *EditorView
 	nodeView                *NodeView
@@ -54,6 +55,7 @@ func NewModel() (*Model, error) {
 		shortHelperHeight: 1,
 	}
 	model.helpView = NewHelpView(model)
+	model.confirmView = NewConfirmView(model)
 	model.treeView = NewTreeView(model)
 	model.editorView = NewTextView(model)
 	model.nodeView = NewNodeView(model)
@@ -63,10 +65,11 @@ func NewModel() (*Model, error) {
 func (m *Model) Init() tea.Cmd {
 	log.Debug(fmt.Sprintf("style w %d h %d", m.styleWidth, m.styleHeight))
 	return tea.Batch(
+		m.helpView.Init(),
+		m.confirmView.Init(),
 		m.treeView.Init(),
 		m.editorView.Init(),
 		m.nodeView.Init(),
-		m.helpView.Init(),
 	)
 }
 
@@ -79,7 +82,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 		m.resizeViews(msg, &cmds)
 		return m, tea.Batch(cmds...)
-
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, keys.Switch):
@@ -102,6 +104,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	}
+	m.updateView(msg, &cmds, m.confirmView)
 	m.updateView(msg, &cmds, m.editorView)
 	m.updateView(msg, &cmds, m.nodeView)
 	m.updateView(msg, &cmds, m.treeView)
@@ -115,7 +118,6 @@ func (m *Model) View() string {
 	case treeViewState:
 		v = lipgloss.JoinVertical(lipgloss.Left,
 			lipgloss.JoinHorizontal(lipgloss.Top,
-				//styles.FocusedView.Width(m.leftViewWidth).Render(m.treeView.View()),
 				styles.FocusedView.Render(m.treeView.View()),
 				styles.DefaultView.Render(m.editorView.View()),
 			),
@@ -137,7 +139,13 @@ func (m *Model) View() string {
 			),
 			m.helpView.View(),
 		)
-
+	case confirmViewState:
+		v = lipgloss.JoinVertical(lipgloss.Left,
+			lipgloss.JoinHorizontal(lipgloss.Top,
+				styles.DefaultView.Render(m.treeView.View()),
+				styles.FocusedView.Render(m.confirmView.View()),
+			),
+		)
 	case helpViewState:
 		v = m.helpView.View()
 	}
@@ -157,6 +165,7 @@ func (m *Model) switchNextState() sessionState {
 
 func (m *Model) switchState(state sessionState) {
 	m.preState = m.state
+	// TODO use tea.msg
 	if state == editorViewState {
 		m.editorView.Focus()
 	} else {
@@ -175,12 +184,14 @@ func (m *Model) setFullHelp(state sessionState, kb [][]key.Binding) {
 
 func (m *Model) resizeViews(sizeMsg tea.WindowSizeMsg, cmds *[]tea.Cmd) {
 	log.Debug(fmt.Sprintf("window w %d h %d", sizeMsg.Width, sizeMsg.Height))
-	m.leftViewWidth = (sizeMsg.Width - m.styleWidth) / 4
-	m.rightViewWidth = (sizeMsg.Width - m.styleWidth) - m.leftViewWidth
+	width := sizeMsg.Width - m.styleWidth
+	m.leftViewWidth = width / 4
+	m.rightViewWidth = width - m.leftViewWidth
 	height := sizeMsg.Height - m.styleHeight - m.shortHelperHeight
 	log.Debug(fmt.Sprintf("left w %d right w %d h %d", m.leftViewWidth, m.rightViewWidth, height))
+	m.updateView(tea.WindowSizeMsg{Width: sizeMsg.Width, Height: 1}, cmds, m.helpView)
 	m.updateView(tea.WindowSizeMsg{Width: m.leftViewWidth, Height: height}, cmds, m.treeView)
+	m.updateView(tea.WindowSizeMsg{Width: m.rightViewWidth, Height: height}, cmds, m.confirmView)
 	m.updateView(tea.WindowSizeMsg{Width: m.rightViewWidth, Height: height}, cmds, m.editorView)
 	m.updateView(tea.WindowSizeMsg{Width: m.rightViewWidth, Height: height}, cmds, m.nodeView)
-	m.updateView(tea.WindowSizeMsg{Width: sizeMsg.Width, Height: 1}, cmds, m.helpView)
 }

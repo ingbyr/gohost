@@ -5,10 +5,26 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"gohost/config"
 	"gohost/tui/keys"
 	"gohost/tui/styles"
 	"strings"
 )
+
+var cfg = config.Instance()
+
+type Item interface {
+	tea.Model
+	Focus(mode FocusMode) tea.Cmd
+	Unfocus() tea.Cmd
+	InterceptKey(m tea.KeyMsg) bool
+	Focusable() bool
+	SetFocusedStyle(style lipgloss.Style)
+	SetUnfocusedStyle(style lipgloss.Style)
+	Hide() bool
+}
+
+type HideCondition func() bool
 
 func New() *Form {
 	vp := viewport.New(0, 0)
@@ -165,7 +181,7 @@ func (v *Form) idxAfterFocusItem() int {
 		if idx >= len(v.Items) {
 			idx = 0
 		}
-		if !v.Items[idx].Hide() {
+		if !v.Items[idx].Hide() && v.Items[idx].Focusable() {
 			return idx
 		}
 		if idx == v.focus {
@@ -181,7 +197,7 @@ func (v *Form) idxBeforeFocusItem() int {
 		if idx < 0 {
 			idx = len(v.Items) - 1
 		}
-		if !v.Items[idx].Hide() {
+		if !v.Items[idx].Hide() && v.Items[idx].Focusable() {
 			return idx
 		}
 		if idx == v.focus {

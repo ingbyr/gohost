@@ -47,6 +47,10 @@ type Choices struct {
 	selectedIndex     int
 }
 
+func (c *Choices) Focusable() bool {
+	return true
+}
+
 func (c *Choices) Hide() bool {
 	if c.HideFunc == nil {
 		return false

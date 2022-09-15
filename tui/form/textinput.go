@@ -28,6 +28,10 @@ type TextInput struct {
 	unfocusedStyle lipgloss.Style
 }
 
+func (t *TextInput) Focusable() bool {
+	return true
+}
+
 func (t *TextInput) Hide() bool {
 	if t.HideFunc == nil {
 		return false

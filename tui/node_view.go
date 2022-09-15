@@ -41,7 +41,7 @@ func NewNodeView(model *Model) *NodeView {
 	}
 
 	// Confirm button
-	confirmButton := form.NewButton("[ Confirm ]")
+	confirmButton := form.NewButton("Confirm")
 	confirmButton.OnClick = func() tea.Cmd {
 		log.Debug(fmt.Sprintf("name %s, desc %s, url %s, choice %s",
 			nameTextInput.Value(), descTextInput.Value(), urlTextInput.Value(),
