@@ -24,11 +24,16 @@ func NewConfirmView(model *Model) *ConfirmView {
 	confirmForm.AddItem(tipLabel)
 
 	confirmButton := form.NewButton("Confirm")
-	confirmButton.Focus(form.FocusFirstMode)
 	confirmForm.AddItem(confirmButton)
 
 	cancelButton := form.NewButton("Cancel")
 	confirmForm.AddItem(cancelButton)
+
+	//confirmForm.AddItem(form.NewLabel("Label 3"))
+	//confirmForm.AddItem(form.NewButton("Cancel 2"))
+	//confirmForm.AddItem(form.NewLabel("Label 2"))
+
+	confirmForm.FocusAvailableFirstItem()
 	return &ConfirmView{
 		model:         model,
 		Form:          confirmForm,

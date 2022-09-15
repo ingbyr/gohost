@@ -13,23 +13,19 @@ import (
 
 var cfg = config.Instance()
 
-type Item interface {
-	tea.Model
-	Focus(mode FocusMode) tea.Cmd
-	Unfocus() tea.Cmd
-	InterceptKey(m tea.KeyMsg) bool
-	Focusable() bool
-	SetFocusedStyle(style lipgloss.Style)
-	SetUnfocusedStyle(style lipgloss.Style)
-	Hide() bool
-}
+type FocusMode int
+
+const (
+	FocusFirstMode FocusMode = iota
+	FocusLastMode
+)
 
 type HideCondition func() bool
 
 func New() *Form {
 	vp := viewport.New(0, 0)
 	return &Form{
-		Items:              make([]Item, 0),
+		Items:              make([]ItemModel, 0),
 		ItemFocusedStyle:   styles.None,
 		ItemUnfocusedStyle: styles.None,
 		MorePlaceHold:      "...",
@@ -43,7 +39,7 @@ func New() *Form {
 }
 
 type Form struct {
-	Items              []Item
+	Items              []ItemModel
 	ItemFocusedStyle   lipgloss.Style
 	ItemUnfocusedStyle lipgloss.Style
 	MorePlaceHold      string
@@ -109,7 +105,7 @@ func (v *Form) View() string {
 	var b strings.Builder
 	for i := range v.Items {
 		item := v.Items[i]
-		if item.Hide() {
+		if item.Hided() {
 			continue
 		}
 		b.WriteString(v.Items[i].View())
@@ -135,7 +131,7 @@ func (v *Form) View() string {
 	return b.String()
 }
 
-func (v *Form) AddItem(widget Item) {
+func (v *Form) AddItem(widget ItemModel) {
 	if widget == nil {
 		return
 	}
@@ -155,6 +151,16 @@ func (v *Form) SetItemUnfocusedStyle(style lipgloss.Style) {
 	v.ItemUnfocusedStyle = style
 	for i := range v.Items {
 		v.Items[i].SetUnfocusedStyle(style)
+	}
+}
+
+func (v *Form) FocusAvailableFirstItem() {
+	for i, item := range v.Items {
+		if item.Focusable() {
+			item.Focus(FocusFirstMode)
+			v.focus = i
+			return
+		}
 	}
 }
 
@@ -181,7 +187,7 @@ func (v *Form) idxAfterFocusItem() int {
 		if idx >= len(v.Items) {
 			idx = 0
 		}
-		if !v.Items[idx].Hide() && v.Items[idx].Focusable() {
+		if !v.Items[idx].Hided() && v.Items[idx].Focusable() {
 			return idx
 		}
 		if idx == v.focus {
@@ -197,7 +203,7 @@ func (v *Form) idxBeforeFocusItem() int {
 		if idx < 0 {
 			idx = len(v.Items) - 1
 		}
-		if !v.Items[idx].Hide() && v.Items[idx].Focusable() {
+		if !v.Items[idx].Hided() && v.Items[idx].Focusable() {
 			return idx
 		}
 		if idx == v.focus {

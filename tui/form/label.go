@@ -2,22 +2,23 @@ package form
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
-var _ Item = (*Label)(nil)
+var _ ItemModel = (*Label)(nil)
 
 func NewLabel(label string) *Label {
-	return &Label{label: label}
+	commonItem := NewCommonItem()
+	commonItem.SetFocusable(false)
+	return &Label{
+		CommonItem: commonItem,
+		label:      label,
+	}
 }
 
 type Label struct {
+	*CommonItem
 	label         string
 	width, height int
-}
-
-func (l *Label) Focusable() bool {
-	return false
 }
 
 func (l *Label) Init() tea.Cmd {
@@ -34,26 +35,4 @@ func (l *Label) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (l *Label) View() string {
 	return l.label
-}
-
-func (l *Label) Focus(mode FocusMode) tea.Cmd {
-	return nil
-}
-
-func (l *Label) Unfocus() tea.Cmd {
-	return nil
-}
-
-func (l *Label) InterceptKey(m tea.KeyMsg) bool {
-	return false
-}
-
-func (l *Label) SetFocusedStyle(style lipgloss.Style) {
-}
-
-func (l *Label) SetUnfocusedStyle(style lipgloss.Style) {
-}
-
-func (l *Label) Hide() bool {
-	return false
 }

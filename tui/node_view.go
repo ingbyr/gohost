@@ -29,15 +29,20 @@ func NewNodeView(model *Model) *NodeView {
 	descTextInput := form.NewTextInput()
 	descTextInput.Prompt = "Description: "
 
+	urlTextInput := form.NewTextInput()
+	urlTextInput.Prompt = "Url: "
+	urlTextInput.SetHided(true)
+
 	// Node type choices
 	nodeTypeChoices := form.NewChoice([]list.DefaultItem{NodeGroup, NodeLocalHost, NodeRemoteHost})
 	nodeTypeChoices.Spacing = 1
 	nodeTypeChoices.ShowMorePlaceHold = false
-
-	urlTextInput := form.NewTextInput()
-	urlTextInput.Prompt = "Url: "
-	urlTextInput.HideFunc = func() bool {
-		return nodeTypeChoices.SelectedItem() != NodeRemoteHost
+	nodeTypeChoices.OnSelectedChoice = func(item list.DefaultItem) {
+		if item == NodeRemoteHost {
+			urlTextInput.SetHided(false)
+		} else {
+			urlTextInput.SetHided(true)
+		}
 	}
 
 	// Confirm button

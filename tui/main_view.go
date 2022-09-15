@@ -145,6 +145,7 @@ func (m *Model) View() string {
 				styles.DefaultView.Render(m.treeView.View()),
 				styles.FocusedView.Render(m.confirmView.View()),
 			),
+			m.helpView.View(),
 		)
 	case helpViewState:
 		v = m.helpView.View()

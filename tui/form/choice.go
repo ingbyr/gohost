@@ -4,85 +4,44 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"gohost/tui/keys"
 	"strings"
 )
 
-type FocusMode int
+var _ ItemModel = (*Choices)(nil)
 
-const (
-	FocusFirstMode FocusMode = iota
-	FocusLastMode
-)
-
-var _ Item = (*Choices)(nil)
+type OnSelectedChoice = func(item list.DefaultItem)
 
 func NewChoice(items []list.DefaultItem) *Choices {
 	return &Choices{
+		CommonItem:        NewCommonItem(),
 		items:             items,
 		SelectedPrefix:    "(v) ",
 		UnselectedPrefix:  "( ) ",
 		MorePlaceHold:     "...",
 		ShowMorePlaceHold: true,
 		Spacing:           1,
-		focused:           false,
+		OnSelectedChoice:  nil,
 		cursorIndex:       -1,
 		selectedIndex:     -1,
 	}
 }
 
 type Choices struct {
+	*CommonItem
 	SelectedPrefix    string
 	UnselectedPrefix  string
 	MorePlaceHold     string
 	ShowMorePlaceHold bool
-	HideFunc          HideCondition
-	items             []list.DefaultItem
-	focused           bool
-	focusedStyle      lipgloss.Style
-	unfocusedStyle    lipgloss.Style
+	OnSelectedChoice  OnSelectedChoice
 	Spacing           int
+	items             []list.DefaultItem
 	cursorIndex       int
 	selectedIndex     int
 }
 
-func (c *Choices) Focusable() bool {
-	return true
-}
-
-func (c *Choices) Hide() bool {
-	if c.HideFunc == nil {
-		return false
-	}
-	return c.HideFunc()
-}
-
-func (c *Choices) SetFocusedStyle(style lipgloss.Style) {
-	c.focusedStyle = style
-}
-
-func (c *Choices) SetUnfocusedStyle(style lipgloss.Style) {
-	c.unfocusedStyle = style
-}
-
 func (c *Choices) Items() []list.DefaultItem {
 	return c.items
-}
-
-func (c *Choices) View() string {
-	var b strings.Builder
-	for i := range c.items {
-		if i == c.cursorIndex {
-			b.WriteString(c.focusedStyle.Render(c.itemTitle(i)))
-		} else {
-			b.WriteString(c.unfocusedStyle.Render(c.itemTitle(i)))
-		}
-		if i < len(c.items)-1 {
-			b.WriteString(strings.Repeat(cfg.LineBreak, c.Spacing+1))
-		}
-	}
-	return b.String()
 }
 
 func (c *Choices) Init() tea.Cmd {
@@ -104,6 +63,9 @@ func (c *Choices) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(m, keys.Enter):
 			if c.cursorIndex >= 0 {
 				c.selectedIndex = c.cursorIndex
+				if c.OnSelectedChoice != nil {
+					c.OnSelectedChoice(c.items[c.selectedIndex])
+				}
 			}
 		}
 	}
@@ -111,8 +73,23 @@ func (c *Choices) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return c, nil
 }
 
+func (c *Choices) View() string {
+	var b strings.Builder
+	for i := range c.items {
+		if i == c.cursorIndex {
+			b.WriteString(c.focusedStyle.Render(c.itemTitle(i)))
+		} else {
+			b.WriteString(c.unfocusedStyle.Render(c.itemTitle(i)))
+		}
+		if i < len(c.items)-1 {
+			b.WriteString(strings.Repeat(cfg.LineBreak, c.Spacing+1))
+		}
+	}
+	return b.String()
+}
+
 func (c *Choices) Focus(mode FocusMode) tea.Cmd {
-	c.focused = true
+	c.CommonItem.Focus(mode)
 	if len(c.items) == 0 {
 		return nil
 	}
@@ -125,7 +102,7 @@ func (c *Choices) Focus(mode FocusMode) tea.Cmd {
 }
 
 func (c *Choices) Unfocus() tea.Cmd {
-	c.focused = false
+	c.CommonItem.Unfocus()
 	c.cursorIndex = -1
 	return nil
 }
