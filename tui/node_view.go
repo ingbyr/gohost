@@ -48,14 +48,19 @@ func NewNodeView(model *Model) *NodeView {
 	// Confirm button
 	confirmButton := form.NewButton("Confirm")
 	confirmButton.OnClick = func() tea.Cmd {
-		log.Debug(fmt.Sprintf("name %s, desc %s, url %s, choice %s",
-			nameTextInput.Value(), descTextInput.Value(), urlTextInput.Value(),
-			nodeTypeChoices.SelectedItem().FilterValue()))
-
 		// Check inputs
 		if nodeTypeChoices.SelectedItem() == nil {
-			log.Debug(fmt.Sprintf("no group type was selected"))
-			return nil
+			model.switchState(StateConfirmView)
+			return func() tea.Msg {
+				return ConfirmMessage{
+					Message: "Please select node type",
+					ConfirmAction: func() tea.Cmd {
+						// Go back to previous state
+						model.setState(model.preState)
+						return nil
+					},
+				}
+			}
 		}
 
 		// Get parent group
@@ -96,7 +101,7 @@ func NewNodeView(model *Model) *NodeView {
 
 		// Go back to tree view state
 		return func() tea.Msg {
-			model.switchState(treeViewState)
+			model.switchState(StateTreeView)
 			return RefreshTreeViewItems{}
 		}
 	}
@@ -122,7 +127,7 @@ func NewNodeView(model *Model) *NodeView {
 }
 
 func (v *NodeView) Init() tea.Cmd {
-	v.model.setShortHelp(nodeViewState, keys.Arrows())
+	v.model.setShortHelp(StateNodeView, keys.Arrows())
 	return nil
 }
 
@@ -131,7 +136,7 @@ func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		log.Debug(fmt.Sprintf("node view w %d h %d", m.Width, m.Height))
 	case tea.KeyMsg:
-		if v.model.state != nodeViewState {
+		if v.model.state != StateNodeView {
 			return v, nil
 		}
 		return v.Form.Update(msg)

@@ -9,8 +9,8 @@ import (
 type HelpView struct {
 	model       *Model
 	helpView    help.Model
-	shortHelp   map[sessionState][]key.Binding
-	fullHelp    map[sessionState][][]key.Binding
+	shortHelp   map[State][]key.Binding
+	fullHelp    map[State][][]key.Binding
 	enableDebug bool
 }
 
@@ -18,8 +18,8 @@ func NewHelpView(model *Model) *HelpView {
 	return &HelpView{
 		model:       model,
 		helpView:    help.New(),
-		shortHelp:   make(map[sessionState][]key.Binding, 8),
-		fullHelp:    make(map[sessionState][][]key.Binding, 8),
+		shortHelp:   make(map[State][]key.Binding, 8),
+		fullHelp:    make(map[State][][]key.Binding, 8),
 		enableDebug: true,
 	}
 }
@@ -52,10 +52,10 @@ func (h *HelpView) Width() int {
 	return h.helpView.Width
 }
 
-func (h *HelpView) SetShortHelp(state sessionState, kb []key.Binding) {
+func (h *HelpView) SetShortHelp(state State, kb []key.Binding) {
 	h.shortHelp[state] = kb
 }
 
-func (h *HelpView) SetFullHelp(state sessionState, kb [][]key.Binding) {
+func (h *HelpView) SetFullHelp(state State, kb [][]key.Binding) {
 	h.fullHelp[state] = kb
 }

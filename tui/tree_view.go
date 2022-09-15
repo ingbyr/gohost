@@ -133,8 +133,8 @@ func NewTreeView(model *Model) *TreeView {
 }
 
 func (v *TreeView) Init() tea.Cmd {
-	v.model.setShortHelp(treeViewState, []key.Binding{keys.Create, keys.Delete, keys.Apply, keys.Save, keys.ForceQuit})
-	v.model.setFullHelp(treeViewState, append(v.nodeList.FullHelp(), []key.Binding{keys.Create}))
+	v.model.setShortHelp(StateTreeView, []key.Binding{keys.Create, keys.Delete, keys.Apply, keys.Save, keys.ForceQuit})
+	v.model.setFullHelp(StateTreeView, append(v.nodeList.FullHelp(), []key.Binding{keys.Create}))
 	return nil
 }
 
@@ -149,7 +149,7 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case RefreshTreeViewItems, AppliedNewHostContent:
 		v.RefreshTreeNodes()
 	case tea.KeyMsg:
-		if v.model.state != treeViewState {
+		if v.model.state != StateTreeView {
 			return v, nil
 		}
 		selectedNode := v.SelectedNode()
@@ -165,13 +165,13 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return RefreshTreeViewItems{}
 				}
 				log.Debug("select host: " + host.Title())
-				v.model.switchState(editorViewState)
+				v.model.switchState(StateEditorView)
 				v.model.editorView.SetHostNode(selectedNode)
 				return RefreshTreeViewItems{}
 			}
 		case key.Matches(m, keys.Create):
 			cmd = func() tea.Msg {
-				v.model.switchState(nodeViewState)
+				v.model.switchState(StateNodeView)
 				svc.UpdateFoldOfNode(selectedNode, false)
 				return RefreshTreeViewItems{}
 			}

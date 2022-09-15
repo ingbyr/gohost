@@ -6,18 +6,18 @@ import (
 
 var _ ItemModel = (*Label)(nil)
 
-func NewLabel(label string) *Label {
+func NewLabel(text string) *Label {
 	commonItem := NewCommonItem()
 	commonItem.SetFocusable(false)
 	return &Label{
 		CommonItem: commonItem,
-		label:      label,
+		Text:       text,
 	}
 }
 
 type Label struct {
 	*CommonItem
-	label         string
+	Text          string
 	width, height int
 }
 
@@ -34,5 +34,5 @@ func (l *Label) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (l *Label) View() string {
-	return l.label
+	return l.Text
 }

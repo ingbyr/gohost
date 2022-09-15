@@ -53,11 +53,18 @@ func (v *ConfirmView) Init() tea.Cmd {
 
 func (v *ConfirmView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
+	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		v.width, v.height = msg.Width, msg.Height
+	case ConfirmMessage:
+		v.tipLabel.Text = msg.Message
+		v.confirmButton.OnClick = msg.ConfirmAction
 	case tea.KeyMsg:
+
 	}
+	cmds = append(cmds, cmd)
 	_, cmd = v.Form.Update(msg)
-	return v, cmd
+	cmds = append(cmds, cmd)
+	return v, tea.Batch(cmds...)
 }

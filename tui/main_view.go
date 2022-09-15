@@ -13,17 +13,17 @@ import (
 	"strconv"
 )
 
-type sessionState int
+type State int
 
 const (
-	treeViewState = iota
-	editorViewState
-	nodeViewState
-	lastViewState
-	helpViewState
-	confirmViewState
+	StateTreeView = iota
+	StateEditorView
+	StateNodeView
+	StateLastView
+	StateHelpView
+	StateConfirmView
 
-	initViewState = treeViewState
+	StateInit = StateTreeView
 )
 
 var (
@@ -32,8 +32,8 @@ var (
 )
 
 type Model struct {
-	preState                sessionState
-	state                   sessionState
+	preState                State
+	state                   State
 	helpView                *HelpView
 	confirmView             *ConfirmView
 	treeView                *TreeView
@@ -49,7 +49,8 @@ type Model struct {
 func NewModel() (*Model, error) {
 	styleWidth, styleHeight := styles.DefaultView.GetFrameSize()
 	model := &Model{
-		state:             initViewState,
+		preState:          StateInit,
+		state:             StateInit,
 		styleWidth:        styleWidth * 2,
 		styleHeight:       styleHeight,
 		shortHelperHeight: 1,
@@ -77,7 +78,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		// Overwrite size msg for each component
 		m.width = msg.Width
 		m.height = msg.Height
 		m.resizeViews(msg, &cmds)
@@ -89,14 +89,14 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, keys.ForceQuit):
 			cmds = append(cmds, tea.Quit)
 		case key.Matches(msg, keys.Esc):
-			if m.state != initViewState {
-				m.switchState(initViewState)
+			if m.state != StateInit {
+				m.switchState(StateInit)
 			} else {
 				cmds = append(cmds, tea.Quit)
 			}
 		case key.Matches(msg, keys.Help):
-			if m.state != helpViewState {
-				m.switchState(helpViewState)
+			if m.state != StateHelpView {
+				m.switchState(StateHelpView)
 				m.helpView.helpView.ShowAll = true
 			} else {
 				m.switchState(m.preState)
@@ -115,7 +115,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m *Model) View() string {
 	var v string
 	switch m.state {
-	case treeViewState:
+	case StateTreeView:
 		v = lipgloss.JoinVertical(lipgloss.Left,
 			lipgloss.JoinHorizontal(lipgloss.Top,
 				styles.FocusedView.Render(m.treeView.View()),
@@ -123,7 +123,7 @@ func (m *Model) View() string {
 			),
 			m.helpView.View())
 
-	case editorViewState:
+	case StateEditorView:
 		v = lipgloss.JoinVertical(lipgloss.Left,
 			lipgloss.JoinHorizontal(lipgloss.Top,
 				styles.DefaultView.Render(m.treeView.View()),
@@ -131,7 +131,7 @@ func (m *Model) View() string {
 			),
 			m.helpView.View())
 
-	case nodeViewState:
+	case StateNodeView:
 		v = lipgloss.JoinVertical(lipgloss.Left,
 			lipgloss.JoinHorizontal(lipgloss.Top,
 				styles.DefaultView.Render(m.treeView.View()),
@@ -139,7 +139,7 @@ func (m *Model) View() string {
 			),
 			m.helpView.View(),
 		)
-	case confirmViewState:
+	case StateConfirmView:
 		v = lipgloss.JoinVertical(lipgloss.Left,
 			lipgloss.JoinHorizontal(lipgloss.Top,
 				styles.DefaultView.Render(m.treeView.View()),
@@ -147,7 +147,7 @@ func (m *Model) View() string {
 			),
 			m.helpView.View(),
 		)
-	case helpViewState:
+	case StateHelpView:
 		v = m.helpView.View()
 	}
 	return v
@@ -158,28 +158,26 @@ func (m *Model) updateView(msg tea.Msg, cmds *[]tea.Cmd, view tea.Model) {
 	*cmds = append(*cmds, cmd)
 }
 
-func (m *Model) switchNextState() sessionState {
-	m.switchState((m.state + 1) % lastViewState)
+func (m *Model) switchNextState() State {
+	m.switchState((m.state + 1) % StateLastView)
 	log.Debug("state:" + strconv.Itoa(int(m.state)))
 	return m.state
 }
 
-func (m *Model) switchState(state sessionState) {
+func (m *Model) switchState(state State) {
 	m.preState = m.state
-	// TODO use tea.msg
-	if state == editorViewState {
-		m.editorView.Focus()
-	} else {
-		m.editorView.Blur()
-	}
 	m.state = state
 }
 
-func (m *Model) setShortHelp(state sessionState, kb []key.Binding) {
+func (m *Model) setState(state State) {
+	m.state = state
+}
+
+func (m *Model) setShortHelp(state State, kb []key.Binding) {
 	m.helpView.SetShortHelp(state, kb)
 }
 
-func (m *Model) setFullHelp(state sessionState, kb [][]key.Binding) {
+func (m *Model) setFullHelp(state State, kb [][]key.Binding) {
 	m.helpView.SetFullHelp(state, kb)
 }
 
