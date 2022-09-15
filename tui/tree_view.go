@@ -149,9 +149,6 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case RefreshTreeViewItems, AppliedNewHostContent:
 		v.RefreshTreeNodes()
 	case tea.KeyMsg:
-		if v.model.state != StateTreeView {
-			return v, nil
-		}
 		selectedNode := v.SelectedNode()
 		switch {
 		case key.Matches(m, keys.Esc):

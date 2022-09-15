@@ -50,17 +50,17 @@ func NewNodeView(model *Model) *NodeView {
 	confirmButton.OnClick = func() tea.Cmd {
 		// Check inputs
 		if nodeTypeChoices.SelectedItem() == nil {
-			model.switchState(StateConfirmView)
-			return func() tea.Msg {
-				return ConfirmMessage{
-					Message: "Please select node type",
-					ConfirmAction: func() tea.Cmd {
-						// Go back to previous state
-						model.setState(model.preState)
-						return nil
-					},
-				}
-			}
+			model.confirmView.Reset("Please select node type",
+				func() tea.Cmd {
+					model.setState(StateNodeView)
+					return nil
+				},
+				func() tea.Cmd {
+					model.setState(StateNodeView)
+					return nil
+				})
+			model.setState(StateConfirmView)
+			return nil
 		}
 
 		// Get parent group
@@ -136,9 +136,6 @@ func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		log.Debug(fmt.Sprintf("node view w %d h %d", m.Width, m.Height))
 	case tea.KeyMsg:
-		if v.model.state != StateNodeView {
-			return v, nil
-		}
 		return v.Form.Update(msg)
 	}
 	_, cmd := v.Form.Update(msg)

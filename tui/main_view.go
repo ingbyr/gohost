@@ -102,13 +102,25 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.switchState(m.preState)
 				m.helpView.helpView.ShowAll = false
 			}
+		default:
+			switch m.state {
+			case StateTreeView:
+				m.updateView(msg, &cmds, m.treeView)
+			case StateEditorView:
+				m.updateView(msg, &cmds, m.editorView)
+			case StateNodeView:
+				m.updateView(msg, &cmds, m.nodeView)
+			case StateConfirmView:
+				m.updateView(msg, &cmds, m.confirmView)
+			}
 		}
+	default:
+		m.updateView(msg, &cmds, m.editorView)
+		m.updateView(msg, &cmds, m.nodeView)
+		m.updateView(msg, &cmds, m.treeView)
+		m.updateView(msg, &cmds, m.confirmView)
+		m.updateView(msg, &cmds, m.helpView)
 	}
-	m.updateView(msg, &cmds, m.confirmView)
-	m.updateView(msg, &cmds, m.editorView)
-	m.updateView(msg, &cmds, m.nodeView)
-	m.updateView(msg, &cmds, m.treeView)
-	m.updateView(msg, &cmds, m.helpView)
 	return m, tea.Batch(cmds...)
 }
 

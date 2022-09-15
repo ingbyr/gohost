@@ -57,9 +57,6 @@ func (v *ConfirmView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		v.width, v.height = msg.Width, msg.Height
-	case ConfirmMessage:
-		v.tipLabel.Text = msg.Message
-		v.confirmButton.OnClick = msg.ConfirmAction
 	case tea.KeyMsg:
 
 	}
@@ -67,4 +64,10 @@ func (v *ConfirmView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	_, cmd = v.Form.Update(msg)
 	cmds = append(cmds, cmd)
 	return v, tea.Batch(cmds...)
+}
+
+func (v *ConfirmView) Reset(tip string, confirmOnClick, cancelOnClick func() tea.Cmd) {
+	v.tipLabel.Text = tip
+	v.confirmButton.OnClick = confirmOnClick
+	v.cancelButton.OnClick = cancelOnClick
 }

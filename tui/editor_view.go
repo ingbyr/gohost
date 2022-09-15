@@ -73,9 +73,6 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case AppliedNewHostContent:
 		v.SetHostNode(v.hostNode)
 	case tea.KeyMsg:
-		if v.model.state != StateEditorView {
-			return v, nil
-		}
 		switch {
 		case key.Matches(m, keys.Esc):
 			return v, nil
