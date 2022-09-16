@@ -70,30 +70,3 @@ func (s *Service) loadGroupNodesByParent(parent *TreeNode) []*TreeNode {
 	}
 	return nodes
 }
-
-func (s *Service) SaveGroup(group *Group) error {
-	return s.store.Insert(s.extractID(group), group)
-}
-
-func (s *Service) SaveGroupNode(groupNode *TreeNode) {
-	group := groupNode.Node.(*Group)
-	if err := s.SaveGroup(group); err != nil {
-		panic(err)
-	}
-	s.nodes[groupNode.GetID()] = groupNode
-}
-
-func (s *Service) UpdateGroup(group *Group) error {
-	return s.store.Update(group.GetID(), group)
-}
-
-func (s *Service) UpdateGroupNode(groupNode *TreeNode) {
-	group := groupNode.Node.(*Group)
-	if err := s.UpdateGroup(group); err != nil {
-		panic(err)
-	}
-}
-
-func (s *Service) DeleteGroup(id db.ID) error {
-	return s.store.Delete(id, &Group{})
-}

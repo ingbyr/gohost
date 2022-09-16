@@ -54,11 +54,8 @@ func (v *EditorView) Init() tea.Cmd {
 		{keys.Up, keys.Down, keys.Left, keys.Right, keys.Save},
 		{km.CharacterForward, km.CharacterBackward}, // TODO add all key map from textarea.KeyMap
 	})
-	return func() tea.Msg {
-		// Display system host on start up
-		v.SetHostNode(svc.SysHostNode)
-		return nil
-	}
+	v.SetHostNode(svc.SysHostNode)
+	return nil
 }
 
 func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -77,8 +74,9 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(m, keys.Esc):
 			return v, nil
 		case key.Matches(m, keys.Save):
-			if v.hostNode.Node.(gohost.Host).IsEditable() {
-				v.hostNode.Node.(gohost.Host).SetContent([]byte(v.hostEditor.Value()))
+			host := v.Host()
+			if host.IsEditable() {
+				host.SetContent([]byte(v.hostEditor.Value()))
 				svc.UpdateNode(v.hostNode)
 				v.SetSaved()
 			} else {
@@ -112,6 +110,13 @@ func (v *EditorView) Focus() {
 
 func (v *EditorView) Blur() {
 	v.hostEditor.Blur()
+}
+
+func (v *EditorView) Host() gohost.Host {
+	if v.hostNode == nil {
+		return nil
+	}
+	return v.hostNode.Node.(gohost.Host)
 }
 
 func (v *EditorView) SetHostNode(hostNode *gohost.TreeNode) {

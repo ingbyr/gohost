@@ -1,11 +1,9 @@
 package gohost
 
 import (
-	"bytes"
 	"github.com/charmbracelet/bubbles/list"
 	"gohost/config"
 	"gohost/db"
-	"os"
 	"sync"
 )
 
@@ -34,6 +32,7 @@ func NewService() *Service {
 		children: make([]*TreeNode, 0),
 		depth:    -1,
 	}
+
 	sysHostNode := NewTreeNode(SysHostInstance())
 	sysHostNode.SetParent(s.tree)
 	s.SysHostNode = sysHostNode
@@ -122,54 +121,42 @@ func (s *Service) RemoveNodesByParent(parent *TreeNode) {
 	parent.SetChildren(nil)
 }
 
-func (s *Service) extractID(node Node) db.ID {
-	if node.GetID() == 0 {
-		return s.store.NextID()
+func (s *Service) DeleteNode(node *TreeNode) error {
+	if node == nil || node.Node == nil || node == s.tree || node == s.SysHostNode {
+		return nil
 	}
-	return node.GetID()
+	if err := s.store.Delete(node.GetID(), node.Node); err != nil {
+		return err
+	}
+	s.nodes[node.GetID()] = nil
+	if node.Parent() != nil {
+		node.Parent().RemoveChild(node)
+	}
+	return nil
 }
 
-func (s *Service) DeleteNode(node *TreeNode) {
-	if node == nil || node.Node == nil || node == s.SysHostNode {
-		return
+func (s *Service) DeleteNodeRecursively(node *TreeNode) error {
+	if err := s.DeleteNode(node); err != nil {
+		return err
 	}
-	if node == s.tree {
-		panic("Can not delete dummy root node")
+	for len(node.Children()) > 0 {
+		if err := s.DeleteNodeRecursively(node.Children()[0]); err != nil {
+			return err
+		}
 	}
-	node.Parent().RemoveChild(node)
-	s.nodes[node.GetID()] = nil
-	switch node.Node.(type) {
-	case *Group:
-		if err := s.DeleteGroup(node.GetID()); err != nil {
-			panic(err)
-		}
-		for _, childNode := range node.Children() {
-			s.DeleteNode(childNode)
-		}
-	case *LocalHost:
-		if err := s.DeleteLocalHost(node.GetID()); err != nil {
-			panic(err)
-		}
-	case *RemoteHost:
+	return nil
+}
 
+func (s *Service) SaveNode(node *TreeNode) error {
+	id := node.GetID()
+	if id == 0 {
+		id = s.store.NextID()
 	}
+	return s.store.Insert(id, node.Node)
 }
 
 func (s *Service) UpdateNode(node *TreeNode) {
 	if err := s.store.Update(node.GetID(), node.Node); err != nil {
-		panic(err)
-	}
-}
-
-func (s *Service) ApplyHost(hostContent []byte) {
-	// Truncate system host file
-	sysHostFile, err := os.Create(cfg.SysHostFile)
-	if err != nil {
-		panic(err)
-	}
-	defer sysHostFile.Close()
-	// Write hosts to system host file
-	if _, err = sysHostFile.Write(hostContent); err != nil {
 		panic(err)
 	}
 }
@@ -197,27 +184,4 @@ func (s *Service) UpdateEnabledOfNode(node *TreeNode, enabled bool) {
 	for _, child := range node.Children() {
 		s.UpdateEnabledOfNode(child, enabled)
 	}
-}
-
-func (s *Service) CombineEnabledHosts() []byte {
-	hosts := s.loadLocalHostsByFlag(MaskEnable)
-	// TODO load all enabled remote hosts
-	combinedHost := bytes.NewBuffer(nil)
-	for _, host := range hosts {
-		combinedHost.WriteString("# Content from ")
-		combinedHost.WriteString(host.Title())
-		if host.Description() != "" {
-			combinedHost.WriteString("( ")
-			combinedHost.WriteString(host.Description())
-			combinedHost.WriteString(" )")
-		}
-		combinedHost.WriteString(cfg.LineBreak)
-		combinedHost.Write(host.GetContent())
-		combinedHost.WriteString(cfg.LineBreak)
-		combinedHost.WriteString("# End of ")
-		combinedHost.WriteString(host.Title())
-		combinedHost.WriteString(cfg.LineBreak)
-		combinedHost.WriteString(cfg.LineBreak)
-	}
-	return combinedHost.Bytes()
 }

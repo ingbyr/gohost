@@ -82,7 +82,7 @@ func (c *Choices) View() string {
 			b.WriteString(c.unfocusedStyle.Render(c.itemTitle(i)))
 		}
 		if i < len(c.items)-1 {
-			b.WriteString(strings.Repeat(cfg.LineBreak, c.Spacing+1))
+			b.WriteString(strings.Repeat("\n", c.Spacing+1))
 		}
 	}
 	return b.String()

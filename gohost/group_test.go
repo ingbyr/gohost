@@ -2,15 +2,11 @@ package gohost
 
 import (
 	"github.com/stretchr/testify/assert"
-	"gohost/db"
 	"testing"
 )
 
 func TestGroupService_Save(t *testing.T) {
-	store := db.Instance()
-	defer store.Close()
 	a := assert.New(t)
-	service := GetService()
 	groups := []*Group{
 		{ID: 002, ParentID: 000, Name: "g-1", Desc: "desc1"},
 		{ID: 011, ParentID: 002, Name: "g-1-1", Desc: "desc11"},
@@ -27,7 +23,7 @@ func TestGroupService_Save(t *testing.T) {
 		{ID: 005, ParentID: 000, Name: "g-4", Desc: "desc4"},
 	}
 	for _, g := range groups {
-		if err := service.SaveGroup(g); err != nil {
+		if err := GetService().SaveNode(NewTreeNode(g)); err != nil {
 			a.NoError(err)
 		}
 	}

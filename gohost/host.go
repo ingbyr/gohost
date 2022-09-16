@@ -1,5 +1,10 @@
 package gohost
 
+import (
+	"bytes"
+	"os"
+)
+
 type Host interface {
 	Node
 	GetContent() []byte
@@ -7,25 +12,38 @@ type Host interface {
 	IsEditable() bool
 }
 
-func (s *Service) SaveHost(host Host) error {
-	if err := s.store.Insert(s.extractID(host), host); err != nil {
-		return err
+func (s *Service) ApplyHost(hostContent []byte) {
+	// Truncate system host file
+	sysHostFile, err := os.Create(cfg.SysHostFile)
+	if err != nil {
+		panic(err)
 	}
-	return nil
+	defer sysHostFile.Close()
+	// Write hosts to system host file
+	if _, err = sysHostFile.Write(hostContent); err != nil {
+		panic(err)
+	}
 }
 
-func (s *Service) SaveHostNode(hostNode *TreeNode) error {
-	host := hostNode.Node.(Host)
-	if err := s.SaveHost(host); err != nil {
-		return err
+func (s *Service) CombineEnabledHosts() []byte {
+	hosts := s.loadLocalHostsByFlag(MaskEnable)
+	// TODO load all enabled remote hosts
+	combinedHost := bytes.NewBuffer(nil)
+	for _, host := range hosts {
+		combinedHost.WriteString("# Content from ")
+		combinedHost.WriteString(host.Title())
+		if host.Description() != "" {
+			combinedHost.WriteString("( ")
+			combinedHost.WriteString(host.Description())
+			combinedHost.WriteString(" )")
+		}
+		combinedHost.WriteString(cfg.LineBreak)
+		combinedHost.Write(host.GetContent())
+		combinedHost.WriteString(cfg.LineBreak)
+		combinedHost.WriteString("# End of ")
+		combinedHost.WriteString(host.Title())
+		combinedHost.WriteString(cfg.LineBreak)
+		combinedHost.WriteString(cfg.LineBreak)
 	}
-	s.nodes[hostNode.GetID()] = hostNode
-	return nil
-}
-
-func (s *Service) UpdateHost(host Host) error {
-	if err := s.store.Update(host.GetID(), host); err != nil {
-		return err
-	}
-	return nil
+	return combinedHost.Bytes()
 }

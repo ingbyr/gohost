@@ -92,7 +92,3 @@ func (s *Service) loadLocalHostsByFlag(flag int) []Host {
 	}
 	return hosts
 }
-
-func (s *Service) DeleteLocalHost(id db.ID) error {
-	return s.store.Delete(id, &LocalHost{})
-}

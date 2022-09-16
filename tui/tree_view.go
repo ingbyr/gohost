@@ -174,7 +174,9 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case key.Matches(m, keys.Delete):
 			cmd = func() tea.Msg {
-				svc.DeleteNode(selectedNode)
+				if err := svc.DeleteNodeRecursively(selectedNode); err != nil {
+					panic(err)
+				}
 				return RefreshTreeViewMsg{}
 			}
 		case key.Matches(m, keys.Apply):
