@@ -1,8 +1,7 @@
 package tui
 
-type RefreshTreeViewItems struct {
+type RefreshTreeViewMsg struct {
 }
 
-type AppliedNewHostContent struct {
+type AppliedNewHostMsg struct {
 }
-

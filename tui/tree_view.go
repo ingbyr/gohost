@@ -146,7 +146,7 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		v.SetWidth(m.Width)
 		v.SetHeight(m.Height)
 		log.Debug(fmt.Sprintf("tree view w %d h %d", v.nodeList.Width(), v.nodeList.Height()))
-	case RefreshTreeViewItems, AppliedNewHostContent:
+	case RefreshTreeViewMsg, AppliedNewHostMsg:
 		v.RefreshTreeNodes()
 	case tea.KeyMsg:
 		selectedNode := v.SelectedNode()
@@ -154,35 +154,35 @@ func (v *TreeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(m, keys.Esc):
 			return v, nil
 		case key.Matches(m, keys.Enter):
+			host, isHostNode := selectedNode.Node.(gohost.Host)
 			cmd = func() tea.Msg {
 				svc.UpdateFoldOfNode(selectedNode, !selectedNode.IsFolded())
-				// Switch to editor view if selected host node
-				host, ok := selectedNode.Node.(gohost.Host)
-				if !ok {
-					return RefreshTreeViewItems{}
+				if !isHostNode {
+					return RefreshTreeViewMsg{}
 				}
+				// Switch to editor view if selected host node
 				log.Debug("select host: " + host.Title())
 				v.model.switchState(StateEditorView)
 				v.model.editorView.SetHostNode(selectedNode)
-				return RefreshTreeViewItems{}
+				return RefreshTreeViewMsg{}
 			}
 		case key.Matches(m, keys.Create):
 			cmd = func() tea.Msg {
 				v.model.switchState(StateNodeView)
 				svc.UpdateFoldOfNode(selectedNode, false)
-				return RefreshTreeViewItems{}
+				return RefreshTreeViewMsg{}
 			}
 		case key.Matches(m, keys.Delete):
 			cmd = func() tea.Msg {
 				svc.DeleteNode(selectedNode)
-				return RefreshTreeViewItems{}
+				return RefreshTreeViewMsg{}
 			}
 		case key.Matches(m, keys.Apply):
 			cmd = func() tea.Msg {
 				svc.UpdateEnabledOfNode(selectedNode, !selectedNode.IsEnabled())
 				hostContent := svc.CombineEnabledHosts()
 				svc.ApplyHost(hostContent)
-				return AppliedNewHostContent{}
+				return AppliedNewHostMsg{}
 			}
 		}
 	}

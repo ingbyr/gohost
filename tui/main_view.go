@@ -178,13 +178,21 @@ func (m *Model) switchNextState() State {
 
 func (m *Model) switchState(state State) {
 	m.preState = m.state
-	m.state = state
+	m.setState(state)
 }
 
 func (m *Model) setState(state State) {
 	m.state = state
+	m.triggerStateViewIfNecessary(state)
 }
 
+func (m *Model) triggerStateViewIfNecessary(state State) {
+	if state == StateEditorView {
+		m.editorView.Focus()
+	} else {
+		m.editorView.Blur()
+	}
+}
 func (m *Model) setShortHelp(state State, kb []key.Binding) {
 	m.helpView.SetShortHelp(state, kb)
 }

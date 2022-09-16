@@ -102,7 +102,7 @@ func NewNodeView(model *Model) *NodeView {
 		// Go back to tree view state
 		return func() tea.Msg {
 			model.switchState(StateTreeView)
-			return RefreshTreeViewItems{}
+			return RefreshTreeViewMsg{}
 		}
 	}
 
