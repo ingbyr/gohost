@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"gohost/gohost"
@@ -125,7 +126,8 @@ func NewNodeView(model *Model) *NodeView {
 }
 
 func (v *NodeView) Init() tea.Cmd {
-	v.model.setShortHelp(StateNodeView, keys.Arrows())
+	v.model.setShortHelp(StateNodeView, []key.Binding{keys.Up, keys.Down, keys.Enter})
+	v.model.setFullHelp(StateNodeView, [][]key.Binding{{keys.Up, keys.Down, keys.Enter}})
 	return nil
 }
 

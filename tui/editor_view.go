@@ -23,7 +23,7 @@ type EditorView struct {
 	width, height int
 }
 
-func NewTextView(model *Model) *EditorView {
+func NewEditorView(model *Model) *EditorView {
 	hostEditor := textarea.New()
 	hostEditor.ShowLineNumbers = true
 	hostEditor.CharLimit = 0
@@ -41,7 +41,6 @@ func NewTextView(model *Model) *EditorView {
 }
 
 func (v *EditorView) Init() tea.Cmd {
-	km := v.hostEditor.KeyMap
 	v.model.setShortHelp(StateEditorView, []key.Binding{
 		keys.Up,
 		keys.Down,
@@ -51,14 +50,14 @@ func (v *EditorView) Init() tea.Cmd {
 		keys.Esc,
 	})
 	v.model.setFullHelp(StateEditorView, [][]key.Binding{
-		{keys.Up, keys.Down, keys.Left, keys.Right, keys.Save},
-		{km.CharacterForward, km.CharacterBackward}, // TODO add all key map from textarea.KeyMap
+		{keys.Up, keys.Down, keys.Left, keys.Right, keys.Save, keys.Esc},
 	})
 	v.SetHostNode(svc.SysHostNode)
 	return nil
 }
 
 func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	host := v.Host()
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 	switch m := msg.(type) {
@@ -74,18 +73,22 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(m, keys.Esc):
 			return v, nil
 		case key.Matches(m, keys.Save):
-			host := v.Host()
 			if host.IsEditable() {
 				host.SetContent([]byte(v.hostEditor.Value()))
 				svc.UpdateNode(v.hostNode)
 				v.SetSaved()
-			} else {
-				v.statusMsg = "Can not edit this"
 			}
+		case key.Matches(m, keys.Up, keys.Down):
+			v.hostEditor, cmd = v.hostEditor.Update(msg)
+			msg = nil
 		}
 	}
+	if host.IsEditable() {
+		v.hostEditor, cmd = v.hostEditor.Update(msg)
+	} else {
+		v.statusMsg = "Can not edit this file"
+	}
 	v.RefreshStatusLine()
-	v.hostEditor, cmd = v.hostEditor.Update(msg)
 	cmds = append(cmds, cmd)
 	return v, tea.Batch(cmds...)
 }
@@ -124,6 +127,7 @@ func (v *EditorView) SetHostNode(hostNode *gohost.TreeNode) {
 	v.hostEditor.Reset()
 	v.hostEditor.SetValue(string(hostNode.Node.(gohost.Host).GetContent()))
 	v.prevLen = v.hostEditor.Length()
+	v.statusMsg = ""
 }
 
 func (v *EditorView) RefreshStatusLine() {
@@ -145,4 +149,13 @@ func (v *EditorView) IsSaved() bool {
 func (v *EditorView) SetSaved() {
 	v.prevLen = v.hostEditor.Length()
 	v.saved = true
+}
+
+func (v *EditorView) FullHelp() [][]key.Binding {
+	keyMap := v.hostEditor.KeyMap
+	return [][]key.Binding{
+		{keyMap.CharacterBackward, keyMap.CharacterForward},
+		{keyMap.DeleteAfterCursor, keyMap.DeleteBeforeCursor},
+		{keyMap.DeleteCharacterBackward, keyMap.DeleteCharacterForward},
+	}
 }

@@ -29,15 +29,15 @@ var (
 	)
 	Esc = key.NewBinding(
 		key.WithKeys("esc"),
-		key.WithHelp("esc", "switch group or exit"),
+		key.WithHelp("esc", "left/exit"),
 	)
 	Enter = key.NewBinding(
 		key.WithKeys("enter"),
-		key.WithHelp("enter", "select or confirm"),
+		key.WithHelp("enter", "select/confirm"),
 	)
 	Switch = key.NewBinding(
 		key.WithKeys("tab"),
-		key.WithHelp("tab", "switch helpView"),
+		key.WithHelp("tab", "switch next view"),
 	)
 	Save = key.NewBinding(
 		key.WithKeys("ctrl+s"),
@@ -56,7 +56,3 @@ var (
 		key.WithHelp("a", "apply"),
 	)
 )
-
-func Arrows() []key.Binding {
-	return []key.Binding{Up, Down, Left, Right}
-}

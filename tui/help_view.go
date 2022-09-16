@@ -8,7 +8,7 @@ import (
 
 type HelpView struct {
 	model       *Model
-	helpView    help.Model
+	helpModel   help.Model
 	shortHelp   map[State][]key.Binding
 	fullHelp    map[State][][]key.Binding
 	enableDebug bool
@@ -17,7 +17,7 @@ type HelpView struct {
 func NewHelpView(model *Model) *HelpView {
 	return &HelpView{
 		model:       model,
-		helpView:    help.New(),
+		helpModel:   help.New(),
 		shortHelp:   make(map[State][]key.Binding, 8),
 		fullHelp:    make(map[State][][]key.Binding, 8),
 		enableDebug: true,
@@ -31,13 +31,13 @@ func (h *HelpView) Init() tea.Cmd {
 func (h *HelpView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		h.helpView.Width = msg.Width
+		h.helpModel.Width = msg.Width
 	}
 	return h, nil
 }
 
 func (h *HelpView) View() string {
-	return h.helpView.View(h)
+	return h.helpModel.View(h)
 }
 
 func (h *HelpView) ShortHelp() []key.Binding {
@@ -49,7 +49,7 @@ func (h *HelpView) FullHelp() [][]key.Binding {
 }
 
 func (h *HelpView) Width() int {
-	return h.helpView.Width
+	return h.helpModel.Width
 }
 
 func (h *HelpView) SetShortHelp(state State, kb []key.Binding) {

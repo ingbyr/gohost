@@ -1,8 +1,10 @@
 package tui
 
 import (
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"gohost/tui/form"
+	"gohost/tui/keys"
 	"gohost/tui/styles"
 )
 
@@ -41,6 +43,8 @@ func NewConfirmView(model *Model) *ConfirmView {
 }
 
 func (v *ConfirmView) Init() tea.Cmd {
+	v.model.setShortHelp(StateConfirmView, []key.Binding{keys.Up, keys.Down, keys.Enter, keys.Esc})
+	v.model.setFullHelp(StateConfirmView, [][]key.Binding{{keys.Up, keys.Down, keys.Enter, keys.Esc}})
 	return nil
 }
 

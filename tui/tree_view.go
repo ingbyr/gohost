@@ -103,7 +103,7 @@ func (d *nodeItemDelegate) SetWidth(width int) {
 	d.width = width
 }
 
-// TreeView is tui helpView for nodes tree
+// TreeView is tui helpModel for nodes tree
 type TreeView struct {
 	model            *Model
 	nodeList         list.Model
@@ -112,7 +112,7 @@ type TreeView struct {
 }
 
 func NewTreeView(model *Model) *TreeView {
-	// Create nodes list helpView
+	// Create nodes list helpModel
 	nodes := svc.TreeNodesAsItem()
 	delegate := newNodeItemDelegate()
 	nodeList := list.New(nodes, delegate, 0, 0)
@@ -133,8 +133,11 @@ func NewTreeView(model *Model) *TreeView {
 }
 
 func (v *TreeView) Init() tea.Cmd {
-	v.model.setShortHelp(StateTreeView, []key.Binding{keys.Create, keys.Delete, keys.Apply, keys.Save, keys.ForceQuit})
-	v.model.setFullHelp(StateTreeView, append(v.nodeList.FullHelp(), []key.Binding{keys.Create}))
+	v.model.setShortHelp(StateTreeView, []key.Binding{keys.Create, keys.Delete, keys.Apply, keys.Save, keys.ForceQuit, keys.Help})
+	v.model.setFullHelp(StateTreeView,
+		append(v.nodeList.FullHelp(),
+			[]key.Binding{keys.Create, keys.Delete, keys.Apply, keys.Save, keys.ForceQuit, keys.Help}),
+	)
 	return nil
 }
 

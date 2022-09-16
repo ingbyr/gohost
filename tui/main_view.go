@@ -58,7 +58,7 @@ func NewModel() (*Model, error) {
 	model.helpView = NewHelpView(model)
 	model.confirmView = NewConfirmView(model)
 	model.treeView = NewTreeView(model)
-	model.editorView = NewTextView(model)
+	model.editorView = NewEditorView(model)
 	model.nodeView = NewNodeView(model)
 	return model, nil
 }
@@ -86,6 +86,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, keys.Switch):
 			m.switchNextState()
+			m.helpView.helpModel.ShowAll = false
 		case key.Matches(msg, keys.ForceQuit):
 			cmds = append(cmds, tea.Quit)
 		case key.Matches(msg, keys.Esc):
@@ -97,10 +98,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, keys.Help):
 			if m.state != StateHelpView {
 				m.switchState(StateHelpView)
-				m.helpView.helpView.ShowAll = true
+				m.helpView.helpModel.ShowAll = true
 			} else {
 				m.switchState(m.preState)
-				m.helpView.helpView.ShowAll = false
+				m.helpView.helpModel.ShowAll = false
 			}
 		default:
 			switch m.state {
