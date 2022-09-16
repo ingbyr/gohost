@@ -17,8 +17,9 @@ type ConfirmView struct {
 
 func NewConfirmView(model *Model) *ConfirmView {
 	confirmForm := form.New()
-	confirmForm.SetItemFocusedStyle(styles.FocusedFormItem)
-	confirmForm.SetItemUnfocusedStyle(styles.UnfocusedFormItem)
+	confirmForm.SetDefaultFocusedStyle(styles.FocusedFormItem)
+	confirmForm.SetDefaultUnfocusedStyle(styles.UnfocusedFormItem)
+	confirmForm.Spacing = 1
 
 	tipLabel := form.NewLabel("Default label")
 	confirmForm.AddItem(tipLabel)

@@ -114,8 +114,8 @@ func NewNodeView(model *Model) *NodeView {
 		typeChoices:   nodeTypeChoices,
 	}
 	nodeForm.Spacing = 1
-	nodeForm.SetItemFocusedStyle(styles.FocusedFormItem)
-	nodeForm.SetItemUnfocusedStyle(styles.UnfocusedFormItem)
+	nodeForm.SetDefaultFocusedStyle(styles.FocusedFormItem)
+	nodeForm.SetDefaultUnfocusedStyle(styles.UnfocusedFormItem)
 	nodeForm.AddItem(nameTextInput)
 	nodeForm.AddItem(descTextInput)
 	nodeForm.AddItem(nodeTypeChoices)

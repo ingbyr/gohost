@@ -4,13 +4,10 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"gohost/config"
 	"gohost/tui/keys"
 	"gohost/tui/styles"
 	"strings"
 )
-
-var cfg = config.Instance()
 
 type FocusMode int
 
@@ -19,31 +16,30 @@ const (
 	FocusLastMode
 )
 
-type HideCondition func() bool
-
 func New() *Form {
 	return &Form{
-		Items:              make([]ItemModel, 0),
-		ItemFocusedStyle:   styles.None,
-		ItemUnfocusedStyle: styles.None,
-		MorePlaceHold:      "...",
-		Spacing:            0,
-		preFocus:           0,
-		focus:              0,
-		width:              0,
-		height:             0,
+		Items:                 make([]ItemModel, 0),
+		defaultFocusedStyle:   styles.None,
+		defaultUnfocusedStyle: styles.None,
+		MorePlaceHold:         "...",
+		Spacing:               0,
+		preFocus:              0,
+		focus:                 0,
+		width:                 0,
+		height:                0,
 	}
 }
 
 type Form struct {
-	Items              []ItemModel
-	ItemFocusedStyle   lipgloss.Style
-	ItemUnfocusedStyle lipgloss.Style
-	MorePlaceHold      string
-	Spacing            int
-	preFocus           int
-	focus              int
-	width, height      int
+	Items                 []ItemModel
+	defaultFocusedStyle   lipgloss.Style
+	defaultUnfocusedStyle lipgloss.Style
+	MorePlaceHold         string
+	Spacing               int
+	preFocus              int
+	focus                 int
+	width, height         int
+	// TODO add layout align
 }
 
 func (v *Form) Init() tea.Cmd {
@@ -105,7 +101,7 @@ func (v *Form) View() string {
 		}
 		b.WriteString(v.Items[i].View())
 		if i < len(v.Items)-1 {
-			b.WriteString(strings.Repeat(cfg.LineBreak, v.Spacing+1))
+			b.WriteString(strings.Repeat("\n", v.Spacing+1))
 		}
 	}
 	return lipgloss.NewStyle().
@@ -119,20 +115,20 @@ func (v *Form) AddItem(widget ItemModel) {
 	if widget == nil {
 		return
 	}
-	widget.SetFocusedStyle(v.ItemFocusedStyle)
-	widget.SetUnfocusedStyle(v.ItemUnfocusedStyle)
+	widget.SetFocusedStyle(v.defaultFocusedStyle)
+	widget.SetUnfocusedStyle(v.defaultUnfocusedStyle)
 	v.Items = append(v.Items, widget)
 }
 
-func (v *Form) SetItemFocusedStyle(style lipgloss.Style) {
-	v.ItemFocusedStyle = style
+func (v *Form) SetDefaultFocusedStyle(style lipgloss.Style) {
+	v.defaultFocusedStyle = style
 	for i := range v.Items {
 		v.Items[i].SetFocusedStyle(style)
 	}
 }
 
-func (v *Form) SetItemUnfocusedStyle(style lipgloss.Style) {
-	v.ItemUnfocusedStyle = style
+func (v *Form) SetDefaultUnfocusedStyle(style lipgloss.Style) {
+	v.defaultUnfocusedStyle = style
 	for i := range v.Items {
 		v.Items[i].SetUnfocusedStyle(style)
 	}
