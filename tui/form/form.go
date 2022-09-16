@@ -2,7 +2,6 @@ package form
 
 import (
 	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"gohost/config"
@@ -23,14 +22,12 @@ const (
 type HideCondition func() bool
 
 func New() *Form {
-	vp := viewport.New(0, 0)
 	return &Form{
 		Items:              make([]ItemModel, 0),
 		ItemFocusedStyle:   styles.None,
 		ItemUnfocusedStyle: styles.None,
 		MorePlaceHold:      "...",
 		Spacing:            0,
-		viewport:           vp,
 		preFocus:           0,
 		focus:              0,
 		width:              0,
@@ -44,14 +41,13 @@ type Form struct {
 	ItemUnfocusedStyle lipgloss.Style
 	MorePlaceHold      string
 	Spacing            int
-	viewport           viewport.Model
 	preFocus           int
 	focus              int
 	width, height      int
 }
 
 func (v *Form) Init() tea.Cmd {
-	return v.viewport.Init()
+	return nil
 }
 
 func (v *Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -61,8 +57,7 @@ func (v *Form) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		v.width = m.Width
 		v.height = m.Height
-		v.viewport.Width = v.width
-		v.viewport.Height = v.height - 1
+		// TODO add layout for items to adjust size dynamically
 		return v, nil
 	case tea.KeyMsg:
 		focusedItem := v.Items[v.focus]
@@ -113,22 +108,11 @@ func (v *Form) View() string {
 			b.WriteString(strings.Repeat(cfg.LineBreak, v.Spacing+1))
 		}
 	}
-	v.viewport.SetContent(b.String())
-
-	b = strings.Builder{}
-	if !v.viewport.AtBottom() {
-		b.WriteString(lipgloss.NewStyle().Width(v.width).Height(v.height - 1).Render(v.viewport.View()))
-		b.WriteString(cfg.LineBreak)
-		if len(v.MorePlaceHold) > v.width {
-			b.WriteString(v.MorePlaceHold[:v.width])
-		} else {
-			b.WriteString(v.MorePlaceHold)
-			b.WriteString(strings.Repeat(" ", v.width-len(v.MorePlaceHold)))
-		}
-	} else {
-		b.WriteString(lipgloss.NewStyle().Width(v.width).Height(v.height).Render(v.viewport.View()))
-	}
-	return b.String()
+	return lipgloss.NewStyle().
+		Width(v.width).
+		Height(v.height).
+		Align(lipgloss.Top).
+		Render(b.String())
 }
 
 func (v *Form) AddItem(widget ItemModel) {

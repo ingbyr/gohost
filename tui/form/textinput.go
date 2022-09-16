@@ -3,18 +3,14 @@ package form
 import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	"gohost/tui/styles"
 )
 
 var _ ItemModel = (*TextInput)(nil)
 
 func NewTextInput() *TextInput {
 	t := &TextInput{
-		CommonItem:     NewCommonItem(),
-		Model:          textinput.New(),
-		focusedStyle:   styles.None,
-		unfocusedStyle: styles.None,
+		CommonItem: NewCommonItem(),
+		Model:      textinput.New(),
 	}
 	t.Unfocus()
 	return t
@@ -23,9 +19,6 @@ func NewTextInput() *TextInput {
 type TextInput struct {
 	*CommonItem
 	textinput.Model
-	focused        bool
-	focusedStyle   lipgloss.Style
-	unfocusedStyle lipgloss.Style
 }
 
 func (t *TextInput) Init() tea.Cmd {

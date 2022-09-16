@@ -7,9 +7,6 @@ import (
 )
 
 func main() {
-	//if err := cmd.Execute(); err != nil {
-	//	panic(err)
-	//}
 	if err := log.New("debug.log"); err != nil {
 		panic(err)
 	}

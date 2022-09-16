@@ -24,7 +24,6 @@ func NewNodeView(model *Model) *NodeView {
 	// Text inputs
 	nameTextInput := form.NewTextInput()
 	nameTextInput.Prompt = "Name: "
-	nameTextInput.Focus(form.FocusFirstMode)
 
 	descTextInput := form.NewTextInput()
 	descTextInput.Prompt = "Description: "
@@ -122,6 +121,7 @@ func NewNodeView(model *Model) *NodeView {
 	nodeForm.AddItem(nodeTypeChoices)
 	nodeForm.AddItem(urlTextInput)
 	nodeForm.AddItem(confirmButton)
+	nodeForm.FocusAvailableFirstItem()
 
 	return nodeForm
 }
