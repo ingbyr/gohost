@@ -77,6 +77,10 @@ func (v *EditorView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				host.SetContent([]byte(v.hostEditor.Value()))
 				svc.UpdateNode(v.hostNode)
 				v.SetSaved()
+				// Refresh the system host if host was enabled
+				if v.hostNode.IsEnabled() {
+					svc.ApplyHost(svc.CombineEnabledHosts())
+				}
 			}
 		case key.Matches(m, keys.Up, keys.Down):
 			v.hostEditor, cmd = v.hostEditor.Update(msg)
