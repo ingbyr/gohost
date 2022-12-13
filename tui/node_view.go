@@ -1,12 +1,10 @@
 package tui
 
 import (
-	"fmt"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"gohost/gohost"
-	"gohost/log"
 	"gohost/tui/form"
 	"gohost/tui/keys"
 	"gohost/tui/styles"
@@ -132,9 +130,8 @@ func (v *NodeView) Init() tea.Cmd {
 }
 
 func (v *NodeView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch m := msg.(type) {
+	switch msg.(type) {
 	case tea.WindowSizeMsg:
-		log.Debug(fmt.Sprintf("node view w %d h %d", m.Width, m.Height))
 	case tea.KeyMsg:
 		return v.Form.Update(msg)
 	}

@@ -64,7 +64,6 @@ func NewModel() (*Model, error) {
 }
 
 func (m *Model) Init() tea.Cmd {
-	log.Debug(fmt.Sprintf("style w %d h %d", m.styleWidth, m.styleHeight))
 	return tea.Batch(
 		m.helpView.Init(),
 		m.confirmView.Init(),
@@ -203,7 +202,6 @@ func (m *Model) setFullHelp(state State, kb [][]key.Binding) {
 }
 
 func (m *Model) resizeViews(sizeMsg tea.WindowSizeMsg, cmds *[]tea.Cmd) {
-	log.Debug(fmt.Sprintf("window w %d h %d", sizeMsg.Width, sizeMsg.Height))
 	width := sizeMsg.Width - m.styleWidth
 	m.leftViewWidth = width / 4
 	m.rightViewWidth = width - m.leftViewWidth

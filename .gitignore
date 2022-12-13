@@ -1,5 +1,4 @@
 /.idea
 /debug.log
-/output
 /build
-/hosts
+/fake_sys_hosts

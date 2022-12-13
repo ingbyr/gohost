@@ -26,7 +26,18 @@ func Instance() *config {
 	once.Do(func() {
 		cfg = New()
 		if debug {
-			cfg.SysHostFile = "hosts"
+			cfg.SysHostFile = "fake_sys_hosts"
+			_, err := os.Stat(cfg.SysHostFile)
+			if err != nil {
+				if os.IsNotExist(err) {
+					_, err := os.Create(cfg.SysHostFile)
+					if err != nil {
+						panic(err)
+					}
+				} else {
+					panic(err)
+				}
+			}
 		}
 	})
 	return cfg
